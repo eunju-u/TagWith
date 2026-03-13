@@ -1,4 +1,4 @@
-package com.team_tagwith.tagwith_app
+package com.eunju.tagwith
 
 import io.flutter.embedding.android.FlutterActivity
 
