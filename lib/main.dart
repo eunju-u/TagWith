@@ -3,14 +3,17 @@ import 'package:provider/provider.dart';
 import 'core/theme.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/auth_provider.dart';
 import 'ui/screens/home_screen.dart';
+import 'ui/screens/login_screen.dart';
 
 void main() {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()), // Added ThemeProvider
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: const TagWithApp(),
     ),
@@ -22,15 +25,21 @@ class TagWithApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context); // Added this line
-    
-    return MaterialApp(
-      title: 'TagWith', // Changed title
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme, // Changed theme to lightTheme
-      darkTheme: AppTheme.darkTheme, // Added darkTheme
-      themeMode: themeProvider.themeMode, // Added themeMode
-      home: const HomeScreen(),
+    return Consumer2<ThemeProvider, AuthProvider>(
+      builder: (context, themeProvider, authProvider, child) {
+        return MaterialApp(
+          title: 'TagWith',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.themeMode,
+          home: authProvider.status == AuthStatus.authenticated
+              ? const HomeScreen()
+              : authProvider.status == AuthStatus.loading
+                  ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+                  : const LoginScreen(),
+        );
+      },
     );
   }
 }
