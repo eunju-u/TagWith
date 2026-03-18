@@ -14,9 +14,17 @@ class StatisticsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final provider = Provider.of<TransactionProvider>(context);
-    final expenseMap = provider.getCategorySpending(TransactionType.expense, forStats: true);
-    final totalExpense = expenseMap.values.fold(0.0, (sum, val) => sum + val);
-    final sortedExpenses = expenseMap.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final stats = provider.statistics;
+    
+    // 서버 통계가 있으면 사용, 없으면 기존처럼 클라이언트 연산
+    final double totalExpense = stats?.totalExpense ?? 
+        provider.getCategorySpending(TransactionType.expense, forStats: true).values.fold(0.0, (s, v) => s + v);
+    
+    final Map<String, double> categoryMap = stats != null 
+        ? { for (var e in stats.categorySpending) e.name : e.amount }
+        : provider.getCategorySpending(TransactionType.expense, forStats: true);
+        
+    final sortedCategories = categoryMap.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -49,7 +57,7 @@ class StatisticsView extends StatelessWidget {
                     const SizedBox(height: 24),
                     AspectRatio(
                       aspectRatio: 1.5,
-                      child: expenseMap.isEmpty
+                      child: categoryMap.isEmpty
                           ? Center(child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -65,9 +73,9 @@ class StatisticsView extends StatelessWidget {
                                   PieChartData(
                                     sectionsSpace: 6,
                                     centerSpaceRadius: 70, // 중심 구멍 크기를 키워 더 얇아 보이게 조절
-                                    sections: expenseMap.entries.map((e) {
-                                      final cat = provider.allCategories.firstWhere((c) => c.name == e.key);
-                                      final rank = sortedExpenses.indexWhere((entry) => entry.key == e.key);
+                                    sections: categoryMap.entries.map((e) {
+                                      final cat = provider.allCategories.firstWhere((c) => c.name == e.key, orElse: () => Category.fromName(e.key));
+                                      final rank = sortedCategories.indexWhere((entry) => entry.key == e.key);
                                       // 두께를 20 내외로 얇게 조절 (순위별로 약간씩 차이를 줌)
                                       final radius = (25 - (rank * 2)).toDouble().clamp(15, 25).toDouble();
                                       
@@ -108,8 +116,8 @@ class StatisticsView extends StatelessWidget {
                             ),
                     ),
                     const SizedBox(height: 32),
-                    if (expenseMap.isNotEmpty) ...[
-                      _buildGridLegend(context, expenseMap, totalExpense, provider),
+                    if (categoryMap.isNotEmpty) ...[
+                      _buildGridLegend(context, categoryMap, totalExpense, provider),
                       const SizedBox(height: 40),
                       _buildPaymentMethodSection(context, provider),
                       const SizedBox(height: 40),
@@ -127,10 +135,12 @@ class StatisticsView extends StatelessWidget {
   Widget _buildTotalSummary(BuildContext context, double total) {
     final theme = Theme.of(context);
     final provider = Provider.of<TransactionProvider>(context, listen: false);
+    final stats = provider.statistics;
     
-    // 지난달 지출과 비교
-    final lastMonth = DateTime(DateTime.now().year, DateTime.now().month - 1, 1);
-    final lastMonthTotal = provider.getTotalExpenseByMonth(lastMonth);
+    // 서버에서 지난달 지출을 주면 그것을 사용, 아니면 계산
+    final lastMonthTotal = stats?.lastMonthExpense ?? 
+        provider.getTotalExpenseByMonth(DateTime(DateTime.now().year, DateTime.now().month - 1, 1));
+    
     final diff = total - lastMonthTotal;
     final isIncrease = diff > 0;
     final diffPercent = lastMonthTotal > 0 ? (diff.abs() / lastMonthTotal * 100).toStringAsFixed(0) : '0';
@@ -432,7 +442,12 @@ class StatisticsView extends StatelessWidget {
 
   Widget _buildTagSection(BuildContext context, TransactionProvider provider) {
     final theme = Theme.of(context);
-    final tagMap = provider.getTagSpending(forStats: true);
+    final stats = provider.statistics;
+    
+    final Map<String, double> tagMap = stats != null 
+        ? { for (var e in stats.tagSpending) e.name : e.amount }
+        : provider.getTagSpending(forStats: true);
+        
     final sortedTags = tagMap.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     final totalExpense = tagMap.values.fold(0.0, (sum, val) => sum + val);
 
@@ -512,8 +527,14 @@ class StatisticsView extends StatelessWidget {
 
   Widget _buildMonthlyTrendSection(BuildContext context, TransactionProvider provider) {
     final theme = Theme.of(context);
-    final trendMap = provider.getMonthlyTrend(); // 이미 6개월 전까지만 가져오도록 프로바이더에 구현됨
-    final months = trendMap.keys.toList();
+    final stats = provider.statistics;
+    
+    // 서버 통계가 있으면 사용, 없으면 기존처럼 클라이언트 연산
+    final Map<DateTime, Map<String, double>> trendData = stats != null 
+        ? { for (var e in stats.monthlyTrend) DateTime.parse(e.date) : { 'income': e.income, 'expense': e.expense } }
+        : provider.getMonthlyTrend();
+        
+    final months = trendData.keys.toList();
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,7 +612,7 @@ class StatisticsView extends StatelessWidget {
                 LineChartBarData(
                   spots: List.generate(months.length, (index) {
                     final month = months[index];
-                    return FlSpot(index.toDouble(), trendMap[month]!['income']! / 10000);
+                    return FlSpot(index.toDouble(), trendData[month]!['income']! / 10000);
                   }),
                   isCurved: true,
                   color: Colors.blueAccent,
@@ -604,7 +625,7 @@ class StatisticsView extends StatelessWidget {
                 LineChartBarData(
                   spots: List.generate(months.length, (index) {
                     final month = months[index];
-                    return FlSpot(index.toDouble(), trendMap[month]!['expense']! / 10000);
+                    return FlSpot(index.toDouble(), trendData[month]!['expense']! / 10000);
                   }),
                   isCurved: true,
                   color: Colors.redAccent, // 지출은 빨간색으로 변경

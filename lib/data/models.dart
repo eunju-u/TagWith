@@ -184,4 +184,82 @@ class Transaction {
   }
 }
 
+// 통계 데이터 모델 추가
+class Statistics {
+  final double totalIncome;
+  final double totalExpense;
+  final double lastMonthExpense;
+  final List<CategorySpending> categorySpending;
+  final List<TagSpending> tagSpending;
+  final List<MonthlyTrend> monthlyTrend;
 
+  Statistics({
+    required this.totalIncome,
+    required this.totalExpense,
+    required this.lastMonthExpense,
+    required this.categorySpending,
+    required this.tagSpending,
+    required this.monthlyTrend,
+  });
+
+  factory Statistics.fromJson(Map<String, dynamic> json) {
+    return Statistics(
+      totalIncome: (json['total_income'] as num?)?.toDouble() ?? 0.0,
+      totalExpense: (json['total_expense'] as num?)?.toDouble() ?? 0.0,
+      lastMonthExpense: (json['last_month_expense'] as num?)?.toDouble() ?? 0.0,
+      categorySpending: (json['category_spending'] as List?)
+          ?.map((e) => CategorySpending.fromJson(e))
+          .toList() ?? [],
+      tagSpending: (json['tag_spending'] as List?)
+          ?.map((e) => TagSpending.fromJson(e))
+          .toList() ?? [],
+      monthlyTrend: (json['monthly_trend'] as List?)
+          ?.map((e) => MonthlyTrend.fromJson(e))
+          .toList() ?? [],
+    );
+  }
+}
+
+class CategorySpending {
+  final String name;
+  final double amount;
+
+  CategorySpending({required this.name, required this.amount});
+
+  factory CategorySpending.fromJson(Map<String, dynamic> json) {
+    return CategorySpending(
+      name: json['name'] ?? '',
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
+class TagSpending {
+  final String name;
+  final double amount;
+
+  TagSpending({required this.name, required this.amount});
+
+  factory TagSpending.fromJson(Map<String, dynamic> json) {
+    return TagSpending(
+      name: json['name'] ?? '',
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
+class MonthlyTrend {
+  final String date;
+  final double income;
+  final double expense;
+
+  MonthlyTrend({required this.date, required this.income, required this.expense});
+
+  factory MonthlyTrend.fromJson(Map<String, dynamic> json) {
+    return MonthlyTrend(
+      date: json['date'] ?? '',
+      income: (json['income'] as num?)?.toDouble() ?? 0.0,
+      expense: (json['expense'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}

@@ -33,6 +33,32 @@ class TransactionService {
     }
   }
 
+  // 통계 데이터 가져오기 (신설)
+  Future<Statistics?> getStatistics({int? year, int? month}) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
+
+      final queryParams = <String, dynamic>{};
+      if (year != null) queryParams['year'] = year;
+      if (month != null) queryParams['month'] = month;
+
+      final response = await _dio.get(
+        '/statistics',
+        queryParameters: queryParams,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return Statistics.fromJson(response.data);
+      }
+      return null;
+    } catch (e) {
+      print('Get Statistics Error: $e');
+      return null;
+    }
+  }
+
   // 가계부 내역 추가
   Future<Transaction?> createTransaction(Transaction transaction) async {
     try {

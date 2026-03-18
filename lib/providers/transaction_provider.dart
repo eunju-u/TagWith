@@ -9,6 +9,8 @@ class TransactionProvider with ChangeNotifier {
 
   List<Relation> _customRelations = [];
   List<Relation> get customRelations => _customRelations;
+  Statistics? _statistics;
+  Statistics? get statistics => _statistics;
 
   Future<void> addCustomRelation(String name) async {
     if (name.trim().isEmpty) return;
@@ -19,6 +21,11 @@ class TransactionProvider with ChangeNotifier {
       _customRelations.add(newTag);
       notifyListeners();
     }
+  }
+
+  Future<void> loadStatistics({int? year, int? month}) async {
+    _statistics = await _service.getStatistics(year: year, month: month);
+    notifyListeners();
   }
 
   List<Transaction> _transactions = [];
@@ -35,11 +42,13 @@ class TransactionProvider with ChangeNotifier {
       _service.getTransactions(),
       _service.getCategories(),
       _service.getTags(),
+      _service.getStatistics(year: DateTime.now().year, month: DateTime.now().month),
     ]);
 
     _transactions = results[0] as List<Transaction>;
     _allCategories = results[1] as List<Category>;
     _customRelations = results[2] as List<Relation>;
+    _statistics = results[3] as Statistics?;
     
     // 카테고리가 비어있을 경우 기본값 세팅 (서버에서 아직 안 온 경우를 대비)
     if (_allCategories.isEmpty) {
