@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../core/theme.dart';
 
 class SettingsView extends StatelessWidget {
@@ -10,6 +11,8 @@ class SettingsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
+    final user = authProvider.user;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -21,6 +24,28 @@ class SettingsView extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          _buildSectionHeader(context, '계정'),
+          const SizedBox(height: 10),
+          Card(
+            child: Column(
+              children: [
+                if (user != null) ...[
+                  ListTile(
+                    leading: const Icon(Icons.person_outline),
+                    title: Text(user['name'] ?? '사용자'),
+                    subtitle: Text(user['email'] ?? ''),
+                  ),
+                  const Divider(height: 1),
+                ],
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.redAccent),
+                  title: const Text('로그아웃', style: TextStyle(color: Colors.redAccent)),
+                  onTap: () => _showLogoutDialog(context, authProvider),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 30),
           _buildSectionHeader(context, '화면 설정'),
           const SizedBox(height: 10),
           Card(
@@ -63,6 +88,29 @@ class SettingsView extends StatelessWidget {
               title: const Text('버전 정보'),
               trailing: Text('1.0.0', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context, AuthProvider authProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('로그아웃'),
+        content: const Text('정말 로그아웃 하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              authProvider.signOut();
+            },
+            child: const Text('로그아웃', style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),

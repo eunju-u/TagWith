@@ -33,10 +33,10 @@ class TagWithApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.themeMode,
-          home: authProvider.status == AuthStatus.authenticated
-              ? const HomeScreen()
-              : authProvider.status == AuthStatus.loading
-                  ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+          home: !authProvider.isInitialized
+              ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+              : authProvider.status == AuthStatus.authenticated
+                  ? const HomeScreen()
                   : const LoginScreen(),
         );
       },

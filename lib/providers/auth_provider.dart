@@ -7,9 +7,11 @@ class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
   AuthStatus _status = AuthStatus.loading;
   Map<String, dynamic>? _user;
+  bool _isInitialized = false;
 
   AuthStatus get status => _status;
   Map<String, dynamic>? get user => _user;
+  bool get isInitialized => _isInitialized;
 
   AuthProvider() {
     _checkSession();
@@ -35,6 +37,7 @@ class AuthProvider with ChangeNotifier {
     } else {
       _status = AuthStatus.unauthenticated;
     }
+    _isInitialized = true;
     notifyListeners();
   }
 
@@ -56,6 +59,16 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  // 인증 번호 요청
+  Future<bool> sendVerificationCode(String email) async {
+    return await _authService.sendVerificationCode(email);
+  }
+
+  // 인증 번호 확인
+  Future<bool> verifyCode(String email, String code) async {
+    return await _authService.verifyCode(email, code);
   }
 
   // 회원가입 실행

@@ -14,7 +14,25 @@ class _LoginScreenState extends State<LoginScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _verificationCodeController = TextEditingController();
   bool _isSignUp = false;
+  bool _isCodeSent = false;
+  bool _isEmailVerified = false;
+  bool _isVerifying = false;
+
+  void _showSnackBar(BuildContext context, String message, ThemeData theme) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(color: theme.colorScheme.onSurface),
+        ),
+        backgroundColor: const Color(0xFFF3F4F6),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,19 +108,112 @@ class _LoginScreenState extends State<LoginScreen> {
                               icon: Icons.person_outline,
                             ),
                             const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildTextField(
+                                    controller: _emailController,
+                                    hint: '이메일',
+                                    icon: Icons.email_outlined,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                SizedBox(
+                                  height: 56,
+                                  child: ElevatedButton(
+                                    onPressed: _isEmailVerified ? null : () async {
+                                      if (_emailController.text.isEmpty) {
+                                        _showSnackBar(context, '이메일을 입력해 주세요.', theme);
+                                        return;
+                                      }
+                                      print("eunju sendVerificationCode 111");
+
+                                      final success = await authProvider.sendVerificationCode(_emailController.text);
+                                      print("eunju sendVerificationCode 222 : $success");
+
+                                      if (success) {
+                                        setState(() => _isCodeSent = true);
+                                        _showSnackBar(context, '인증 코드가 발송되었습니다.', theme);
+                                      } else {
+                                        _showSnackBar(context, '코드 발송에 실패했습니다.', theme);
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white.withValues(alpha: 0.2),
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    ),
+                                    child: Text(_isEmailVerified ? '인증됨' : '인증 요청'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (_isCodeSent && !_isEmailVerified) ...[
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildTextField(
+                                      controller: _verificationCodeController,
+                                      hint: '인증 코드',
+                                      icon: Icons.security,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  SizedBox(
+                                    height: 56,
+                                    child: ElevatedButton(
+                                      onPressed: _isVerifying ? null : () async {
+                                        if (_verificationCodeController.text.isEmpty) return;
+                                        setState(() => _isVerifying = true);
+                                        final success = await authProvider.verifyCode(
+                                          _emailController.text,
+                                          _verificationCodeController.text,
+                                        );
+                                        setState(() => _isVerifying = false);
+                                        if (success) {
+                                          setState(() => _isEmailVerified = true);
+                                          _showSnackBar(context, '이메일 인증에 성공했습니다!', theme);
+                                        } else {
+                                          _showSnackBar(context, '인증 코드가 올바르지 않습니다.', theme);
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFF6366F1), // 보라색과 어울리는 인디고 색상
+                                        foregroundColor: Colors.white,
+                                        elevation: 0,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                      ),
+                                      child: _isVerifying 
+                                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                        : const Text('확인'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              controller: _passwordController,
+                              hint: '비밀번호',
+                              icon: Icons.lock_outline,
+                              isPassword: true,
+                            ),
+                          ] else ...[
+                            _buildTextField(
+                              controller: _emailController,
+                              hint: '이메일',
+                              icon: Icons.email_outlined,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              controller: _passwordController,
+                              hint: '비밀번호',
+                              icon: Icons.lock_outline,
+                              isPassword: true,
+                            ),
                           ],
-                          _buildTextField(
-                            controller: _emailController,
-                            hint: '이메일',
-                            icon: Icons.email_outlined,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            controller: _passwordController,
-                            hint: '비밀번호',
-                            icon: Icons.lock_outline,
-                            isPassword: true,
-                          ),
                           const SizedBox(height: 24),
                           
                           // 로그인/회원가입 버튼
@@ -114,6 +225,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                     String message;
                                     
                                     if (_isSignUp) {
+                                      if (!_isEmailVerified) {
+                                        _showSnackBar(context, '이메일 인증을 먼저 완료해 주세요.', theme);
+                                        return;
+                                      }
                                       // 비밀번호 유효성 검사
                                       final password = _passwordController.text;
                                       bool hasLetter = password.contains(RegExp(r'[a-zA-Z]'));
@@ -125,9 +240,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                       if (password.length < 8 || score < 2) {
                                         if (mounted) {
                                           ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('비밀번호는 8자 이상이며, 영문/숫자/특수문자 중 2가지 이상을 조합해야 합니다.'),
-                                              backgroundColor: Colors.orangeAccent,
+                                            SnackBar(
+                                              content: Text(
+                                                '비밀번호는 8자 이상이며, 영문/숫자/특수문자 중 2가지 이상을 조합해야 합니다.',
+                                                style: TextStyle(color: theme.colorScheme.onSurface),
+                                              ),
+                                              backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                                              behavior: SnackBarBehavior.floating,
                                             ),
                                           );
                                         }
@@ -160,14 +279,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     }
 
                                     if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(message),
-                                          backgroundColor: success 
-                                            ? theme.colorScheme.secondary 
-                                            : Colors.redAccent,
-                                        ),
-                                      );
+                                      _showSnackBar(context, message, theme);
                                     }
                                   },
                             style: ElevatedButton.styleFrom(

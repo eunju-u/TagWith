@@ -40,6 +40,34 @@ class AuthService {
     }
   }
 
+  // 인증 번호 발송
+  Future<bool> sendVerificationCode(String email) async {
+    print("eunju sendVerificationCode ");
+
+    try {
+      final response = await _dio.post('/auth/send-verification', data: {'email': email});
+      print("eunju sendVerificationCode response : $response");
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Send Verification Error: $e');
+      return false;
+    }
+  }
+
+  // 인증 번호 확인
+  Future<bool> verifyCode(String email, String code) async {
+    try {
+      final response = await _dio.post('/auth/verify-code', data: {
+        'email': email,
+        'code': code,
+      });
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Verify Code Error: $e');
+      return false;
+    }
+  }
+
   // 회원가입
   Future<bool> signUpWithEmail(String email, String password, String name) async {
     try {
