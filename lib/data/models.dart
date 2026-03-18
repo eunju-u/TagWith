@@ -16,6 +16,53 @@ class Category {
     required this.icon,
     required this.color,
   });
+
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      id: json['id'].toString(),
+      name: json['name'],
+      icon: _parseIcon(json['icon']),
+      color: _parseColor(json['color']),
+    );
+  }
+
+  static IconData _parseIcon(String? iconName) {
+    switch (iconName) {
+      case 'restaurant': return Icons.restaurant;
+      case 'coffee': return Icons.coffee;
+      case 'account_balance_wallet': return Icons.account_balance_wallet;
+      case 'directions_bus': return Icons.directions_bus;
+      case 'shopping_bag': return Icons.shopping_bag;
+      default: return Icons.category;
+    }
+  }
+
+  static Color _parseColor(String? colorHex) {
+    if (colorHex == null || colorHex.isEmpty) return Colors.grey;
+    try {
+      final hex = colorHex.replaceFirst('#', '');
+      return Color(int.parse('FF$hex', radix: 16));
+    } catch (e) {
+      return Colors.grey;
+    }
+  }
+
+  factory Category.fromName(String name) {
+    switch (name) {
+      case '식비':
+        return Category(id: '1', name: '식비', icon: Icons.restaurant, color: Colors.orange);
+      case '카페/간식':
+        return Category(id: '2', name: '카페/간식', icon: Icons.coffee, color: Colors.brown);
+      case '수입':
+        return Category(id: '3', name: '수입', icon: Icons.account_balance_wallet, color: Colors.blue);
+      case '교통':
+        return Category(id: '4', name: '교통', icon: Icons.directions_bus, color: Colors.teal);
+      case '생활/쇼핑':
+        return Category(id: '5', name: '생활/쇼핑', icon: Icons.shopping_bag, color: Colors.purple);
+      default:
+        return Category(id: '0', name: name, icon: Icons.category, color: Colors.grey);
+    }
+  }
 }
 
 class Relation {
@@ -26,6 +73,19 @@ class Relation {
     required this.id,
     required this.name,
   });
+
+  factory Relation.fromJson(Map<String, dynamic> json) {
+    return Relation(
+      id: json['id'].toString(),
+      name: json['name'],
+    );
+  }
+
+  factory Relation.fromTagName(String name) {
+    return Relation(id: name, name: name);
+  }
+
+  Map<String, dynamic> toJson() => {'name': name};
 }
 
 class Transaction {
@@ -49,6 +109,58 @@ class Transaction {
     required this.paymentMethod,
   });
 
+  factory Transaction.fromJson(Map<String, dynamic> json) {
+    // 서버 규격인 tags 필드로 통일
+    final List<dynamic> tagData = (json['tags'] as List?) ?? [];
+    
+    return Transaction(
+      id: json['id'].toString(),
+      date: DateTime.parse(json['date']),
+      amount: json['amount'].toDouble(),
+      description: json['description'] ?? '',
+      type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
+      category: json['category_detail'] != null 
+          ? Category.fromJson(json['category_detail']) 
+          : Category.fromName(json['category'] ?? ''),
+      relations: tagData.map((e) {
+        if (e is Map<String, dynamic>) {
+          return Relation.fromJson(e);
+        }
+        return Relation.fromTagName(e.toString());
+      }).toList(),
+      paymentMethod: _parsePaymentMethod(json['payment_method']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'amount': amount,
+      'description': description,
+      'category': category.name,
+      'date': date.toUtc().toIso8601String(), // 서버 예시와 동일하게 UTC('Z') 포맷으로 전송
+      'type': type == TransactionType.income ? 'income' : 'expense',
+      'tags': relations.map((r) => r.name).toList(), // 서버 최종 표준인 tags 사용
+      'payment_method': _paymentMethodToString(paymentMethod),
+    };
+  }
+
+  static String _paymentMethodToString(PaymentMethod method) {
+    switch (method) {
+      case PaymentMethod.cash: return 'cash';
+      case PaymentMethod.checkCard: return 'checkCard';
+      case PaymentMethod.creditCard: return 'creditCard';
+    }
+  }
+
+  static PaymentMethod _parsePaymentMethod(String? method) {
+    switch (method) {
+      case 'cash': return PaymentMethod.cash;
+      case 'checkCard': return PaymentMethod.checkCard;
+      case 'creditCard': return PaymentMethod.creditCard;
+      default: return PaymentMethod.checkCard;
+    }
+  }
+
   Transaction copyWith({
     String? id,
     DateTime? date,
@@ -71,3 +183,5 @@ class Transaction {
     );
   }
 }
+
+

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../data/models.dart';
@@ -36,7 +35,7 @@ class _OCRViewState extends State<OCRView> {
       _isLoading = false;
       _extractedItems = [
         Transaction(
-          id: 'temp1',
+          id: '',
           date: DateTime.now(),
           amount: 12000,
           description: '치킨마요 정식',
@@ -46,7 +45,7 @@ class _OCRViewState extends State<OCRView> {
           paymentMethod: PaymentMethod.checkCard,
         ),
         Transaction(
-          id: 'temp2',
+          id: '',
           date: DateTime.now(),
           amount: 5000,
           description: '스타벅스 아메리카노',
@@ -153,13 +152,22 @@ class _OCRViewState extends State<OCRView> {
                 Expanded(
                   flex: 2,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       final provider = Provider.of<TransactionProvider>(context, listen: false);
+                      bool allSuccess = true;
+                      
+                      // Show loading indicator if needed, or disable button
                       for (var t in _extractedItems) {
-                        provider.addTransaction(t);
+                        final success = await provider.addTransaction(t);
+                        if (!success) allSuccess = false;
                       }
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('내역이 저장되었습니다.')));
-                      setState(() => _extractedItems = []);
+                      
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(allSuccess ? '모든 내역이 저장되었습니다.' : '일부 내역 저장에 실패했습니다.'))
+                        );
+                        setState(() => _extractedItems = []);
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -312,15 +320,20 @@ class _OCRViewState extends State<OCRView> {
           children: [
             const Text('카테고리 선택', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 4,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 0.8,
               children: categories.map((cat) => InkWell(
                 onTap: () {
                   setState(() => _extractedItems[index] = t.copyWith(category: cat));
                   Navigator.pop(context);
                 },
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -330,8 +343,15 @@ class _OCRViewState extends State<OCRView> {
                       ),
                       child: Icon(cat.icon, color: cat.color),
                     ),
-                    const SizedBox(height: 4),
-                    Text(cat.name, style: const TextStyle(fontSize: 12)),
+                    const SizedBox(height: 8),
+                    Flexible(
+                      child: Text(
+                        cat.name, 
+                        style: const TextStyle(fontSize: 12), 
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
                   ],
                 ),
               )).toList(),
@@ -418,10 +438,13 @@ class _OCRViewState extends State<OCRView> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
           ElevatedButton(
-            onPressed: () {
-              provider.addCustomRelation(controller.text);
-              setModalState(() {});
-              Navigator.pop(context);
+            onPressed: () async {
+              final tagName = controller.text.trim();
+              if (tagName.isNotEmpty) {
+                await provider.addCustomRelation(tagName);
+                setModalState(() {});
+              }
+              if (context.mounted) Navigator.pop(context);
             },
             child: const Text('추가'),
           ),

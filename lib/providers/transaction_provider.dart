@@ -1,90 +1,60 @@
 import 'package:flutter/material.dart';
 import '../data/models.dart';
+import '../services/transaction_service.dart';
 
 class TransactionProvider with ChangeNotifier {
-  final List<Relation> _customRelations = [
-    Relation(id: '1', name: '친구1'),
-    Relation(id: '2', name: '직장동료'),
-    Relation(id: '3', name: '부모님'),
-  ];
+  final TransactionService _service = TransactionService();
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
 
+  List<Relation> _customRelations = [];
   List<Relation> get customRelations => _customRelations;
 
-  void addCustomRelation(String name) {
+  Future<void> addCustomRelation(String name) async {
     if (name.trim().isEmpty) return;
     if (_customRelations.any((r) => r.name == name)) return;
     
-    final newRelation = Relation(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: name,
-    );
-    _customRelations.add(newRelation);
-    notifyListeners();
+    final newTag = await _service.createTag(name);
+    if (newTag != null) {
+      _customRelations.add(newTag);
+      notifyListeners();
+    }
   }
 
-  final List<Transaction> _transactions = [
-    // Mock Data
-    Transaction(
-      id: '1',
-      date: DateTime.now(),
-      amount: 15000,
-      description: '점심 (김치찌개)',
-      type: TransactionType.expense,
-      category: Category(id: '1', name: '식비', icon: Icons.restaurant, color: Colors.orange),
-      relations: [Relation(id: '1', name: '친구1')],
-      paymentMethod: PaymentMethod.checkCard,
-    ),
-    Transaction(
-      id: '2',
-      date: DateTime.now(),
-      amount: 4500,
-      description: '아메리카노',
-      type: TransactionType.expense,
-      category: Category(id: '2', name: '카페/간식', icon: Icons.coffee, color: Colors.brown),
-      relations: [Relation(id: '2', name: '직장동료')],
-      paymentMethod: PaymentMethod.creditCard,
-    ),
-    Transaction(
-      id: '3',
-      date: DateTime.now().subtract(const Duration(days: 1)),
-      amount: 50000,
-      description: '용돈',
-      type: TransactionType.income,
-      category: Category(id: '3', name: '수입', icon: Icons.account_balance_wallet, color: Colors.blue),
-      relations: [Relation(id: '3', name: '부모님')],
-      paymentMethod: PaymentMethod.cash,
-    ),
-    Transaction(
-      id: '4',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-      amount: 12000,
-      description: '택시비',
-      type: TransactionType.expense,
-      category: Category(id: '4', name: '교통', icon: Icons.directions_bus, color: Colors.teal),
-      relations: [Relation(id: '4', name: '나')],
-      paymentMethod: PaymentMethod.checkCard,
-    ),
-    Transaction(
-      id: '5',
-      date: DateTime.now().subtract(const Duration(days: 3)),
-      amount: 85000,
-      description: '친구 생일 선물',
-      type: TransactionType.expense,
-      category: Category(id: '5', name: '생활/쇼핑', icon: Icons.shopping_bag, color: Colors.purple),
-      relations: [Relation(id: '5', name: '친구2')],
-      paymentMethod: PaymentMethod.creditCard,
-    ),
-  ];
+  List<Transaction> _transactions = [];
 
-  final List<Category> _allCategories = [
-    Category(id: '1', name: '식비', icon: Icons.restaurant, color: Colors.orange),
-    Category(id: '2', name: '카페/간식', icon: Icons.coffee, color: Colors.brown),
-    Category(id: '3', name: '수입', icon: Icons.account_balance_wallet, color: Colors.blue),
-    Category(id: '4', name: '교통', icon: Icons.directions_bus, color: Colors.teal),
-    Category(id: '5', name: '생활/쇼핑', icon: Icons.shopping_bag, color: Colors.purple),
-  ];
-
+  List<Category> _allCategories = [];
   List<Category> get allCategories => _allCategories;
+
+  Future<void> loadTransactions() async {
+    _isLoading = true;
+    notifyListeners();
+
+    // 병렬로 데이터 로드
+    final results = await Future.wait([
+      _service.getTransactions(),
+      _service.getCategories(),
+      _service.getTags(),
+    ]);
+
+    _transactions = results[0] as List<Transaction>;
+    _allCategories = results[1] as List<Category>;
+    _customRelations = results[2] as List<Relation>;
+    
+    // 카테고리가 비어있을 경우 기본값 세팅 (서버에서 아직 안 온 경우를 대비)
+    if (_allCategories.isEmpty) {
+      _allCategories = [
+        Category(id: '1', name: '식비', icon: Icons.restaurant, color: Colors.orange),
+        Category(id: '2', name: '카페/간식', icon: Icons.coffee, color: Colors.brown),
+        Category(id: '3', name: '수입', icon: Icons.account_balance_wallet, color: Colors.blue),
+        Category(id: '4', name: '교통', icon: Icons.directions_bus, color: Colors.teal),
+        Category(id: '5', name: '생활/쇼핑', icon: Icons.shopping_bag, color: Colors.purple),
+      ];
+    }
+    
+    _isLoading = false;
+    notifyListeners();
+  }
 
   List<Transaction> get calendarFilteredTransactions {
     return _transactions.where((t) {
@@ -232,6 +202,39 @@ class TransactionProvider with ChangeNotifier {
     return map;
   }
 
+  Map<String, double> getTagSpending({bool forStats = true}) {
+    final map = <String, double>{};
+    final transactions = forStats ? statsFilteredTransactions : calendarFilteredTransactions;
+    
+    // 수입/지출 상관없이 모든 태그 통계를 집계하여 사용자 혼란 방지
+    for (var t in transactions) { 
+      for (var rel in t.relations) {
+        map[rel.name] = (map[rel.name] ?? 0) + t.amount;
+      }
+    }
+    return map;
+  }
+
+  // 달별 수입/지출 트렌드 데이터 (최근 6개월)
+  Map<DateTime, Map<String, double>> getMonthlyTrend({int months = 6}) {
+    final now = DateTime.now();
+    final result = <DateTime, Map<String, double>>{};
+    
+    for (int i = 0; i < months; i++) {
+      final monthDate = DateTime(now.year, now.month - i, 1);
+      final monthTransactions = _transactions.where((t) => t.date.year == monthDate.year && t.date.month == monthDate.month);
+      
+      final income = monthTransactions.where((t) => t.type == TransactionType.income).fold(0.0, (s, t) => s + t.amount);
+      final expense = monthTransactions.where((t) => t.type == TransactionType.expense).fold(0.0, (s, t) => s + t.amount);
+      
+      result[monthDate] = {'income': income, 'expense': expense};
+    }
+    // 날짜별 오름차순 정렬
+    return Map.fromEntries(result.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
+  }
+
+
+
   double getTotalByMethod(TransactionType type, List<PaymentMethod> methods, {int? year, DateTime? month}) {
     return calendarFilteredTransactions.where((t) {
       final matchesType = t.type == type;
@@ -246,8 +249,22 @@ class TransactionProvider with ChangeNotifier {
     }).fold(0.0, (sum, t) => sum + t.amount);
   }
 
-  void addTransaction(Transaction transaction) {
-    _transactions.add(transaction);
-    notifyListeners();
+  Future<bool> addTransaction(Transaction transaction) async {
+    final savedTransaction = await _service.createTransaction(transaction);
+    if (savedTransaction != null) {
+      _transactions.add(savedTransaction);
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> deleteTransaction(String id) async {
+    final success = await _service.deleteTransaction(id);
+    if (success) {
+      _transactions.removeWhere((t) => t.id == id);
+      notifyListeners();
+    }
+    return success;
   }
 }

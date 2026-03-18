@@ -42,7 +42,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     final amount = double.tryParse(_amountController.text) ?? 0;
     if (amount <= 0 || _descriptionController.text.trim().isEmpty || _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,7 +52,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     }
 
     final transaction = Transaction(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: '', // Server will assign an ID
       date: _selectedDate,
       amount: amount,
       description: _descriptionController.text.trim(),
@@ -62,11 +62,20 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       paymentMethod: _paymentMethod,
     );
 
-    Provider.of<TransactionProvider>(context, listen: false).addTransaction(transaction);
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('기록이 완료되었습니다!')),
-    );
+    final success = await Provider.of<TransactionProvider>(context, listen: false).addTransaction(transaction);
+    
+    if (mounted) {
+      if (success) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('기록이 완료되었습니다!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('저장에 실패했습니다. 다시 시도해 주세요.')),
+        );
+      }
+    }
   }
 
   @override
@@ -372,15 +381,18 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
             const SizedBox(height: 24),
             GridView.count(
               shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(), // Scroll handled by Column/Bottomsheet if needed
               crossAxisCount: 4,
-              mainAxisSpacing: 20,
-              crossAxisSpacing: 20,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 0.8, // 세로 길이를 더 확보하여 텍스트 넘침(overflow) 방지
               children: provider.allCategories.map((cat) => InkWell(
                 onTap: () {
                   setState(() => _selectedCategory = cat);
                   Navigator.pop(context);
                 },
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -390,8 +402,15 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                       ),
                       child: Icon(cat.icon, color: cat.color),
                     ),
-                    const SizedBox(height: 4),
-                    Text(cat.name, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 8),
+                    Flexible(
+                      child: Text(
+                        cat.name, 
+                        style: const TextStyle(fontSize: 12), 
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
                   ],
                 ),
               )).toList(),
@@ -477,10 +496,13 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
           ElevatedButton(
-            onPressed: () {
-              provider.addCustomRelation(controller.text);
-              setModalState(() {});
-              Navigator.pop(context);
+            onPressed: () async {
+              final tagName = controller.text.trim();
+              if (tagName.isNotEmpty) {
+                await provider.addCustomRelation(tagName);
+                setModalState(() {});
+              }
+              if (context.mounted) Navigator.pop(context);
             },
             child: const Text('추가'),
           ),
