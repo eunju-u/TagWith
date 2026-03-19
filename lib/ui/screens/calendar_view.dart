@@ -102,12 +102,12 @@ class _CalendarViewState extends State<CalendarView> {
                     child: _viewType == CalendarViewType.year
                         ? _buildYearView(provider, theme)
                         : Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 140),
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 100), // 바텀 패딩을 조금 줄여 캘린더 공간 확보
                             child: LayoutBuilder(
                               builder: (context, constraints) {
                                 final availableHeight = constraints.maxHeight - 40;
                                 final calculatedRowHeight = availableHeight / 6;
-                                final rowHeight = calculatedRowHeight > 0 ? calculatedRowHeight : 52.0;
+                                final rowHeight = calculatedRowHeight > 62.0 ? calculatedRowHeight : 62.0; // 최소 높이 보장
 
                                 return TableCalendar(
                                   firstDay: DateTime.utc(2020, 1, 1),
@@ -394,10 +394,11 @@ class _CalendarViewState extends State<CalendarView> {
     if (isToday && !isSelected) dateStyle = dateStyle.copyWith(color: AppColors.primary);
 
     return Container(
-      alignment: Alignment.center,
+      alignment: Alignment.topCenter,
+      padding: const EdgeInsets.only(top: 4), // 셀 상단에 약간의 여백
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           SizedBox(
             height: 40,
