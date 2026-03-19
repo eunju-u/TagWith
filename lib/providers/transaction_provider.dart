@@ -187,18 +187,39 @@ class TransactionProvider with ChangeNotifier {
         .fold(0, (sum, t) => sum + t.amount);
   }
 
-  Map<String, double> getCategorySpending(TransactionType type, {bool forStats = false}) {
+  Map<String, double> getCategorySpending(TransactionType type, {bool forStats = false, int? year, int? month}) {
     final map = <String, double>{};
-    final transactions = forStats ? statsFilteredTransactions : calendarFilteredTransactions;
+    var transactions = forStats ? statsFilteredTransactions : calendarFilteredTransactions;
+    
+    // 기간 필터링 추가
+    if (year != null || month != null) {
+      transactions = transactions.where((t) {
+        bool matches = true;
+        if (year != null) matches = matches && t.date.year == year;
+        if (month != null) matches = matches && t.date.month == month;
+        return matches;
+      }).toList();
+    }
+
     for (var t in transactions.where((t) => t.type == type)) {
       map[t.category.name] = (map[t.category.name] ?? 0) + t.amount;
     }
     return map;
   }
 
-  Map<PaymentMethod, double> getPaymentMethodSpending({bool forStats = true}) {
+  Map<PaymentMethod, double> getPaymentMethodSpending({bool forStats = true, int? year, int? month}) {
     final map = <PaymentMethod, double>{};
-    final transactions = forStats ? statsFilteredTransactions : calendarFilteredTransactions;
+    var transactions = forStats ? statsFilteredTransactions : calendarFilteredTransactions;
+    
+    // 기간 필터링 추가
+    if (year != null || month != null) {
+      transactions = transactions.where((t) {
+        bool matches = true;
+        if (year != null) matches = matches && t.date.year == year;
+        if (month != null) matches = matches && t.date.month == month;
+        return matches;
+      }).toList();
+    }
     
     // Initialize all methods with 0 to ensure they appear in UI
     for (var method in PaymentMethod.values) {
@@ -211,9 +232,19 @@ class TransactionProvider with ChangeNotifier {
     return map;
   }
 
-  Map<String, double> getTagSpending({bool forStats = true}) {
+  Map<String, double> getTagSpending({bool forStats = true, int? year, int? month}) {
     final map = <String, double>{};
-    final transactions = forStats ? statsFilteredTransactions : calendarFilteredTransactions;
+    var transactions = forStats ? statsFilteredTransactions : calendarFilteredTransactions;
+    
+    // 기간 필터링 추가
+    if (year != null || month != null) {
+      transactions = transactions.where((t) {
+        bool matches = true;
+        if (year != null) matches = matches && t.date.year == year;
+        if (month != null) matches = matches && t.date.month == month;
+        return matches;
+      }).toList();
+    }
     
     // 수입/지출 상관없이 모든 태그 통계를 집계하여 사용자 혼란 방지
     for (var t in transactions) { 
@@ -224,13 +255,14 @@ class TransactionProvider with ChangeNotifier {
     return map;
   }
 
-  // 달별 수입/지출 트렌드 데이터 (최근 6개월)
-  Map<DateTime, Map<String, double>> getMonthlyTrend({int months = 6}) {
-    final now = DateTime.now();
+  // 달별 수입/지출 트렌드 데이터 (가변 기간)
+  Map<DateTime, Map<String, double>> getMonthlyTrend({DateTime? rootDate, int months = 6}) {
+    final baseDate = rootDate ?? DateTime.now();
     final result = <DateTime, Map<String, double>>{};
     
     for (int i = 0; i < months; i++) {
-      final monthDate = DateTime(now.year, now.month - i, 1);
+      // 지정된 날짜부터 거꾸로 계산
+      final monthDate = DateTime(baseDate.year, baseDate.month - i, 1);
       final monthTransactions = _transactions.where((t) => t.date.year == monthDate.year && t.date.month == monthDate.month);
       
       final income = monthTransactions.where((t) => t.type == TransactionType.income).fold(0.0, (s, t) => s + t.amount);
