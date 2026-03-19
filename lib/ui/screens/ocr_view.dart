@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../data/models.dart';
 import '../../providers/transaction_provider.dart';
+import '../../services/transaction_service.dart';
 import 'manual_entry_screen.dart';
 
 class OCRView extends StatefulWidget {
@@ -27,35 +28,77 @@ class _OCRViewState extends State<OCRView> {
 
   Future<void> _processImage(String path) async {
     setState(() => _isLoading = true);
+    final service = TransactionService();
+    final result = await service.uploadReceipt(path);
 
-    // MOCK OCR PROCESS
-    await Future.delayed(const Duration(seconds: 2));
+    if (result != null && result.containsKey('ocr_result')) {
+      final List<dynamic> texts = result['ocr_result'];
+      final List<String> stringTexts = texts.map((e) => e.toString()).toList();
+      
+      // OCR 결과에서 정보 추출
+      final parsed = _parseOcrResult(stringTexts);
+      
+      setState(() {
+        _isLoading = false;
+        _extractedItems = [parsed];
+      });
+    } else {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('영수증을 분석할 수 없습니다.')));
+      }
+    }
+  }
 
-    setState(() {
-      _isLoading = false;
-      _extractedItems = [
-        Transaction(
-          id: '',
-          date: DateTime.now(),
-          amount: 12000,
-          description: '치킨마요 정식',
-          type: TransactionType.expense,
-          category: Category(id: '1', name: '식비', icon: Icons.restaurant, color: Colors.orange),
-          relations: [],
-          paymentMethod: PaymentMethod.checkCard,
-        ),
-        Transaction(
-          id: '',
-          date: DateTime.now(),
-          amount: 5000,
-          description: '스타벅스 아메리카노',
-          type: TransactionType.expense,
-          category: Category(id: '2', name: '카페/간식', icon: Icons.coffee, color: Colors.brown),
-          relations: [],
-          paymentMethod: PaymentMethod.checkCard,
-        ),
-      ];
-    });
+  Transaction _parseOcrResult(List<String> texts) {
+    String description = '영수증 내역';
+    double amount = 0;
+    DateTime date = DateTime.now();
+    Category category = Category(id: '1', name: '식비', icon: Icons.restaurant, color: Colors.orange);
+
+    // 1. 가맹점명 찾기 (보통 첫 번째나 두 번째 텍스트)
+    if (texts.isNotEmpty) {
+      for (var text in texts.take(5)) {
+        if (text.contains('편의점') || text.contains('식당') || text.contains('마트') || text.length > 2) {
+          description = text.split('\n').first;
+          break;
+        }
+      }
+    }
+
+    // 2. 금액 찾기 (가장 큰 금액이거나 '합계', 'TOTAL' 근처의 숫자)
+    final amountRegex = RegExp(r'([0-9,]{3,})');
+    List<double> candidates = [];
+    for (var text in texts) {
+      final matches = amountRegex.allMatches(text);
+      for (final match in matches) {
+        final val = match.group(1)!.replaceAll(',', '');
+        final dVal = double.tryParse(val) ?? 0;
+        if (dVal > 100) { // 너무 작은 숫자는 제외 (개수 등)
+          candidates.add(dVal);
+        }
+      }
+    }
+    if (candidates.isNotEmpty) {
+      // 내역 중 가장 큰 금액을 합계로 가정 (보통 영수증 하단에 위치)
+      amount = candidates.reduce((a, b) => a > b ? a : b);
+    }
+
+    // 3. 카테고리 추론
+    if (description.contains('커피') || description.contains('스타벅스') || description.contains('카페')) {
+      category = Category(id: '2', name: '카페/간식', icon: Icons.coffee, color: Colors.brown);
+    }
+
+    return Transaction(
+      id: '',
+      date: date,
+      amount: amount,
+      description: description,
+      type: TransactionType.expense,
+      category: category,
+      relations: [],
+      paymentMethod: PaymentMethod.checkCard,
+    );
   }
 
   @override
@@ -64,12 +107,25 @@ class _OCRViewState extends State<OCRView> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text('등록하기', style: theme.textTheme.headlineMedium),
+        leading: _extractedItems.isEmpty ? null : IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => setState(() => _extractedItems = []),
+        ),
+        title: Text('영수증 인식', style: theme.textTheme.headlineMedium),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 24),
+                  Text('AI가 영수증을 분석하고 있어요...', style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            )
           : _extractedItems.isEmpty
               ? _buildEmptyState()
               : _buildReviewList(),

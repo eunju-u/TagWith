@@ -160,5 +160,33 @@ class TransactionService {
       return null;
     }
   }
+  // 영수증 OCR 업로드
+  Future<Map<String, dynamic>?> uploadReceipt(String filePath) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
+
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          filePath,
+          filename: filePath.split('/').last,
+        ),
+      });
+
+      final response = await _dio.post(
+        '/upload-receipt',
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+      return null;
+    } catch (e) {
+      print('Upload Receipt Error: $e');
+      return null;
+    }
+  }
 }
 
