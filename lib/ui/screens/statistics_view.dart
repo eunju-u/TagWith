@@ -417,7 +417,7 @@ class _StatisticsViewState extends State<StatisticsView> {
     final stats = provider.statistics;
 
     final Map<DateTime, Map<String, double>> trendData = stats != null
-        ? { for (var e in stats.monthlyTrend) DateTime.parse(e.date): { 'income': e.income, 'expense': e.expense}}
+        ? { for (var e in stats.monthlyTrend) DateTime.parse(e.date).toLocal(): { 'income': e.income, 'expense': e.expense}}
         : (_selectedMode == StatisticsMode.monthly
             ? provider.getMonthlyTrend(rootDate: _selectedMonthDate, months: 6)
             : provider.getMonthlyTrend(rootDate: DateTime(_selectedYearDate.year, 12, 1), months: 12));

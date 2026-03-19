@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 enum TransactionType { income, expense }
 
@@ -115,7 +116,7 @@ class Transaction {
     
     return Transaction(
       id: json['id'].toString(),
-      date: DateTime.parse(json['date']),
+      date: DateTime.parse(json['date']).toLocal(),
       amount: json['amount'].toDouble(),
       description: json['description'] ?? '',
       type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
@@ -137,7 +138,7 @@ class Transaction {
       'amount': amount,
       'description': description,
       'category': category.name,
-      'date': date.toUtc().toIso8601String(), // 서버 예시와 동일하게 UTC('Z') 포맷으로 전송
+      'date': DateFormat('yyyy-MM-dd').format(date), // 사용자 타임존 기준 날짜만 전송하여 오차 방지
       'type': type == TransactionType.income ? 'income' : 'expense',
       'tags': relations.map((r) => r.name).toList(), // 서버 최종 표준인 tags 사용
       'payment_method': _paymentMethodToString(paymentMethod),
