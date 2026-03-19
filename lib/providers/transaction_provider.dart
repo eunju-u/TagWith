@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../data/models.dart';
 import '../services/transaction_service.dart';
 
@@ -11,6 +12,30 @@ class TransactionProvider with ChangeNotifier {
   List<Relation> get customRelations => _customRelations;
   Statistics? _statistics;
   Statistics? get statistics => _statistics;
+  
+  final _storage = const FlutterSecureStorage();
+  static const String _budgetKey = 'monthly_budget';
+
+  double _monthlyBudget = 1000000.0; // 기본 예산 100만원
+  double get monthlyBudget => _monthlyBudget;
+
+  TransactionProvider() {
+    _loadBudget();
+  }
+
+  Future<void> _loadBudget() async {
+    final savedBudget = await _storage.read(key: _budgetKey);
+    if (savedBudget != null) {
+      _monthlyBudget = double.tryParse(savedBudget) ?? 1000000.0;
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateMonthlyBudget(double newBudget) async {
+    _monthlyBudget = newBudget;
+    await _storage.write(key: _budgetKey, value: newBudget.toString());
+    notifyListeners();
+  }
 
   Future<void> addCustomRelation(String name) async {
     if (name.trim().isEmpty) return;

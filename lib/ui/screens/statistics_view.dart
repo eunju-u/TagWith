@@ -567,57 +567,82 @@ class _StatisticsViewState extends State<StatisticsView> {
 
   Widget _buildGridLegend(BuildContext context, Map<String, double> data, double total, TransactionProvider provider) {
     final theme = Theme.of(context);
-    final sortedList = data.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    final sortedEntries = data.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: sortedList.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 2.2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemBuilder: (context, index) {
-        final entry = sortedList[index];
-        final cat = provider.allCategories.firstWhere((c) => c.name == entry.key, orElse: () => Category.fromName(entry.key));
-        final percentage = (entry.value / total * 100).toStringAsFixed(1);
+    return Column(
+      children: sortedEntries.map((e) {
+        final cat = provider.allCategories.firstWhere((c) => c.name == e.key);
+        final percentage = (e.value / total * 100).toStringAsFixed(0);
 
         return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(20),
-          ),
+          margin: const EdgeInsets.only(bottom: 24),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: cat.color.withValues(alpha: 0.1), shape: BoxShape.circle),
-                child: Icon(cat.icon, size: 16, color: cat.color),
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: cat.color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(cat.icon, color: cat.color, size: 22),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(entry.key, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 2),
-                    Text('$percentage%', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(e.key, style: theme.textTheme.titleMedium),
+                        Text(
+                          '${NumberFormat('#,###').format(e.value)}원',
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Stack(
+                      children: [
+                        Container(
+                          height: 6,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: theme.dividerColor,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                        FractionallySizedBox(
+                          widthFactor: e.value / total,
+                          child: Container(
+                            height: 6,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [cat.color, cat.color.withValues(alpha: 0.6)],
+                              ),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
-              Text(
-                NumberFormat.compact().format(entry.value),
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+              const SizedBox(width: 16),
+              SizedBox(
+                width: 45,
+                child: Text(
+                  '$percentage%',
+                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+                  textAlign: TextAlign.end,
+                ),
               ),
             ],
           ),
         );
-      },
+      }).toList(),
     );
   }
 

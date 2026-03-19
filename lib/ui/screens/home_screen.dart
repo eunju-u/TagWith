@@ -54,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _bottomNavIndex,
         children: _views,
       ),
-      floatingActionButton: Container(
+      floatingActionButton: SizedBox(
         height: 64,
         width: 64,
         child: FloatingActionButton(
