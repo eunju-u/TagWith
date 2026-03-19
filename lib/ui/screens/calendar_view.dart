@@ -506,7 +506,7 @@ class _CalendarViewState extends State<CalendarView> {
                 Text(t.description, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 2),
                 Text(
-                  '${t.category.name} • ${t.relations.map((r) => r.name).join(', ')}',
+                  '${t.category.name}${t.relations.isNotEmpty ? ' • ${t.relations.map((r) => r.name).join(', ')}' : ''}',
                   style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
                 ),
               ],
