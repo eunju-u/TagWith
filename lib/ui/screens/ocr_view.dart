@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../data/models.dart';
@@ -9,6 +7,8 @@ import '../../providers/transaction_provider.dart';
 import '../../services/transaction_service.dart';
 import 'manual_entry_screen.dart';
 import '../widgets/relation_picker_sheet.dart';
+import '../widgets/category_picker_sheet.dart';
+import '../widgets/ocr_transaction_card.dart';
 
 class OCRView extends StatefulWidget {
   const OCRView({super.key});
@@ -35,7 +35,6 @@ class _OCRViewState extends State<OCRView> {
     
     try {
       final result = await service.uploadReceipt(path);
-      print("OCR Server Response Raw: $result");
       if (result != null && result['parsed_items'] != null) {
         final List<dynamic> itemsData = result['parsed_items'];
         final List<Transaction> parsedTransactions = itemsData.map((item) {
@@ -49,6 +48,7 @@ class _OCRViewState extends State<OCRView> {
             category: Category.fromName(receipt.categorySuggestion),
             relations: [],
             paymentMethod: PaymentMethod.checkCard,
+            isDuplicate: receipt.isDuplicate,
           );
         }).toList();
 
@@ -145,17 +145,17 @@ class _OCRViewState extends State<OCRView> {
       ),
     );
   }
+
   Widget _buildReviewList() {
     final theme = Theme.of(context);
     return Column(
       children: [
-        // Header title removed for cleaner UI as requested
         Expanded(
           child: ListView.builder(
             itemCount: _extractedItems.length,
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
             itemBuilder: (context, index) {
-              return _OCRTransactionCard(
+              return OCRTransactionCard(
                 transaction: _extractedItems[index],
                 onUpdate: (updated) {
                   setState(() => _extractedItems[index] = updated);
@@ -164,7 +164,11 @@ class _OCRViewState extends State<OCRView> {
                   setState(() => _extractedItems.removeAt(index));
                 },
                 showDelete: _extractedItems.length > 1,
-                onPickCategory: () => _showCategoryPicker(index),
+                onPickCategory: () => CategoryPickerSheet.show(
+                  context: context, 
+                  provider: Provider.of<TransactionProvider>(context, listen: false), 
+                  onSelected: (cat) => setState(() => _extractedItems[index] = _extractedItems[index].copyWith(category: cat))
+                ),
                 onPickRelation: () => _showRelationPicker(index),
                 headerBuilder: _buildSectionHeader,
               );
@@ -173,7 +177,7 @@ class _OCRViewState extends State<OCRView> {
         ),
         SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 130), // Increased for Animated Bottom Nav + Space
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 130),
             child: Row(
               children: [
                 Expanded(
@@ -192,19 +196,29 @@ class _OCRViewState extends State<OCRView> {
                   child: ElevatedButton(
                     onPressed: () async {
                       final provider = Provider.of<TransactionProvider>(context, listen: false);
+                      bool anySaved = false;
                       bool allSuccess = true;
                       
-                      // Show loading indicator if needed, or disable button
+                      if (_extractedItems.isEmpty) return;
+
+                      // 중복 여부와 관계없이 모든 리스트를 저장하도록 수정
                       for (var t in _extractedItems) {
                         final success = await provider.addTransaction(t);
                         if (!success) allSuccess = false;
+                        else anySaved = true;
                       }
                       
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(allSuccess ? '모든 내역이 저장되었습니다.' : '일부 내역 저장에 실패했습니다.'))
-                        );
-                        setState(() => _extractedItems = []);
+                        if (anySaved) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(allSuccess ? '모든 내역이 저장되었습니다.' : '일부 내역 저장에 실패했습니다.'))
+                          );
+                          setState(() => _extractedItems = []);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('저장된 내역이 없습니다.'))
+                          );
+                        }
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -213,7 +227,10 @@ class _OCRViewState extends State<OCRView> {
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                     ),
-                    child: const Text('전부 저장하기', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      '저장하기',
+                      style: TextStyle(fontWeight: FontWeight.bold)
+                    ),
                   ),
                 ),
               ],
@@ -221,99 +238,6 @@ class _OCRViewState extends State<OCRView> {
           ),
         ),
       ],
-    );
-  }
-
-
-
-  Widget _buildSmallChip(String label, IconData icon, {bool isAction = false, VoidCallback? onTap, VoidCallback? onDelete}) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isAction ? Colors.transparent : AppColors.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-          border: isAction ? Border.all(color: theme.dividerColor) : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: isAction ? theme.colorScheme.onSurface.withValues(alpha: 0.5) : AppColors.primary),
-            const SizedBox(width: 4),
-            Text(label, style: TextStyle(fontSize: 12, color: isAction ? theme.colorScheme.onSurface.withValues(alpha: 0.7) : AppColors.primary)),
-            if (onDelete != null) ...[
-              const SizedBox(width: 4),
-              GestureDetector(
-                onTap: onDelete,
-                child: const Icon(Icons.close, size: 14, color: AppColors.primary),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showCategoryPicker(int index) {
-    final t = _extractedItems[index];
-    final theme = Theme.of(context);
-    final provider = Provider.of<TransactionProvider>(context, listen: false);
-    final categories = provider.allCategories;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: theme.colorScheme.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('카테고리 선택', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 4,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: 0.8,
-              children: categories.map((cat) => InkWell(
-                onTap: () {
-                  setState(() => _extractedItems[index] = t.copyWith(category: cat));
-                  Navigator.pop(context);
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: cat.color.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(cat.icon, color: cat.color),
-                    ),
-                    const SizedBox(height: 8),
-                    Flexible(
-                      child: Text(
-                        cat.name, 
-                        style: const TextStyle(fontSize: 12), 
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                  ],
-                ),
-              )).toList(),
-            ),
-            const SizedBox(height: 30),
-          ],
-        ),
-      ),
     );
   }
 
@@ -332,7 +256,6 @@ class _OCRViewState extends State<OCRView> {
       },
     );
   }
-
 
   Widget _buildSectionHeader(String title) {
     return Padding(
@@ -421,263 +344,5 @@ class _SelectionCard extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _OCRTransactionCard extends StatefulWidget {
-  final Transaction transaction;
-  final Function(Transaction) onUpdate;
-  final VoidCallback onDelete;
-  final bool showDelete;
-  final VoidCallback onPickCategory;
-  final VoidCallback onPickRelation;
-  final Widget Function(String) headerBuilder;
-
-  const _OCRTransactionCard({
-    required this.transaction,
-    required this.onUpdate,
-    required this.onDelete,
-    required this.showDelete,
-    required this.onPickCategory,
-    required this.onPickRelation,
-    required this.headerBuilder,
-    super.key,
-  });
-
-  @override
-  State<_OCRTransactionCard> createState() => _OCRTransactionCardState();
-}
-
-class _OCRTransactionCardState extends State<_OCRTransactionCard> {
-  late TextEditingController _descriptionController;
-  late TextEditingController _amountController;
-
-  @override
-  void initState() {
-    super.initState();
-    _descriptionController = TextEditingController(text: widget.transaction.description);
-    final currencyFormat = NumberFormat('#,###');
-    _amountController = TextEditingController(
-      text: widget.transaction.amount > 0 ? currencyFormat.format(widget.transaction.amount.toInt()) : '',
-    );
-  }
-
-  @override
-  void didUpdateWidget(covariant _OCRTransactionCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.transaction.description != widget.transaction.description && 
-        _descriptionController.text != widget.transaction.description) {
-      _descriptionController.text = widget.transaction.description;
-    }
-    
-    final currencyFormat = NumberFormat('#,###');
-    final formattedAmount = widget.transaction.amount > 0 ? currencyFormat.format(widget.transaction.amount.toInt()) : '';
-    if (oldWidget.transaction.amount != widget.transaction.amount && 
-        _amountController.text != formattedAmount) {
-      _amountController.text = formattedAmount;
-    }
-  }
-
-  @override
-  void dispose() {
-    _descriptionController.dispose();
-    _amountController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final t = widget.transaction;
-    final theme = Theme.of(context);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.dividerColor),
-        boxShadow: theme.brightness == Brightness.light ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)] : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              widget.headerBuilder('내용'),
-              if (widget.showDelete)
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: const Icon(Icons.close_rounded, size: 20, color: Colors.grey),
-                  onPressed: widget.onDelete,
-                ),
-            ],
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
-            ),
-            child: TextField(
-              controller: _descriptionController,
-              onChanged: (val) => widget.onUpdate(t.copyWith(description: val)),
-              decoration: const InputDecoration(
-                hintText: '무엇에 쓰셨나요?',
-                border: InputBorder.none,
-                isDense: true,
-              ),
-              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-            ),
-          ),
-          const SizedBox(height: 20),
-          widget.headerBuilder('금액'),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _amountController,
-                  onChanged: (val) {
-                    final cleanVal = val.replaceAll(',', '');
-                    final amount = double.tryParse(cleanVal) ?? 0;
-                    widget.onUpdate(t.copyWith(amount: amount));
-                  },
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    CurrencyInputFormatter(),
-                  ],
-                  decoration: const InputDecoration(
-                    hintText: '0',
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '원',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary.withValues(alpha: 0.5),
-                ),
-              ),
-            ],
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Divider(height: 1),
-          ),
-          const SizedBox(height: 12),
-          widget.headerBuilder('날짜'),
-          InkWell(
-            onTap: () async {
-              final date = await showDatePicker(
-                context: context,
-                initialDate: t.date,
-                firstDate: DateTime(2020),
-                lastDate: DateTime(2100),
-              );
-              if (date != null) widget.onUpdate(t.copyWith(date: date));
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    DateFormat('yyyy. MM. dd.').format(t.date),
-                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildSmallChip(context, t.category.name, t.category.icon, onTap: widget.onPickCategory),
-              ...t.relations.map((rel) => _buildSmallChip(context, rel.name, Icons.person, onDelete: () {
-                    final updatedRelations = List<Relation>.from(t.relations)..remove(rel);
-                    widget.onUpdate(t.copyWith(relations: updatedRelations));
-                  })),
-              _buildSmallChip(context, '관계(태그)', Icons.person_add_outlined, isAction: true, onTap: widget.onPickRelation),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSmallChip(BuildContext context, String label, IconData icon, {bool isAction = false, VoidCallback? onTap, VoidCallback? onDelete}) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isAction ? Colors.transparent : AppColors.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-          border: isAction ? Border.all(color: theme.dividerColor) : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: isAction ? theme.colorScheme.onSurface.withValues(alpha: 0.5) : AppColors.primary),
-            const SizedBox(width: 4),
-            Text(label, style: TextStyle(fontSize: 12, color: isAction ? theme.colorScheme.onSurface.withValues(alpha: 0.7) : AppColors.primary)),
-            if (onDelete != null) ...[
-              const SizedBox(width: 4),
-              GestureDetector(
-                onTap: onDelete,
-                child: const Icon(Icons.close, size: 14, color: AppColors.primary),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class CurrencyInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    if (newValue.text.isEmpty) {
-      return newValue.copyWith(text: '');
-    }
-
-    try {
-      final double value = double.parse(newValue.text.replaceAll(',', ''));
-      final formatter = NumberFormat('#,###');
-      final String newText = formatter.format(value.toInt());
-
-      return newValue.copyWith(
-        text: newText,
-        selection: TextSelection.collapsed(offset: newText.length),
-      );
-    } catch (e) {
-      return newValue;
-    }
   }
 }

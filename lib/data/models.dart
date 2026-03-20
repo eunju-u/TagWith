@@ -100,6 +100,7 @@ class Transaction {
   final Category category;
   final List<Relation> relations;
   final PaymentMethod paymentMethod;
+  final bool isDuplicate;
 
   Transaction({
     required this.id,
@@ -110,6 +111,7 @@ class Transaction {
     required this.category,
     required this.relations,
     required this.paymentMethod,
+    this.isDuplicate = false,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
@@ -132,6 +134,7 @@ class Transaction {
         return Relation.fromTagName(e.toString());
       }).toList(),
       paymentMethod: _parsePaymentMethod(json['payment_method']),
+      isDuplicate: json['is_duplicate'] ?? false,
     );
   }
 
@@ -173,6 +176,7 @@ class Transaction {
     Category? category,
     List<Relation>? relations,
     PaymentMethod? paymentMethod,
+    bool? isDuplicate,
   }) {
     return Transaction(
       id: id ?? this.id,
@@ -183,6 +187,7 @@ class Transaction {
       category: category ?? this.category,
       relations: relations ?? this.relations,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+      isDuplicate: isDuplicate ?? this.isDuplicate,
     );
   }
 }
@@ -278,20 +283,26 @@ class Receipt {
   final String description;
   final String date;
   final String categorySuggestion;
+  final bool isDuplicate;
 
   Receipt({
     required this.amount,
     required this.description,
     required this.date,
     required this.categorySuggestion,
+    this.isDuplicate = false,
   });
 
   factory Receipt.fromJson(Map<String, dynamic> json) {
+    final existing = json['existing_transaction'];
+    final isDuplicate = existing != null && (existing is List ? existing.isNotEmpty : true);
+    
     return Receipt(
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
       description: json['description'] ?? '',
       date: json['date'] ?? '',
       categorySuggestion: json['category_suggestion'] ?? '',
+      isDuplicate: isDuplicate,
     );
   }
 }

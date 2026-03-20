@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme.dart';
+import '../../core/input_formatters.dart';
 import '../../data/models.dart';
 import '../../providers/transaction_provider.dart';
 import '../widgets/relation_picker_sheet.dart';
+import '../widgets/category_picker_sheet.dart';
 
 class ManualEntryScreen extends StatefulWidget {
   const ManualEntryScreen({super.key});
@@ -207,7 +209,11 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                 icon: _selectedCategory?.icon ?? Icons.category_rounded,
                 label: _selectedCategory?.name ?? '선택해주세요',
                 color: _selectedCategory?.color,
-                onTap: () => _showCategoryPicker(provider),
+                onTap: () => CategoryPickerSheet.show(
+                  context: context,
+                  provider: provider,
+                  onSelected: (cat) => setState(() => _selectedCategory = cat),
+                ),
               ),
               const SizedBox(height: 24),
               _buildSectionHeader('관계 (태그)'),
@@ -370,63 +376,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     );
   }
 
-  void _showCategoryPicker(TransactionProvider provider) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('카테고리 선택', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 24),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(), // Scroll handled by Column/Bottomsheet if needed
-              crossAxisCount: 4,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: 0.8, // 세로 길이를 더 확보하여 텍스트 넘침(overflow) 방지
-              children: provider.allCategories.map((cat) => InkWell(
-                onTap: () {
-                  setState(() => _selectedCategory = cat);
-                  Navigator.pop(context);
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: cat.color.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(cat.icon, color: cat.color),
-                    ),
-                    const SizedBox(height: 8),
-                    Flexible(
-                      child: Text(
-                        cat.name, 
-                        style: const TextStyle(fontSize: 12), 
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                  ],
-                ),
-              )).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   void _showRelationPicker(TransactionProvider provider) {
     RelationPickerSheet.show(
@@ -472,24 +422,4 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
   }
 }
 
-class CurrencyInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    if (newValue.text.isEmpty) {
-      return newValue.copyWith(text: '');
-    }
 
-    try {
-      final double value = double.parse(newValue.text.replaceAll(',', ''));
-      final formatter = NumberFormat('#,###');
-      final String newText = formatter.format(value.toInt());
-
-      return newValue.copyWith(
-        text: newText,
-        selection: TextSelection.collapsed(offset: newText.length),
-      );
-    } catch (e) {
-      return newValue;
-    }
-  }
-}
