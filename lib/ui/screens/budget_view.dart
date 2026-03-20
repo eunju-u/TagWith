@@ -2,8 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../providers/transaction_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:dio/dio.dart';
+import 'dart:convert';
+import 'package:geocoding/geocoding.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import '../../core/theme.dart';
+import '../../providers/transaction_provider.dart';
+
 
 class BudgetView extends StatefulWidget {
   const BudgetView({super.key});
@@ -13,6 +22,243 @@ class BudgetView extends StatefulWidget {
 }
 
 class _BudgetViewState extends State<BudgetView> {
+  // 네이버 API 키 설정 (검색은 Developers, 지도는 Cloud Platform)
+  final String _naverClientId = "8zKcP6_dylvz_hceMUkx";
+  final String _naverClientSecret = "DEJZPkNHsk";
+  final String _naverMapClientId = "jd2c1ntprd";
+
+  final _storage = const FlutterSecureStorage();
+  bool _isAiRecommendEnabled = false;
+  bool _isLoadingLocation = false;
+  bool _isServerLunchEnabled = true; // 서버 설정값 (어드민)
+  List<RecommendedStore> _recommendedStores = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeSettings();
+  }
+
+  Future<void> _initializeSettings() async {
+    // 1. 서버 설정 확인 (어드민 권한)
+    await _fetchServerConfig();
+    
+    // 2. 서버가 허용한 경우에만 사용자의 기존 선택을 불러옵니다.
+    if (_isServerLunchEnabled) {
+      String? savedStatus = await _storage.read(key: 'lunch_recommend_on');
+      if (savedStatus == 'true') {
+        // 이전에 켜두었다면 바로 추천 로직을 실행합니다.
+        await _toggleAiRecommend(true);
+      }
+    }
+  }
+
+  Future<void> _fetchServerConfig() async {
+    final dio = Dio();
+    // 5초 타임아웃 추가
+    dio.options.connectTimeout = const Duration(seconds: 5);
+    dio.options.receiveTimeout = const Duration(seconds: 5);
+
+    try {
+      final response = await dio.get('https://web-production-e1340.up.railway.app/system/config');
+      
+      if (response.statusCode == 200) {
+        // 서버에서 온 데이터가 어떤 모양인지 상세히 확인합니다.
+        final rawData = response.data;
+        bool enabled = false;
+
+        // 1단계: 직접 들어있는 경우
+        if (rawData['lunch_recommend_active'] != null) {
+          enabled = rawData['lunch_recommend_active'] == true || rawData['lunch_recommend_active'] == 'true';
+        } 
+        // 2단계: 'data'라는 이름으로 한 번 감싸져 있는 경우 대비
+        else if (rawData['data'] != null && rawData['data']['lunch_recommend_active'] != null) {
+          enabled = rawData['data']['lunch_recommend_active'] == true || rawData['data']['lunch_recommend_active'] == 'true';
+        }
+
+        if (mounted) {
+          setState(() => _isServerLunchEnabled = enabled);
+        }
+      }
+    } catch (e) {
+      debugPrint('Config Fetch Error: $e');
+      if (mounted) {
+        setState(() => _isServerLunchEnabled = false);
+      }
+    }
+  }
+
+  Future<void> _toggleAiRecommend(bool value) async {
+    // 1. 사용자 선택 저장 및 화면 즉시 업데이트
+    await _storage.write(key: 'lunch_recommend_on', value: value.toString());
+    
+    if (value) {
+      setState(() {
+        _isAiRecommendEnabled = true; // 버튼은 즉시 켭니다!
+        _isLoadingLocation = true;
+      });
+
+      try {
+        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (!serviceEnabled) {
+          if (mounted) _showErrorDialog('위치 서비스가 꺼져 있습니다.');
+          setState(() {
+            _isAiRecommendEnabled = false; // 실패 시 다시 끕니다.
+            _isLoadingLocation = false;
+          });
+          return;
+        }
+
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+          if (permission == LocationPermission.denied) {
+            setState(() {
+              _isAiRecommendEnabled = false;
+              _isLoadingLocation = false;
+            });
+            return;
+          }
+        }
+
+        Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+
+        String neighborhood = "";
+        try {
+          List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+          if (placemarks.isNotEmpty) {
+            neighborhood = placemarks.first.subLocality ?? placemarks.first.locality ?? "";
+          }
+        } catch (_) {}
+
+        final provider = Provider.of<TransactionProvider>(context, listen: false);
+        final now = DateTime.now();
+        final remaining = provider.monthlyBudget - provider.getTotalExpenseByMonth(now);
+        final lastDay = DateTime(now.year, now.month + 1, 0).day;
+        final dailyAdvice = remaining / (lastDay - now.day + 1);
+
+        String typeKeyword = dailyAdvice < 2500 ? '편의점' : (dailyAdvice < 15000 ? '맛집' : '맛집 카페');
+        String finalSearchQuery = "$neighborhood $typeKeyword".trim();
+
+        final fetchedStores = await _fetchNaverStores(finalSearchQuery);
+
+        if (mounted) {
+          setState(() {
+            _recommendedStores = fetchedStores;
+            _isLoadingLocation = false;
+          });
+        }
+      } catch (e) {
+        debugPrint('Naver Search Error: $e');
+        if (mounted) {
+          _showErrorDialog('정보를 가져오지 못했습니다.');
+          setState(() {
+            _isAiRecommendEnabled = false;
+            _isLoadingLocation = false;
+          });
+        }
+      }
+    } else {
+      setState(() {
+        _isAiRecommendEnabled = false;
+        _recommendedStores = [];
+      });
+    }
+  }
+
+  Future<List<RecommendedStore>> _fetchNaverStores(String query) async {
+    final dio = Dio();
+    
+    try {
+      final response = await dio.get(
+        'https://openapi.naver.com/v1/search/local.json',
+        queryParameters: {
+          'query': query,
+          'display': 5,
+          'sort': 'random',
+        },
+        options: Options(
+          headers: {
+            'X-Naver-Client-Id': _naverClientId.trim(),
+            'X-Naver-Client-Secret': _naverClientSecret.trim(),
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final List items = response.data['items'];
+        return items.map((item) {
+          String cleanTitle = (item['title'] as String).replaceAll(RegExp(r'<[^>]*>|&quot;'), '');
+          return RecommendedStore(
+            cleanTitle,
+            (item['category'] as String).split('>').last.trim(),
+            4.0,
+            '주변',
+            item['address'] ?? '',
+            query.contains('편의점') ? Colors.orange : AppColors.primary,
+            mapX: item['mapx'] ?? "",
+            mapY: item['mapy'] ?? "",
+          );
+        }).toList();
+      }
+    } catch (e) {
+      debugPrint('Naver Local API Error: $e');
+    }
+    return [];
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('알림', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(message),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('확인'))
+        ],
+      ),
+    );
+  }
+
+  void _showOptionDialog(String title, String message, String actionLabel, VoidCallback onAction) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(message),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('닫기')),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              onAction();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+            child: Text(actionLabel),
+          )
+        ],
+      ),
+    );
+  }
+
+  Future<void> _launchNearbySearch(String query) async {
+    // 앱 내 새로운 화면(KakaoMapScreen)으로 이동하여 지도 표시
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => NaverMapScreen(
+            query: query, 
+            mapClientId: _naverMapClientId, 
+            stores: _recommendedStores,
+          ),
+        ),
+      );
+    }
+  }
+
   void _showEditBudgetDialog(BuildContext context, double currentBudget) {
     final controller = TextEditingController(text: currentBudget.toInt().toString());
     final theme = Theme.of(context);
@@ -109,10 +355,21 @@ class _BudgetViewState extends State<BudgetView> {
               ),
               const SizedBox(height: 32),
               _buildBudgetCard(theme, budgetGoal, currentSpending, progress),
+              if (_isServerLunchEnabled) ...[
+                const SizedBox(height: 32),
+                _buildAiRecommendToggle(theme),
+                if (_isAiRecommendEnabled) ...[
+                  const SizedBox(height: 24),
+                  _buildAiRecommendationSection(theme, dailyAdvice),
+                  const SizedBox(height: 16),
+                  _buildStoreListSection(theme),
+                ],
+              ],
               const SizedBox(height: 40),
               _buildStatusSection(theme, currentSpending, budgetGoal, remaining, dailyAdvice, isOver),
               const SizedBox(height: 32),
               _buildTipCard(theme, progress, dailyAdvice, isOver),
+              const SizedBox(height: 100),
             ],
           ),
         ),
@@ -239,8 +496,6 @@ class _BudgetViewState extends State<BudgetView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('상세를 살펴볼까요?', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-        const SizedBox(height: 20),
         Row(
           children: [
             _buildStatItem(
@@ -387,6 +642,409 @@ class _BudgetViewState extends State<BudgetView> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAiRecommendToggle(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.auto_awesome_rounded, color: AppColors.primary, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('점심 추천 모드', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  _isAiRecommendEnabled ? '위치 기반 추천 모드 활성화됨' : '권장금액 기반 식당 추천',
+                  style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                ),
+              ],
+            ),
+          ),
+          if (_isLoadingLocation)
+            const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+          else
+            Switch.adaptive(
+              value: _isAiRecommendEnabled,
+              activeColor: AppColors.primary,
+              onChanged: _toggleAiRecommend,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAiRecommendationSection(ThemeData theme, double dailyAdvice) {
+    IconData icon;
+    String title;
+    String description;
+    String budgetTag;
+    Color color;
+
+    if (dailyAdvice < 2500) {
+      icon = Icons.store_rounded;
+      title = '가까운 편의점 추천';
+      description = '남은 예산이 빠듯해요!\n가까운 편의점에서 알뜰한 점심 한 끼 어떠세요?';
+      budgetTag = '절약 모드';
+      color = Colors.orange;
+    } else if (dailyAdvice < 9000) {
+      icon = Icons.restaurant_rounded;
+      title = '가성비 식당';
+      description = '주변의 가성비 좋은 식당을 추천드려요.\n오늘 권장 금액 내에서 든든하게 드실 수 있습니다!';
+      budgetTag = '합리적 소비';
+      color = AppColors.primary;
+    } else {
+      icon = Icons.celebration_rounded;
+      title = '오늘은 맛집으로!';
+      description = '예산에 여유가 충분합니다.\n주변 평점 좋은 식당에서 기분 좋은 점심을 즐겨보세요!';
+      budgetTag = '오늘의 flex';
+      color = Colors.purple;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: color.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 24),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                child: Text(budgetTag, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 8),
+          Text(description, style: theme.textTheme.bodySmall?.copyWith(height: 1.5)),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () => _launchNearbySearch(title.contains('편의점') ? '주변 편의점' : '주변 맛집'),
+            icon: const Icon(Icons.near_me_rounded, size: 14),
+            label: const Text('주변 가게 찾기'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: color,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              minimumSize: const Size(double.infinity, 40),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniMapPlaceholder(ThemeData theme, Color color) {
+    return Container(
+      height: 140,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.1)),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(child: Opacity(opacity: 0.05, child: CustomPaint(painter: MapGridPainter()))),
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.location_on_rounded, color: color, size: 28),
+                const SizedBox(height: 4),
+                Text('추천 장소 위치 탐색됨', style: theme.textTheme.labelSmall?.copyWith(color: color.withValues(alpha: 0.5), fontSize: 9)),
+              ],
+            ),
+          ),
+          Positioned(top: 30, left: 80, child: Icon(Icons.location_on_rounded, color: color.withValues(alpha: 0.6), size: 20)),
+          Positioned(bottom: 40, right: 60, child: Icon(Icons.location_on_rounded, color: color.withValues(alpha: 0.4), size: 16)),
+          Positioned(top: 70, right: 120, child: Icon(Icons.location_on_rounded, color: color.withValues(alpha: 0.5), size: 16)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStoreListSection(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('주변 추천 장소', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+            Text('${_recommendedStores.length}곳', style: theme.textTheme.labelSmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 150,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _recommendedStores.length,
+            itemBuilder: (context, index) {
+              final store = _recommendedStores[index];
+              return _buildStoreCard(theme, store);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStoreCard(ThemeData theme, RecommendedStore store) {
+    return Container(
+      width: 200,
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.08)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(color: store.color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                child: Text(store.category, style: TextStyle(color: store.color, fontSize: 9, fontWeight: FontWeight.bold)),
+              ),
+              Row(
+                children: [
+                  const Icon(Icons.star_rounded, color: Colors.amber, size: 12),
+                  Text(store.rating.toString(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(store.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 4),
+          Text(store.description, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 10), maxLines: 1),
+          const Spacer(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(store.distance, style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.3), fontSize: 10)),
+              Icon(Icons.arrow_forward_ios_rounded, size: 10, color: store.color),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class RecommendedStore {
+  final String name;
+  final String category;
+  final double rating;
+  final String distance;
+  final String description;
+  final Color color;
+  final String mapX;
+  final String mapY;
+
+  RecommendedStore(this.name, this.category, this.rating, this.distance, this.description, this.color, {this.mapX = "", this.mapY = ""});
+}
+
+class MapGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.grey..strokeWidth = 0.5;
+    for (double i = 0; i < size.width; i += 20) { canvas.drawLine(Offset(i, 0), Offset(i, size.height), paint); }
+    for (double i = 0; i < size.height; i += 20) { canvas.drawLine(Offset(0, i), Offset(size.width, i), paint); }
+  }
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
+class NaverMapScreen extends StatefulWidget {
+  final String query;
+  final String mapClientId;
+  final List<RecommendedStore> stores;
+  const NaverMapScreen({super.key, required this.query, required this.mapClientId, required this.stores});
+
+  @override
+  State<NaverMapScreen> createState() => _NaverMapScreenState();
+}
+
+class _NaverMapScreenState extends State<NaverMapScreen> {
+  late final WebViewController _controller;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initMap();
+  }
+
+  void _initMap() {
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (url) {
+            if (mounted) setState(() => _isLoading = false);
+          },
+          onWebResourceError: (error) {
+            debugPrint('Naver Map Error: ${error.description}');
+          },
+        ),
+      )
+      ..loadHtmlString(
+        _buildHtml(widget.mapClientId, widget.stores),
+        baseUrl: 'https://map.naver.com', 
+      );
+  }
+
+  String _buildHtml(String apiKey, List<RecommendedStore> stores) {
+    final storesJson = jsonEncode(stores.map((s) => {
+      'name': s.name,
+      'mapX': s.mapX,
+      'mapY': s.mapY,
+    }).toList());
+
+    return '''
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=$apiKey&submodules=geocoder"></script>
+    <style>
+        body, html, #map { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: #f8f8f8; }
+        #map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        var mapOptions = {
+            center: new naver.maps.LatLng(37.5665, 126.9780),
+            zoom: 15,
+            logoControl: true,
+            mapDataControl: true,
+            zoomControl: true
+        };
+        var map = new naver.maps.Map('map', mapOptions);
+        var stores = $storesJson;
+
+        // 1. 내 위치 추적
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var currLoc = new naver.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                map.setCenter(currLoc);
+                new naver.maps.Marker({
+                    position: currLoc,
+                    map: map,
+                    zIndex: 100,
+                    icon: {
+                        content: '<div style="background:#4285F4;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 8px rgba(0,0,0,0.3);"></div>',
+                        anchor: new naver.maps.Point(8, 8)
+                    }
+                });
+            }, function(err) { console.warn("Geolocation denied"); });
+        }
+
+        // 2. 마커 생성 유틸리티
+        function renderMarkers() {
+            if (typeof naver === 'undefined' || !naver.maps || !naver.maps.TransCoord) {
+                setTimeout(renderMarkers, 100);
+                return;
+            }
+
+            stores.forEach(function(store) {
+                if (store.mapX && store.mapY) {
+                    try {
+                        var utmk = new naver.maps.Point(store.mapX, store.mapY);
+                        var latlng = naver.maps.TransCoord.fromTM128ToLatLng(utmk);
+
+                        var marker = new naver.maps.Marker({
+                            position: latlng,
+                            map: map,
+                            animation: naver.maps.Animation.DROP
+                        });
+
+                        var infoWindow = new naver.maps.InfoWindow({
+                            content: '<div style="padding:12px;min-width:100px;text-align:center;">' +
+                                     '<h4 style="margin:0;font-size:14px;">' + store.name + '</h4>' +
+                                     '</div>',
+                            borderWidth: 0,
+                            backgroundColor: "white",
+                            anchorSkew: true,
+                            anchorSize: new naver.maps.Size(10, 10),
+                            pixelOffset: new naver.maps.Point(0, -10)
+                        });
+
+                        naver.maps.Event.addListener(marker, "click", function() {
+                            if (infoWindow.getMap()) {
+                                infoWindow.close();
+                            } else {
+                                infoWindow.open(map, marker);
+                            }
+                        });
+                    } catch (e) {
+                        console.error("Marker Error", e);
+                    }
+                }
+            });
+        }
+        
+        setTimeout(renderMarkers, 600);
+    </script>
+</body>
+</html>
+''';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('${widget.query} 주변 네이버 지도', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0.5,
+        centerTitle: true,
+      ),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: _controller),
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator(color: AppColors.primary)),
         ],
       ),
     );
