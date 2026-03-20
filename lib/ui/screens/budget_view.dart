@@ -12,6 +12,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../core/theme.dart';
 import '../../providers/transaction_provider.dart';
+import '../../core/app_config.dart';
 
 
 class BudgetView extends StatefulWidget {
@@ -22,10 +23,10 @@ class BudgetView extends StatefulWidget {
 }
 
 class _BudgetViewState extends State<BudgetView> {
-  // 네이버 API 키 설정 (검색은 Developers, 지도는 Cloud Platform)
-  final String _naverClientId = "8zKcP6_dylvz_hceMUkx";
-  final String _naverClientSecret = "DEJZPkNHsk";
-  final String _naverMapClientId = "jd2c1ntprd";
+  // 네이버 API 키 설정 (환경 설정에서 불러옵니다)
+  final String _naverClientId = AppConfig.naverClientId;
+  final String _naverClientSecret = AppConfig.naverClientSecret;
+  final String _naverMapClientId = AppConfig.naverMapClientId;
 
   final _storage = const FlutterSecureStorage();
   bool _isAiRecommendEnabled = false;

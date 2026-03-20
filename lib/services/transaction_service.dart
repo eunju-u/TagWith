@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../data/models.dart';
+import '../core/app_config.dart';
 
 class TransactionService {
-  final _dio = Dio(BaseOptions(baseUrl: 'https://web-production-e1340.up.railway.app'));
+  final _dio = Dio(BaseOptions(baseUrl: AppConfig.baseUrl));
   final _storage = const FlutterSecureStorage();
   static const String _tokenKey = 'auth_token';
 

@@ -2,12 +2,13 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import '../core/app_config.dart';
 
 class AuthService {
 
   
   final _storage = const FlutterSecureStorage();
-  final _dio = Dio(BaseOptions(baseUrl: 'https://web-production-e1340.up.railway.app'));
+  final _dio = Dio(BaseOptions(baseUrl: AppConfig.baseUrl));
 
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';

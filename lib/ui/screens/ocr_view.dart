@@ -33,6 +33,7 @@ class _OCRViewState extends State<OCRView> {
 
     if (result != null && result.containsKey('ocr_result')) {
       final List<dynamic> texts = result['ocr_result'];
+      print("eunju texts : $texts");
       final List<String> stringTexts = texts.map((e) => e.toString()).toList();
       
       // OCR 결과에서 정보 추출
