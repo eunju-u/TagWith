@@ -86,7 +86,20 @@ class _StatisticsViewState extends State<StatisticsView> {
                 _buildTopControls(theme),
                 const SizedBox(height: 24),
                 _buildTotalSummary(context, totalExpense),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
+                if (_selectedMode == StatisticsMode.monthly) ...[
+                  _buildSmartInsights(theme, stats ?? Statistics(
+                    totalIncome: 0, 
+                    totalExpense: 0, 
+                    lastMonthExpense: 0, 
+                    dailyAverageExpense: 0, 
+                    mostSpentWeekday: '데이터 없음', 
+                    categorySpending: [], 
+                    tagSpending: [], 
+                    monthlyTrend: []
+                  )),
+                  const SizedBox(height: 32),
+                ],
                 _buildMonthlyTrendSection(context, provider),
                 const SizedBox(height: 40),
                 Text('카테고리별 지출', style: theme.textTheme.titleLarge),
@@ -291,7 +304,7 @@ class _StatisticsViewState extends State<StatisticsView> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -417,7 +430,12 @@ class _StatisticsViewState extends State<StatisticsView> {
     final stats = provider.statistics;
 
     final Map<DateTime, Map<String, double>> trendData = stats != null
-        ? { for (var e in stats.monthlyTrend) DateTime.parse(e.date).toLocal(): { 'income': e.income, 'expense': e.expense}}
+        ? { 
+            for (var e in stats.monthlyTrend) 
+              // 날짜가 '2025-10' 처럼 연-월만 오는 경우를 대비해 '-01'을 붙여 안전하게 파싱합니다. 🗓️
+              DateTime.parse(e.date.length == 7 ? '${e.date}-01' : e.date).toLocal(): 
+              { 'income': e.income, 'expense': e.expense }
+          }
         : (_selectedMode == StatisticsMode.monthly
             ? provider.getMonthlyTrend(rootDate: _selectedMonthDate, months: 6)
             : provider.getMonthlyTrend(rootDate: DateTime(_selectedYearDate.year, 12, 1), months: 12));
@@ -868,6 +886,89 @@ class _StatisticsViewState extends State<StatisticsView> {
       ),
       child: Center(
         child: Icon(icon, size: 16, color: color),
+      ),
+    );
+  }
+
+  Widget _buildSmartInsights(ThemeData theme, Statistics stats) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('이번 달 소비 인사이트', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            Text('스마트 분석', style: theme.textTheme.labelSmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            _buildSmartInsightCard(
+              theme,
+              '하루 평균 지출',
+              '${NumberFormat('#,###').format(stats.dailyAverageExpense.toInt())}원',
+              Icons.calendar_today_rounded,
+              Colors.blue.withValues(alpha: 0.1),
+              Colors.blue,
+              '지출 속도 체크',
+            ),
+            const SizedBox(width: 16),
+            _buildSmartInsightCard(
+              theme,
+              '최다 지출 요일',
+              stats.mostSpentWeekday,
+              Icons.local_fire_department_rounded,
+              Colors.orange.withValues(alpha: 0.1),
+              Colors.orange,
+              '소비 점검일',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSmartInsightCard(ThemeData theme, String title, String value, IconData icon, Color bgColor, Color iconColor, String sub) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.08)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: bgColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 20, color: iconColor),
+            ),
+            const SizedBox(height: 16),
+            Text(title, style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900, color: theme.colorScheme.onSurface),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(sub, style: theme.textTheme.labelSmall?.copyWith(color: iconColor.withValues(alpha: 0.6), fontWeight: FontWeight.bold)),
+          ],
+        ),
       ),
     );
   }

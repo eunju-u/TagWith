@@ -44,17 +44,19 @@ class TransactionService {
       if (month != null) queryParams['month'] = month;
 
       final response = await _dio.get(
-        '/statistics',
+        '/transactions/statistics',
         queryParameters: queryParams,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
+      
+       print('getStatistics Server Data Raw JSON: ${response.data}');
 
       if (response.statusCode == 200) {
         return Statistics.fromJson(response.data);
       }
       return null;
     } catch (e) {
-      print('Get Statistics Error: $e');
+      print('getStatistics Get Statistics Error: $e');
       return null;
     }
   }
@@ -63,7 +65,6 @@ class TransactionService {
   Future<Transaction?> createTransaction(Transaction transaction) async {
     try {
       final token = await _getToken();
-      print('eunju createTransaction token =: $token');
 
       if (token == null) return null;
 
@@ -72,7 +73,7 @@ class TransactionService {
         data: transaction.toJson(),
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      print('eunju createTransaction response : $response');
+      print('createTransaction response : $response');
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         return Transaction.fromJson(response.data);

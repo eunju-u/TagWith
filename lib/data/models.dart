@@ -190,6 +190,8 @@ class Statistics {
   final double totalIncome;
   final double totalExpense;
   final double lastMonthExpense;
+  final double dailyAverageExpense; // 추가: 일일 평균 지출
+  final String mostSpentWeekday;   // 추가: 최다 지출 요일
   final List<CategorySpending> categorySpending;
   final List<TagSpending> tagSpending;
   final List<MonthlyTrend> monthlyTrend;
@@ -198,6 +200,8 @@ class Statistics {
     required this.totalIncome,
     required this.totalExpense,
     required this.lastMonthExpense,
+    required this.dailyAverageExpense,
+    required this.mostSpentWeekday,
     required this.categorySpending,
     required this.tagSpending,
     required this.monthlyTrend,
@@ -208,6 +212,8 @@ class Statistics {
       totalIncome: (json['total_income'] as num?)?.toDouble() ?? 0.0,
       totalExpense: (json['total_expense'] as num?)?.toDouble() ?? 0.0,
       lastMonthExpense: (json['last_month_expense'] as num?)?.toDouble() ?? 0.0,
+      dailyAverageExpense: (json['daily_average_expense'] as num?)?.toDouble() ?? 0.0,
+      mostSpentWeekday: json['most_spent_weekday'] ?? '없음',
       categorySpending: (json['category_spending'] as List?)
           ?.map((e) => CategorySpending.fromJson(e))
           .toList() ?? [],

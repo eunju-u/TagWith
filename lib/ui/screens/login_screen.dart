@@ -126,10 +126,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                         _showSnackBar(context, '이메일을 입력해 주세요.', theme);
                                         return;
                                       }
-                                      print("eunju sendVerificationCode 111");
 
                                       final success = await authProvider.sendVerificationCode(_emailController.text);
-                                      print("eunju sendVerificationCode 222 : $success");
 
                                       if (success) {
                                         setState(() => _isCodeSent = true);
@@ -259,7 +257,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                         _passwordController.text,
                                         _nameController.text,
                                       );
-                                      print("eunju 회원가입 성능!!! success : $success");
                                       message = success ? '회원가입에 성공했습니다! 로그인해 주세요.' : '회원가입에 실패했습니다.';
                                       
                                       if (success && mounted) {
@@ -273,7 +270,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                         _emailController.text,
                                         _passwordController.text,
                                       );
-                                      print("eunju 로그인 성능!!! success : $success");
 
                                       message = success ? '로그인에 성공했습니다!' : '로그인에 실패했습니다. 정보를 확인해 주세요.';
                                     }

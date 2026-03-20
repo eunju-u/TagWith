@@ -42,11 +42,9 @@ class AuthService {
 
   // 인증 번호 발송
   Future<bool> sendVerificationCode(String email) async {
-    print("eunju sendVerificationCode ");
 
     try {
       final response = await _dio.post('/auth/send-verification', data: {'email': email});
-      print("eunju sendVerificationCode response : $response");
       return response.statusCode == 200;
     } catch (e) {
       print('Send Verification Error: $e');
