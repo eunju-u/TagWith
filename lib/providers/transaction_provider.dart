@@ -83,6 +83,7 @@ class TransactionProvider with ChangeNotifier {
         Category(id: '3', name: '수입', icon: Icons.account_balance_wallet, color: Colors.blue),
         Category(id: '4', name: '교통', icon: Icons.directions_bus, color: Colors.teal),
         Category(id: '5', name: '생활/쇼핑', icon: Icons.shopping_bag, color: Colors.purple),
+        Category(id: '6', name: '기타', icon: Icons.more_horiz, color: Colors.blueGrey),
       ];
     }
     

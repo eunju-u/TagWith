@@ -8,6 +8,7 @@ import '../../data/models.dart';
 import '../../providers/transaction_provider.dart';
 import '../../services/transaction_service.dart';
 import 'manual_entry_screen.dart';
+import '../widgets/relation_picker_sheet.dart';
 
 class OCRView extends StatefulWidget {
   const OCRView({super.key});
@@ -34,33 +35,35 @@ class _OCRViewState extends State<OCRView> {
     
     try {
       final result = await service.uploadReceipt(path);
-      if (result != null && result['parsed_data'] != null) {
-        final receipt = Receipt.fromJson(result['parsed_data']);
-        
-        // 서버에서 받아온 데이터를 기반으로 Transaction 생성 (자동 입력)
-        final parsed = Transaction(
-          id: '',
-          date: DateTime.tryParse(receipt.date) ?? DateTime.now(),
-          amount: receipt.amount,
-          description: receipt.description,
-          type: TransactionType.expense,
-          category: Category.fromName(receipt.categorySuggestion),
-          relations: [],
-          paymentMethod: PaymentMethod.checkCard,
-        );
-        
+      print("OCR Server Response Raw: $result");
+      if (result != null && result['parsed_items'] != null) {
+        final List<dynamic> itemsData = result['parsed_items'];
+        final List<Transaction> parsedTransactions = itemsData.map((item) {
+          final receipt = Receipt.fromJson(item);
+          return Transaction(
+            id: '',
+            date: DateTime.tryParse(receipt.date) ?? DateTime.now(),
+            amount: receipt.amount,
+            description: receipt.description,
+            type: TransactionType.expense,
+            category: Category.fromName(receipt.categorySuggestion),
+            relations: [],
+            paymentMethod: PaymentMethod.checkCard,
+          );
+        }).toList();
+
         setState(() {
           _isLoading = false;
-          _extractedItems = [parsed];
+          _extractedItems = parsedTransactions;
         });
       } else {
         setState(() => _isLoading = false);
         if (mounted) {
-          String errorMsg = '영수증을 분석할 수 없습니다.';
+          String errorMsg = '분석할 수 없습니다.';
           if (result == null) {
             errorMsg = '서버 내부 오류(500) 또는 네트워크 연결을 확인해 주세요.';
-          } else if (result['parsed_data'] == null) {
-            errorMsg = '영수증 정보를 신뢰할 수 없어 데이터 추출에 실패했습니다.';
+          } else if (result['parsed_items'] == null) {
+            errorMsg = '정보를 신뢰할 수 없어 데이터 추출에 실패했습니다.';
           }
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMsg)));
         }
@@ -80,29 +83,22 @@ class _OCRViewState extends State<OCRView> {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        leading: _extractedItems.isEmpty ? null : IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => setState(() => _extractedItems = []),
-        ),
-        title: Text('영수증 인식', style: theme.textTheme.headlineMedium),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      body: SafeArea(
+        child: _isLoading
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 24),
+                    Text('분석하고 있어요...', style: theme.textTheme.bodyMedium),
+                  ],
+                ),
+              )
+            : _extractedItems.isEmpty
+                ? _buildEmptyState()
+                : _buildReviewList(),
       ),
-      body: _isLoading
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 24),
-                  Text('영수증을 분석하고 있어요...', style: theme.textTheme.bodyMedium),
-                ],
-              ),
-            )
-          : _extractedItems.isEmpty
-              ? _buildEmptyState()
-              : _buildReviewList(),
     );
   }
 
@@ -126,7 +122,7 @@ class _OCRViewState extends State<OCRView> {
           ),
           const SizedBox(height: 12),
           Text(
-            '영수증을 찍어 자동으로 입력하거나,\n직접 내용을 작성하실 수 있습니다.',
+            '영수증/캡쳐본을 찍어 자동으로 입력하거나,\n직접 내용을 작성하실 수 있습니다.',
             style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
           ),
           const SizedBox(height: 40),
@@ -164,6 +160,10 @@ class _OCRViewState extends State<OCRView> {
                 onUpdate: (updated) {
                   setState(() => _extractedItems[index] = updated);
                 },
+                onDelete: () {
+                  setState(() => _extractedItems.removeAt(index));
+                },
+                showDelete: _extractedItems.length > 1,
                 onPickCategory: () => _showCategoryPicker(index),
                 onPickRelation: () => _showRelationPicker(index),
                 headerBuilder: _buildSectionHeader,
@@ -320,96 +320,23 @@ class _OCRViewState extends State<OCRView> {
   void _showRelationPicker(int index) {
     final provider = Provider.of<TransactionProvider>(context, listen: false);
     final t = _extractedItems[index];
-    final theme = Theme.of(context);
 
-    showModalBottomSheet(
+    RelationPickerSheet.show(
       context: context,
-      backgroundColor: theme.colorScheme.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('2차 태그 (관계) 선택', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
-                    onPressed: () => _showAddTagDialog(context, provider, setModalState),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: provider.customRelations.map((rel) {
-                  final isSelected = t.relations.any((r) => r.id == rel.id);
-                  return FilterChip(
-                    label: Text(rel.name),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        final updatedRelations = List<Relation>.from(t.relations);
-                        if (selected) {
-                          updatedRelations.add(rel);
-                        } else {
-                          updatedRelations.removeWhere((r) => r.id == rel.id);
-                        }
-                        _extractedItems[index] = t.copyWith(relations: updatedRelations);
-                      });
-                      setModalState(() {});
-                    },
-                    selectedColor: AppColors.primary.withValues(alpha: 0.2),
-                    checkmarkColor: AppColors.primary,
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 30),
-            ],
-          ),
-        ),
-      ),
+      provider: provider,
+      selectedRelations: t.relations,
+      onUpdate: (updated) {
+        setState(() {
+          _extractedItems[index] = t.copyWith(relations: updated);
+        });
+      },
     );
   }
 
-  void _showAddTagDialog(BuildContext context, TransactionProvider provider, StateSetter setModalState) {
-    final theme = Theme.of(context);
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface,
-        title: const Text('새 태그 추가'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: '태그 이름 (예: 친구, 가족)'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
-          ElevatedButton(
-            onPressed: () async {
-              final tagName = controller.text.trim();
-              if (tagName.isNotEmpty) {
-                await provider.addCustomRelation(tagName);
-                setModalState(() {});
-              }
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('추가'),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         title,
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey),
@@ -500,6 +427,8 @@ class _SelectionCard extends StatelessWidget {
 class _OCRTransactionCard extends StatefulWidget {
   final Transaction transaction;
   final Function(Transaction) onUpdate;
+  final VoidCallback onDelete;
+  final bool showDelete;
   final VoidCallback onPickCategory;
   final VoidCallback onPickRelation;
   final Widget Function(String) headerBuilder;
@@ -507,6 +436,8 @@ class _OCRTransactionCard extends StatefulWidget {
   const _OCRTransactionCard({
     required this.transaction,
     required this.onUpdate,
+    required this.onDelete,
+    required this.showDelete,
     required this.onPickCategory,
     required this.onPickRelation,
     required this.headerBuilder,
@@ -571,7 +502,19 @@ class _OCRTransactionCardState extends State<_OCRTransactionCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          widget.headerBuilder('내용'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              widget.headerBuilder('내용'),
+              if (widget.showDelete)
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: const Icon(Icons.close_rounded, size: 20, color: Colors.grey),
+                  onPressed: widget.onDelete,
+                ),
+            ],
+          ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
@@ -590,7 +533,7 @@ class _OCRTransactionCardState extends State<_OCRTransactionCard> {
               style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           widget.headerBuilder('금액'),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -632,9 +575,43 @@ class _OCRTransactionCardState extends State<_OCRTransactionCard> {
             ],
           ),
           const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
+            padding: EdgeInsets.symmetric(vertical: 8),
             child: Divider(height: 1),
           ),
+          const SizedBox(height: 12),
+          widget.headerBuilder('날짜'),
+          InkWell(
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: t.date,
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2100),
+              );
+              if (date != null) widget.onUpdate(t.copyWith(date: date));
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    DateFormat('yyyy. MM. dd.').format(t.date),
+                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -644,7 +621,7 @@ class _OCRTransactionCardState extends State<_OCRTransactionCard> {
                     final updatedRelations = List<Relation>.from(t.relations)..remove(rel);
                     widget.onUpdate(t.copyWith(relations: updatedRelations));
                   })),
-              _buildSmallChip(context, '관계 추가', Icons.person_add_outlined, isAction: true, onTap: widget.onPickRelation),
+              _buildSmallChip(context, '관계(태그)', Icons.person_add_outlined, isAction: true, onTap: widget.onPickRelation),
             ],
           ),
         ],

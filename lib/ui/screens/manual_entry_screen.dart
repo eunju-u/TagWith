@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../data/models.dart';
 import '../../providers/transaction_provider.dart';
+import '../widgets/relation_picker_sheet.dart';
 
 class ManualEntryScreen extends StatefulWidget {
   const ManualEntryScreen({super.key});
@@ -428,94 +429,14 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
   }
 
   void _showRelationPicker(TransactionProvider provider) {
-    showModalBottomSheet(
+    RelationPickerSheet.show(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('관계 (태그) 선택', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
-                    onPressed: () => _showAddTagDialog(provider, setModalState),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: provider.customRelations.map((rel) {
-                  final isSelected = _selectedRelations.any((r) => r.id == rel.id);
-                  return FilterChip(
-                    label: Text(rel.name),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedRelations.add(rel);
-                        } else {
-                          _selectedRelations.removeWhere((r) => r.id == rel.id);
-                        }
-                      });
-                      setModalState(() {});
-                      Navigator.pop(context); // Close the bottom sheet after selection
-                    },
-                    selectedColor: AppColors.primary.withValues(alpha: 0.2),
-                    checkmarkColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
-      ),
+      provider: provider,
+      selectedRelations: _selectedRelations,
+      onUpdate: (updated) => setState(() => _selectedRelations = updated),
     );
   }
 
-  void _showAddTagDialog(TransactionProvider provider, StateSetter setModalState) {
-    final theme = Theme.of(context);
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface,
-        title: const Text('새 태그 추가'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: '태그 이름 (예: 친구, 가족)'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
-          ElevatedButton(
-            onPressed: () async {
-              final tagName = controller.text.trim();
-              if (tagName.isNotEmpty) {
-                await provider.addCustomRelation(tagName);
-                setModalState(() {});
-              }
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('추가'),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildPaymentMethodButton(PaymentMethod method, String label, ThemeData theme) {
     final isSelected = _paymentMethod == method;

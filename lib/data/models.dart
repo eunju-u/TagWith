@@ -60,6 +60,8 @@ class Category {
         return Category(id: '4', name: '교통', icon: Icons.directions_bus, color: Colors.teal);
       case '생활/쇼핑':
         return Category(id: '5', name: '생활/쇼핑', icon: Icons.shopping_bag, color: Colors.purple);
+      case '기타':
+        return Category(id: '6', name: '기타', icon: Icons.more_horiz, color: Colors.blueGrey);
       default:
         return Category(id: '0', name: name, icon: Icons.category, color: Colors.grey);
     }
@@ -267,6 +269,29 @@ class MonthlyTrend {
       date: json['date'] ?? '',
       income: (json['income'] as num?)?.toDouble() ?? 0.0,
       expense: (json['expense'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
+class Receipt {
+  final double amount;
+  final String description;
+  final String date;
+  final String categorySuggestion;
+
+  Receipt({
+    required this.amount,
+    required this.description,
+    required this.date,
+    required this.categorySuggestion,
+  });
+
+  factory Receipt.fromJson(Map<String, dynamic> json) {
+    return Receipt(
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      description: json['description'] ?? '',
+      date: json['date'] ?? '',
+      categorySuggestion: json['category_suggestion'] ?? '',
     );
   }
 }

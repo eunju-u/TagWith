@@ -456,9 +456,10 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  Widget _buildRecentTransactions(TransactionProvider provider) {
-    final transactions = provider.getTransactionsByDate(_focusedDay);
+  Widget _buildRecentTransactions(TransactionProvider provider, DateTime date) {
+    final transactions = provider.getTransactionsByDate(date);
     final theme = Theme.of(context);
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     if (transactions.isEmpty) {
       return Center(
@@ -475,7 +476,7 @@ class _CalendarViewState extends State<CalendarView> {
 
     return ListView.builder(
       itemCount: transactions.length,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: EdgeInsets.fromLTRB(24, 0, 24, 20 + bottomPadding),
       itemBuilder: (context, index) {
         final t = transactions[index];
         return _buildTransactionItem(t);
@@ -526,34 +527,35 @@ class _CalendarViewState extends State<CalendarView> {
 
   void _showTransactionDetailPopup(BuildContext context, DateTime date) {
     final theme = Theme.of(context);
+    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        padding: const EdgeInsets.all(20),
+        height: MediaQuery.of(context).size.height * 0.75, // 점유 공간 약간 확대
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: Column(
           children: [
+            const SizedBox(height: 12),
             Container(
               width: 40,
               height: 4,
-              margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
                 color: theme.dividerColor,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            Text(DateFormat('MM월 dd일 내역').format(date), style: theme.textTheme.titleLarge),
+            const SizedBox(height: 20),
+            Text(DateFormat('MM월 dd일 내역').format(date), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             const Divider(),
             const SizedBox(height: 10),
             Expanded(
-              child: _buildRecentTransactions(Provider.of<TransactionProvider>(context, listen: false)),
+              child: _buildRecentTransactions(Provider.of<TransactionProvider>(context, listen: false), date),
             ),
           ],
         ),
