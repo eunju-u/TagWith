@@ -47,7 +47,7 @@ class _OCRViewState extends State<OCRView> {
             type: TransactionType.expense,
             category: Category.fromName(receipt.categorySuggestion),
             relations: [],
-            paymentMethod: PaymentMethod.checkCard,
+            paymentMethod: receipt.paymentMethod,
             isDuplicate: receipt.isDuplicate,
           );
         }).toList();

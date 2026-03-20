@@ -233,6 +233,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
             runSpacing: 8,
             children: [
               _buildSmallChip(context, t.category.name, t.category.icon, onTap: widget.onPickCategory),
+              _buildSmallChip(context, _getPaymentMethodLabel(t.paymentMethod), _getPaymentMethodIcon(t.paymentMethod), onTap: _showPaymentMethodPicker),
               ...t.relations.map((rel) => _buildSmallChip(context, rel.name, Icons.person, onDelete: () {
                     final updatedRelations = List<Relation>.from(t.relations)..remove(rel);
                     widget.onUpdate(t.copyWith(relations: updatedRelations));
@@ -242,6 +243,71 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
           ),
         ],
       ),
+    );
+  }
+
+  String _getPaymentMethodLabel(PaymentMethod method) {
+    switch (method) {
+      case PaymentMethod.cash: return '현금';
+      case PaymentMethod.checkCard: return '체크카드';
+      case PaymentMethod.creditCard: return '신용카드';
+    }
+  }
+
+  IconData _getPaymentMethodIcon(PaymentMethod method) {
+    switch (method) {
+      case PaymentMethod.cash: return Icons.payments_outlined;
+      case PaymentMethod.checkCard: return Icons.credit_card_outlined;
+      case PaymentMethod.creditCard: return Icons.credit_card;
+    }
+  }
+
+  void _showPaymentMethodPicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text('결제 수단 선택', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.payments_outlined, color: AppColors.primary),
+                title: const Text('현금'),
+                onTap: () {
+                  widget.onUpdate(widget.transaction.copyWith(paymentMethod: PaymentMethod.cash));
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.credit_card_outlined, color: AppColors.primary),
+                title: const Text('체크카드'),
+                onTap: () {
+                  widget.onUpdate(widget.transaction.copyWith(paymentMethod: PaymentMethod.checkCard));
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.credit_card, color: AppColors.primary),
+                title: const Text('신용카드'),
+                onTap: () {
+                  widget.onUpdate(widget.transaction.copyWith(paymentMethod: PaymentMethod.creditCard));
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
     );
   }
 

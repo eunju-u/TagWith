@@ -284,6 +284,7 @@ class Receipt {
   final String date;
   final String categorySuggestion;
   final bool isDuplicate;
+  final PaymentMethod paymentMethod;
 
   Receipt({
     required this.amount,
@@ -291,6 +292,7 @@ class Receipt {
     required this.date,
     required this.categorySuggestion,
     this.isDuplicate = false,
+    this.paymentMethod = PaymentMethod.checkCard,
   });
 
   factory Receipt.fromJson(Map<String, dynamic> json) {
@@ -303,6 +305,7 @@ class Receipt {
       date: json['date'] ?? '',
       categorySuggestion: json['category_suggestion'] ?? '',
       isDuplicate: isDuplicate,
+      paymentMethod: Transaction._parsePaymentMethod(json['payment_method']),
     );
   }
 }
