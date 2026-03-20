@@ -293,14 +293,18 @@ class _StatisticsViewState extends State<StatisticsView> {
   }
 
   Widget _buildTotalSummary(BuildContext context, double total) {
-    final theme = Theme.of(context);
     final provider = Provider.of<TransactionProvider>(context, listen: false);
     final stats = provider.statistics;
+    
+    final now = DateTime.now();
+    final isFuture = _selectedMode == StatisticsMode.monthly && 
+        (_selectedMonthDate.year > now.year || (_selectedMonthDate.year == now.year && _selectedMonthDate.month > now.month));
 
-    final lastMonthTotal = stats?.lastMonthExpense ?? 0.0;
-    final diff = total - lastMonthTotal;
+    final lastMonthTotal = isFuture ? 0.0 : (stats?.lastMonthExpense ?? 0.0);
+    final currentTotal = isFuture ? 0.0 : total;
+    final diff = isFuture ? 0.0 : (currentTotal - lastMonthTotal);
     final isIncrease = diff > 0;
-    final diffPercent = lastMonthTotal > 0 ? (diff.abs() / lastMonthTotal * 100).toStringAsFixed(0) : '0';
+    final diffPercent = (!isFuture && lastMonthTotal > 0) ? (diff.abs() / lastMonthTotal * 100).toStringAsFixed(0) : '0';
 
     return Container(
       width: double.infinity,
@@ -338,7 +342,7 @@ class _StatisticsViewState extends State<StatisticsView> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
@@ -371,7 +375,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   Text(
-                    NumberFormat('#,###').format(total),
+                    NumberFormat('#,###').format(currentTotal),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 38,
@@ -408,7 +412,9 @@ class _StatisticsViewState extends State<StatisticsView> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '지난달보다 ${NumberFormat('#,###').format(diff.abs())}원 ($diffPercent%) ${isIncrease ? '늘었어요' : '줄었어요'}',
+                        isFuture 
+                            ? '미래 지출은 아직 0원이에요 📅'
+                            : '지난달보다 ${NumberFormat('#,###').format(diff.abs())}원 ($diffPercent%) ${isIncrease ? '늘었어요' : '줄었어요'}',
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 12,
