@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../data/models.dart';
@@ -29,77 +31,48 @@ class _OCRViewState extends State<OCRView> {
   Future<void> _processImage(String path) async {
     setState(() => _isLoading = true);
     final service = TransactionService();
-    final result = await service.uploadReceipt(path);
-
-    if (result != null && result.containsKey('ocr_result')) {
-      final List<dynamic> texts = result['ocr_result'];
-      print("eunju texts : $texts");
-      final List<String> stringTexts = texts.map((e) => e.toString()).toList();
-      
-      // OCR 결과에서 정보 추출
-      final parsed = _parseOcrResult(stringTexts);
-      
-      setState(() {
-        _isLoading = false;
-        _extractedItems = [parsed];
-      });
-    } else {
+    
+    try {
+      final result = await service.uploadReceipt(path);
+      if (result != null && result['parsed_data'] != null) {
+        final receipt = Receipt.fromJson(result['parsed_data']);
+        
+        // 서버에서 받아온 데이터를 기반으로 Transaction 생성 (자동 입력)
+        final parsed = Transaction(
+          id: '',
+          date: DateTime.tryParse(receipt.date) ?? DateTime.now(),
+          amount: receipt.amount,
+          description: receipt.description,
+          type: TransactionType.expense,
+          category: Category.fromName(receipt.categorySuggestion),
+          relations: [],
+          paymentMethod: PaymentMethod.checkCard,
+        );
+        
+        setState(() {
+          _isLoading = false;
+          _extractedItems = [parsed];
+        });
+      } else {
+        setState(() => _isLoading = false);
+        if (mounted) {
+          String errorMsg = '영수증을 분석할 수 없습니다.';
+          if (result == null) {
+            errorMsg = '서버 내부 오류(500) 또는 네트워크 연결을 확인해 주세요.';
+          } else if (result['parsed_data'] == null) {
+            errorMsg = '영수증 정보를 신뢰할 수 없어 데이터 추출에 실패했습니다.';
+          }
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMsg)));
+        }
+      }
+    } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('영수증을 분석할 수 없습니다.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('예기치 못한 오류가 발생했습니다: $e'))
+        );
       }
     }
-  }
-
-  Transaction _parseOcrResult(List<String> texts) {
-    String description = '영수증 내역';
-    double amount = 0;
-    DateTime date = DateTime.now();
-    Category category = Category(id: '1', name: '식비', icon: Icons.restaurant, color: Colors.orange);
-
-    // 1. 가맹점명 찾기 (보통 첫 번째나 두 번째 텍스트)
-    if (texts.isNotEmpty) {
-      for (var text in texts.take(5)) {
-        if (text.contains('편의점') || text.contains('식당') || text.contains('마트') || text.length > 2) {
-          description = text.split('\n').first;
-          break;
-        }
-      }
-    }
-
-    // 2. 금액 찾기 (가장 큰 금액이거나 '합계', 'TOTAL' 근처의 숫자)
-    final amountRegex = RegExp(r'([0-9,]{3,})');
-    List<double> candidates = [];
-    for (var text in texts) {
-      final matches = amountRegex.allMatches(text);
-      for (final match in matches) {
-        final val = match.group(1)!.replaceAll(',', '');
-        final dVal = double.tryParse(val) ?? 0;
-        if (dVal > 100) { // 너무 작은 숫자는 제외 (개수 등)
-          candidates.add(dVal);
-        }
-      }
-    }
-    if (candidates.isNotEmpty) {
-      // 내역 중 가장 큰 금액을 합계로 가정 (보통 영수증 하단에 위치)
-      amount = candidates.reduce((a, b) => a > b ? a : b);
-    }
-
-    // 3. 카테고리 추론
-    if (description.contains('커피') || description.contains('스타벅스') || description.contains('카페')) {
-      category = Category(id: '2', name: '카페/간식', icon: Icons.coffee, color: Colors.brown);
-    }
-
-    return Transaction(
-      id: '',
-      date: date,
-      amount: amount,
-      description: description,
-      type: TransactionType.expense,
-      category: category,
-      relations: [],
-      paymentMethod: PaymentMethod.checkCard,
-    );
   }
 
   @override
@@ -123,7 +96,7 @@ class _OCRViewState extends State<OCRView> {
                 children: [
                   const CircularProgressIndicator(),
                   const SizedBox(height: 24),
-                  Text('AI가 영수증을 분석하고 있어요...', style: theme.textTheme.bodyMedium),
+                  Text('영수증을 분석하고 있어요...', style: theme.textTheme.bodyMedium),
                 ],
               ),
             )
@@ -159,7 +132,7 @@ class _OCRViewState extends State<OCRView> {
           const SizedBox(height: 40),
           _SelectionCard(
             title: '영수증/캡처본 업로드',
-            subtitle: 'AI가 내역을 자동으로 분석해드려요',
+            subtitle: '내역을 자동으로 분석해드려요',
             icon: Icons.receipt_long_rounded,
             gradient: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
             onTap: _pickImage,
@@ -186,7 +159,15 @@ class _OCRViewState extends State<OCRView> {
             itemCount: _extractedItems.length,
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
             itemBuilder: (context, index) {
-              return _buildReviewItem(index);
+              return _OCRTransactionCard(
+                transaction: _extractedItems[index],
+                onUpdate: (updated) {
+                  setState(() => _extractedItems[index] = updated);
+                },
+                onPickCategory: () => _showCategoryPicker(index),
+                onPickRelation: () => _showRelationPicker(index),
+                headerBuilder: _buildSectionHeader,
+              );
             },
           ),
         ),
@@ -243,91 +224,7 @@ class _OCRViewState extends State<OCRView> {
     );
   }
 
-  Widget _buildReviewItem(int index) {
-    final t = _extractedItems[index];
-    final theme = Theme.of(context);
-    final amountController = TextEditingController(text: t.amount > 0 ? t.amount.toString() : '');
-    
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.dividerColor),
-        boxShadow: theme.brightness == Brightness.light ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)] : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            controller: TextEditingController(text: t.description),
-            onChanged: (val) => _extractedItems[index] = t.copyWith(description: val),
-            decoration: const InputDecoration(
-              hintText: '내용을 입력하세요',
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
-            ),
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: amountController,
-                  onChanged: (val) {
-                    final amount = double.tryParse(val) ?? 0;
-                    _extractedItems[index] = t.copyWith(amount: amount);
-                  },
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    hintText: '0',
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '원',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary.withValues(alpha: 0.5),
-                ),
-              ),
-            ],
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(height: 1),
-          ),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildSmallChip(t.category.name, t.category.icon, onTap: () => _showCategoryPicker(index)),
-              ...t.relations.map((rel) => _buildSmallChip(rel.name, Icons.person, onDelete: () {
-                    setState(() {
-                      final updatedRelations = List<Relation>.from(t.relations)..remove(rel);
-                      _extractedItems[index] = t.copyWith(relations: updatedRelations);
-                    });
-                  })),
-              _buildSmallChip('관계 추가', Icons.person_add_outlined, isAction: true, onTap: () => _showRelationPicker(index)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildSmallChip(String label, IconData icon, {bool isAction = false, VoidCallback? onTap, VoidCallback? onDelete}) {
     final theme = Theme.of(context);
@@ -509,6 +406,16 @@ class _OCRViewState extends State<OCRView> {
       ),
     );
   }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey),
+      ),
+    );
+  }
 }
 
 class _SelectionCard extends StatelessWidget {
@@ -587,5 +494,213 @@ class _SelectionCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _OCRTransactionCard extends StatefulWidget {
+  final Transaction transaction;
+  final Function(Transaction) onUpdate;
+  final VoidCallback onPickCategory;
+  final VoidCallback onPickRelation;
+  final Widget Function(String) headerBuilder;
+
+  const _OCRTransactionCard({
+    required this.transaction,
+    required this.onUpdate,
+    required this.onPickCategory,
+    required this.onPickRelation,
+    required this.headerBuilder,
+    super.key,
+  });
+
+  @override
+  State<_OCRTransactionCard> createState() => _OCRTransactionCardState();
+}
+
+class _OCRTransactionCardState extends State<_OCRTransactionCard> {
+  late TextEditingController _descriptionController;
+  late TextEditingController _amountController;
+
+  @override
+  void initState() {
+    super.initState();
+    _descriptionController = TextEditingController(text: widget.transaction.description);
+    final currencyFormat = NumberFormat('#,###');
+    _amountController = TextEditingController(
+      text: widget.transaction.amount > 0 ? currencyFormat.format(widget.transaction.amount.toInt()) : '',
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _OCRTransactionCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.transaction.description != widget.transaction.description && 
+        _descriptionController.text != widget.transaction.description) {
+      _descriptionController.text = widget.transaction.description;
+    }
+    
+    final currencyFormat = NumberFormat('#,###');
+    final formattedAmount = widget.transaction.amount > 0 ? currencyFormat.format(widget.transaction.amount.toInt()) : '';
+    if (oldWidget.transaction.amount != widget.transaction.amount && 
+        _amountController.text != formattedAmount) {
+      _amountController.text = formattedAmount;
+    }
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = widget.transaction;
+    final theme = Theme.of(context);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.dividerColor),
+        boxShadow: theme.brightness == Brightness.light ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)] : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          widget.headerBuilder('내용'),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+            ),
+            child: TextField(
+              controller: _descriptionController,
+              onChanged: (val) => widget.onUpdate(t.copyWith(description: val)),
+              decoration: const InputDecoration(
+                hintText: '무엇에 쓰셨나요?',
+                border: InputBorder.none,
+                isDense: true,
+              ),
+              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(height: 16),
+          widget.headerBuilder('금액'),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _amountController,
+                  onChanged: (val) {
+                    final cleanVal = val.replaceAll(',', '');
+                    final amount = double.tryParse(cleanVal) ?? 0;
+                    widget.onUpdate(t.copyWith(amount: amount));
+                  },
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    CurrencyInputFormatter(),
+                  ],
+                  decoration: const InputDecoration(
+                    hintText: '0',
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '원',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary.withValues(alpha: 0.5),
+                ),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1),
+          ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildSmallChip(context, t.category.name, t.category.icon, onTap: widget.onPickCategory),
+              ...t.relations.map((rel) => _buildSmallChip(context, rel.name, Icons.person, onDelete: () {
+                    final updatedRelations = List<Relation>.from(t.relations)..remove(rel);
+                    widget.onUpdate(t.copyWith(relations: updatedRelations));
+                  })),
+              _buildSmallChip(context, '관계 추가', Icons.person_add_outlined, isAction: true, onTap: widget.onPickRelation),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmallChip(BuildContext context, String label, IconData icon, {bool isAction = false, VoidCallback? onTap, VoidCallback? onDelete}) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isAction ? Colors.transparent : AppColors.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: isAction ? Border.all(color: theme.dividerColor) : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: isAction ? theme.colorScheme.onSurface.withValues(alpha: 0.5) : AppColors.primary),
+            const SizedBox(width: 4),
+            Text(label, style: TextStyle(fontSize: 12, color: isAction ? theme.colorScheme.onSurface.withValues(alpha: 0.7) : AppColors.primary)),
+            if (onDelete != null) ...[
+              const SizedBox(width: 4),
+              GestureDetector(
+                onTap: onDelete,
+                child: const Icon(Icons.close, size: 14, color: AppColors.primary),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class CurrencyInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+
+    try {
+      final double value = double.parse(newValue.text.replaceAll(',', ''));
+      final formatter = NumberFormat('#,###');
+      final String newText = formatter.format(value.toInt());
+
+      return newValue.copyWith(
+        text: newText,
+        selection: TextSelection.collapsed(offset: newText.length),
+      );
+    } catch (e) {
+      return newValue;
+    }
   }
 }

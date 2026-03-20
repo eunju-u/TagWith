@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme.dart';
@@ -43,7 +44,8 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
   }
 
   Future<void> _save() async {
-    final amount = double.tryParse(_amountController.text) ?? 0;
+    final amountStr = _amountController.text.replaceAll(',', '');
+    final amount = double.tryParse(amountStr) ?? 0;
     if (amount <= 0 || _descriptionController.text.trim().isEmpty || _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('금액과 내용을 입력해 주세요.')),
@@ -129,6 +131,10 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                         controller: _amountController,
                         focusNode: _amountFocusNode,
                         keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          CurrencyInputFormatter(),
+                        ],
                         autofocus: false,
                         textAlign: TextAlign.center,
                         style: theme.textTheme.displayMedium?.copyWith(
@@ -542,5 +548,27 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
         ),
       ),
     );
+  }
+}
+
+class CurrencyInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+
+    try {
+      final double value = double.parse(newValue.text.replaceAll(',', ''));
+      final formatter = NumberFormat('#,###');
+      final String newText = formatter.format(value.toInt());
+
+      return newValue.copyWith(
+        text: newText,
+        selection: TextSelection.collapsed(offset: newText.length),
+      );
+    } catch (e) {
+      return newValue;
+    }
   }
 }
