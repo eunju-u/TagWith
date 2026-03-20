@@ -476,30 +476,72 @@ class _CalendarViewState extends State<CalendarView> {
 
     return ListView.builder(
       itemCount: transactions.length,
-      padding: EdgeInsets.fromLTRB(24, 0, 24, 20 + bottomPadding),
+      padding: EdgeInsets.fromLTRB(0, 0, 0, 20 + bottomPadding),
       itemBuilder: (context, index) {
         final t = transactions[index];
-        return _buildTransactionItem(t);
+        return Dismissible(
+          key: Key('calendar_${t.id}_${index}'),
+          direction: DismissDirection.endToStart,
+          confirmDismiss: (direction) async {
+            return await showDialog(
+              context: context,
+              builder: (context1) => AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                title: const Text('내역 삭제', style: TextStyle(fontWeight: FontWeight.bold)),
+                content: const Text('정말로 이 내역을 삭제하시겠습니까?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context1, false),
+                    child: Text('취소', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context1, true),
+                    child: const Text('삭제', style: TextStyle(color: AppColors.expense, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            );
+          },
+          onDismissed: (direction) async {
+            final success = await provider.deleteTransaction(t.id);
+            if (context.mounted) {
+              if (success) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('삭제되었습니다.'))
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('삭제에 실패했습니다.'))
+                );
+              }
+            }
+          },
+          background: Container(
+            color: AppColors.expense,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 24),
+            child: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 28),
+          ),
+          child: Container(
+            color: theme.colorScheme.surface,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: _buildTransactionItem(t),
+          ),
+        );
       },
     );
   }
 
   Widget _buildTransactionItem(Transaction t) {
     final theme = Theme.of(context);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: t.category.color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(t.category.icon, color: t.category.color, size: 24),
-          ),
-          const SizedBox(width: 16),
+    return Row(
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          child: Icon(t.category.icon, color: t.category.color, size: 24),
+        ),
+        const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -507,8 +549,8 @@ class _CalendarViewState extends State<CalendarView> {
                 Text(t.description, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 2),
                 Text(
-                  '${t.category.name}${t.relations.isNotEmpty ? ' • ${t.relations.map((r) => r.name).join(', ')}' : ''}',
-                  style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
+                  '${t.category.name} • ${_getPaymentMethodLabel(t.paymentMethod)}${t.relations.isNotEmpty ? ' • ${t.relations.map((r) => r.name).join(', ')}' : ''}',
+                  style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
                 ),
               ],
             ),
@@ -519,9 +561,8 @@ class _CalendarViewState extends State<CalendarView> {
               color: t.type == TransactionType.income ? AppColors.income : AppColors.expense,
               fontWeight: FontWeight.w700,
             ),
-          ),
+          )
         ],
-      ),
     );
   }
 
@@ -531,6 +572,7 @@ class _CalendarViewState extends State<CalendarView> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.75, // 점유 공간 약간 확대
@@ -551,9 +593,8 @@ class _CalendarViewState extends State<CalendarView> {
             ),
             const SizedBox(height: 20),
             Text(DateFormat('MM월 dd일 내역').format(date), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            const Divider(),
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
+            const Divider(height: 1),
             Expanded(
               child: _buildRecentTransactions(Provider.of<TransactionProvider>(context, listen: false), date),
             ),
@@ -561,5 +602,13 @@ class _CalendarViewState extends State<CalendarView> {
         ),
       ),
     );
+  }
+
+  String _getPaymentMethodLabel(PaymentMethod method) {
+    switch (method) {
+      case PaymentMethod.cash: return '현금';
+      case PaymentMethod.checkCard: return '체크카드';
+      case PaymentMethod.creditCard: return '신용카드';
+    }
   }
 }
