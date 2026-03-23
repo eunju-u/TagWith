@@ -99,8 +99,7 @@ class SettingsView extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   void _showLogoutDialog(BuildContext context, AuthProvider authProvider) {

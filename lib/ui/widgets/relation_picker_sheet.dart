@@ -14,6 +14,7 @@ class RelationPickerSheet {
     final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Container(
@@ -21,7 +22,7 @@ class RelationPickerSheet {
             color: theme.colorScheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
-          padding: const EdgeInsets.fromLTRB(32, 12, 32, 40),
+          padding: EdgeInsets.fromLTRB(32, 12, 32, 40 + MediaQuery.of(context).padding.bottom),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

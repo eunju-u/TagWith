@@ -597,7 +597,32 @@ class _CalendarViewState extends State<CalendarView> {
               ),
             ),
             const SizedBox(height: 20),
-            Text(DateFormat('MM월 dd일 내역').format(date), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: Text(DateFormat('MM월 dd일 내역').format(date), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                ),
+                if (Provider.of<TransactionProvider>(context, listen: false).getTransactionsByDate(date).isNotEmpty)
+                  Positioned(
+                    right: 20,
+                    child: IconButton(
+                      icon: Icon(Icons.info_outline_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.5), size: 20),
+                      onPressed: () {
+                        AppDialog.show(
+                          context: context,
+                          title: '도움말',
+                          content: '• 내역을 왼쪽으로 스와이프하면 삭제할 수 있습니다.\n• 내역을 클릭하면 내용을 수정할 수 있습니다.',
+                          icon: Icons.help_outline_rounded,
+                          confirmText: '확인',
+                          onConfirm: () {},
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(height: 16),
             const Divider(height: 1),
             Expanded(

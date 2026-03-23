@@ -11,6 +11,7 @@ class CategoryPickerSheet {
     final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
       builder: (context) => Container(
@@ -25,7 +26,7 @@ class CategoryPickerSheet {
             ),
           ],
         ),
-        padding: const EdgeInsets.fromLTRB(32, 24, 32, 48),
+        padding: EdgeInsets.fromLTRB(32, 24, 32, 48 + MediaQuery.of(context).padding.bottom),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
