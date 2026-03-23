@@ -18,25 +18,37 @@ class AuthService {
   // 이메일 로그인
   Future<Map<String, dynamic>?> signInWithEmail(String email, String password) async {
     try {
+      print('[AuthService] 로그인 시도: $email');
       final response = await _dio.post('/auth/login', data: {
         'email': email,
         'password': password,
       });
 
+      print('[AuthService] 응답 상태 코드: ${response.statusCode}');
+
       if (response.statusCode == 200) {
         final token = response.data['access_token'];
+        print('[AuthService] 토큰 획득 성공');
         
         // 로그인 성공 후 사용자 정보 가져오기
         final userData = await getCurrentUser(token);
         
         if (userData != null) {
           await _saveSession(token, userData);
+          print('[AuthService] 세션 저장 및 로그인 완료');
           return userData;
+        } else {
+          print('[AuthService] 로그인 성공했으나 사용자 정보 조회 실패');
         }
       }
       return null;
     } catch (e) {
-      print('Email Sign-In Error: $e');
+      if (e is DioException) {
+        print('[AuthService] 로그인 API 에러: ${e.response?.statusCode}');
+        print('[AuthService] 에러 내용: ${e.response?.data}');
+      } else {
+        print('[AuthService] 알 수 없는 로그인 에러: $e');
+      }
       return null;
     }
   }
@@ -133,10 +145,27 @@ class AuthService {
 
   Future<void> signOut() async {
     try {
-      await _storage.delete(key: _tokenKey);
-      await _storage.delete(key: _userKey);
+      final token = await getToken();
+      if (token != null) {
+        await _dio.post(
+          '/auth/logout',
+          options: Options(
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          ),
+        );
+      }
     } catch (e) {
-      print('Sign-Out Error: $e');
+      print('Sign-Out API Error: $e');
+    } finally {
+      try {
+        await _storage.delete(key: _tokenKey);
+        await _storage.delete(key: _userKey);
+      } catch (e) {
+        print('Sign-Out Local Storage Error: $e');
+      }
     }
   }
 }

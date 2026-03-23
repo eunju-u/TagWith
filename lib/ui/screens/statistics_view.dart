@@ -445,7 +445,7 @@ class _StatisticsViewState extends State<StatisticsView> {
           DateTime parsed = DateTime.parse(dateStr.length == 7 ? '$dateStr-01' : dateStr).toLocal();
           trendData[parsed] = { 'income': e.income, 'expense': e.expense };
         } catch (err) {
-          print('eunju 통계 날짜 파싱 실패: ${e.date}, 에러: $err');
+          print('통계 날짜 파싱 실패: ${e.date}, 에러: $err');
           // 파싱 실패한 데이터는 skip하거나 기본값 처리
         }
       }

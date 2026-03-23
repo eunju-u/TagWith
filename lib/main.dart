@@ -47,6 +47,11 @@ class TagWithApp extends StatelessWidget {
             Locale('ko', 'KR'),
           ],
           locale: const Locale('ko', 'KR'),
+          initialRoute: '/',
+          routes: {
+            '/login': (context) => const LoginScreen(),
+            '/home': (context) => const HomeScreen(),
+          },
           home: !authProvider.isInitialized
               ? const Scaffold(body: Center(child: CircularProgressIndicator()))
               : authProvider.status == AuthStatus.authenticated

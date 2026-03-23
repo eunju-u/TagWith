@@ -104,7 +104,9 @@ class SettingsView extends StatelessWidget {
       confirmColor: Colors.redAccent,
       cancelText: '취소',
       confirmText: '로그아웃',
-      onConfirm: () => authProvider.signOut(),
+      onConfirm: () async {
+        await authProvider.signOut();
+      },
     );
   }
 

@@ -48,13 +48,16 @@ class AuthProvider with ChangeNotifier {
     _status = AuthStatus.loading;
     notifyListeners();
 
+    print('[AuthProvider] 로그인 프로세스 시작');
     final userData = await _authService.signInWithEmail(email, password);
     if (userData != null) {
+      print('[AuthProvider] 유저 데이터 획득 성공, 상태 업데이트');
       _user = userData;
       _status = AuthStatus.authenticated;
       notifyListeners();
       return true;
     } else {
+      print('[AuthProvider] 유저 데이터 획득 실패');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
