@@ -434,16 +434,27 @@ class _StatisticsViewState extends State<StatisticsView> {
     final theme = Theme.of(context);
     final stats = provider.statistics;
 
-    final Map<DateTime, Map<String, double>> trendData = stats != null
-        ? { 
-            for (var e in stats.monthlyTrend) 
-              // 날짜가 '2025-10' 처럼 연-월만 오는 경우를 대비해 '-01'을 붙여 안전하게 파싱합니다. 🗓️
-              DateTime.parse(e.date.length == 7 ? '${e.date}-01' : e.date).toLocal(): 
-              { 'income': e.income, 'expense': e.expense }
-          }
-        : (_selectedMode == StatisticsMode.monthly
-            ? provider.getMonthlyTrend(rootDate: _selectedMonthDate, months: 6)
-            : provider.getMonthlyTrend(rootDate: DateTime(_selectedYearDate.year, 12, 1), months: 12));
+    final Map<DateTime, Map<String, double>> trendData = {};
+    
+    if (stats != null) {
+      for (var e in stats.monthlyTrend) {
+        try {
+          // '2025.10' 혹은 '2025.10.01' 형식을 대비해 점을 하이픈으로 치환
+          String dateStr = e.date.replaceAll('.', '-');
+          // 연-월만 오는 경우(길이 7) '-01'을 붙여 안전하게 파싱
+          DateTime parsed = DateTime.parse(dateStr.length == 7 ? '$dateStr-01' : dateStr).toLocal();
+          trendData[parsed] = { 'income': e.income, 'expense': e.expense };
+        } catch (err) {
+          print('eunju 통계 날짜 파싱 실패: ${e.date}, 에러: $err');
+          // 파싱 실패한 데이터는 skip하거나 기본값 처리
+        }
+      }
+    } else {
+      final fallbackData = _selectedMode == StatisticsMode.monthly
+          ? provider.getMonthlyTrend(rootDate: _selectedMonthDate, months: 6)
+          : provider.getMonthlyTrend(rootDate: DateTime(_selectedYearDate.year, 12, 1), months: 12);
+      trendData.addAll(fallbackData);
+    }
 
     final months = trendData.keys.toList();
 
@@ -592,10 +603,16 @@ class _StatisticsViewState extends State<StatisticsView> {
     final theme = Theme.of(context);
     final sortedEntries = data.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
 
+    print('eunju 통계 그리드 데이터: ${data.length}개 항목, 총합: $total');
+
     return Column(
       children: sortedEntries.map((e) {
-        final cat = provider.allCategories.firstWhere((c) => c.name == e.key);
-        final percentage = (e.value / total * 100).toStringAsFixed(0);
+        final cat = provider.allCategories.firstWhere(
+          (c) => c.name == e.key,
+          orElse: () => Category.fromName(e.key),
+        );
+        final percentage = total > 0 ? (e.value / total * 100).toStringAsFixed(0) : '0';
+        final double factor = total > 0 ? (e.value / total) : 0.0;
 
         return Container(
           margin: const EdgeInsets.only(bottom: 24),
@@ -637,7 +654,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                           ),
                         ),
                         FractionallySizedBox(
-                          widthFactor: e.value / total,
+                          widthFactor: factor,
                           child: Container(
                             height: 6,
                             decoration: BoxDecoration(
