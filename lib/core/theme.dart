@@ -49,6 +49,12 @@ class AppTheme {
       onSurfaceVariant: AppColors.textSecondaryDark,
     ),
     dividerColor: AppColors.dividerDark,
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: const Color(0xFF1C1C1E),
+      contentTextStyle: GoogleFonts.inter(color: Colors.white),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
     textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
       headlineMedium: GoogleFonts.outfit(
         color: AppColors.textPrimaryDark, 
@@ -90,6 +96,12 @@ class AppTheme {
       onSurfaceVariant: AppColors.textSecondaryLight,
     ),
     dividerColor: AppColors.dividerLight,
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: const Color(0xFF1C1C1E),
+      contentTextStyle: GoogleFonts.inter(color: Colors.white),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
     textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme).copyWith(
       headlineMedium: GoogleFonts.outfit(
         color: AppColors.textPrimaryLight, 

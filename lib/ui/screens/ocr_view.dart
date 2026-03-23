@@ -196,28 +196,36 @@ class _OCRViewState extends State<OCRView> {
           Expanded(
             flex: 2,
             child: ElevatedButton(
-              onPressed: _isSaving ? null : () async { // 저장 중에는 중복 클릭 방지
-                setState(() => _isSaving = true); // 저장 시작
+              onPressed: _isSaving ? null : () async {
+                // 중복 내역이 있는지 확인
+                final hasDuplicate = _extractedItems.any((item) => item.isDuplicate);
 
-                try {
-                  final provider = Provider.of<TransactionProvider>(context, listen: false);
-                  for (var tx in _extractedItems) {
-                    await provider.addTransaction(tx);
+                if (hasDuplicate) {
+                  // 중복 내역이 있을 때 팝업 표시
+                  final shouldSave = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('중복 내역 발견', style: TextStyle(fontWeight: FontWeight.bold)),
+                      content: const Text('이미 저장된 것으로 보이는 내역이 있습니다. 그래도 저장하시겠습니까?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false), // 취소
+                          child: const Text('취소', style: TextStyle(color: Colors.grey)),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true), // 저장 진행
+                          child: const Text('저장하기', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (shouldSave == true) {
+                    _saveTransactions();
                   }
-                  
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${_extractedItems.length}건의 내역이 저장되었습니다.'))
-                    );
-                    Navigator.pop(context);
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    setState(() => _isSaving = false);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('저장 중 오류가 발생했습니다: $e'))
-                    );
-                  }
+                } else {
+                  // 중복 내역이 없으면 바로 저장
+                  _saveTransactions();
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -233,6 +241,32 @@ class _OCRViewState extends State<OCRView> {
         ],
       ),
     );
+  }
+
+  // 실제 저장 로직을 별도 메서드로 분리
+  Future<void> _saveTransactions() async {
+    setState(() => _isSaving = true);
+
+    try {
+      final provider = Provider.of<TransactionProvider>(context, listen: false);
+      for (var tx in _extractedItems) {
+        await provider.addTransaction(tx);
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${_extractedItems.length}건의 내역이 저장되었습니다.'))
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('저장 중 오류가 발생했습니다: $e'))
+        );
+      }
+    }
   }
 
   void _showCategoryPicker(int index) {
