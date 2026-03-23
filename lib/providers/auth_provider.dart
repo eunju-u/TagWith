@@ -94,4 +94,22 @@ class AuthProvider with ChangeNotifier {
     _status = AuthStatus.unauthenticated;
     notifyListeners();
   }
+
+  // 회원 탈퇴
+  Future<bool> withdraw() async {
+    _status = AuthStatus.loading;
+    notifyListeners();
+
+    final success = await _authService.withdraw();
+    if (success) {
+      _user = null;
+      _status = AuthStatus.unauthenticated;
+    } else {
+      // 실패 시 다시 인증된 상태로 복구 (필요시)
+      _status = AuthStatus.authenticated;
+    }
+    
+    notifyListeners();
+    return success;
+  }
 }

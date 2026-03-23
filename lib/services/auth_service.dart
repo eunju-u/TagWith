@@ -168,4 +168,38 @@ class AuthService {
       }
     }
   }
+
+  // 회원 탈퇴
+  Future<bool> withdraw() async {
+    try {
+      final token = await getToken();
+      if (token == null) return false;
+
+      final response = await _dio.delete(
+        '/auth/withdraw',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        // 탈퇴 성공 시 로컬 세션 정보 삭제
+        await _storage.delete(key: _tokenKey);
+        await _storage.delete(key: _userKey);
+        print('[AuthService] 회원 탈퇴 및 로컬 세션 삭제 완료');
+        return true;
+      }
+      return false;
+    } catch (e) {
+      if (e is DioException) {
+        print('[AuthService] 회원 탈퇴 API 에러: ${e.response?.statusCode}');
+        print('[AuthService] 에러 내용: ${e.response?.data}');
+      } else {
+        print('[AuthService] 알 수 없는 회원 탈퇴 에러: $e');
+      }
+      return false;
+    }
+  }
 }

@@ -334,4 +334,27 @@ class TransactionProvider with ChangeNotifier {
     }
     return success;
   }
+
+  /// 모든 로컬 데이터 초기화 (로그아웃/회원탈퇴 시 호출)
+  Future<void> clearData() async {
+    _transactions = [];
+    _allCategories = [];
+    _customRelations = [];
+    _statistics = null;
+    _isLoading = false;
+    
+    // 필터 초기화
+    _calendarSelectedType = null;
+    _calendarSelectedCategories.clear();
+    _calendarSelectedRelations.clear();
+    _statsSelectedType = null;
+    _statsSelectedCategories.clear();
+    _statsSelectedRelations.clear();
+    
+    // 예산 초기화 및 저장소 삭제
+    _monthlyBudget = 1000000.0;
+    await _storage.delete(key: _budgetKey);
+    
+    notifyListeners();
+  }
 }
