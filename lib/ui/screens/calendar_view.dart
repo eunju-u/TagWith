@@ -6,6 +6,7 @@ import '../../core/theme.dart';
 import '../../providers/transaction_provider.dart';
 import '../../data/models.dart';
 import '../widgets/filter_bottom_sheet.dart';
+import '../widgets/app_dialog.dart';
 
 enum CalendarViewType { year, month, week }
 
@@ -483,23 +484,15 @@ class _CalendarViewState extends State<CalendarView> {
           key: Key('calendar_${t.id}_${index}'),
           direction: DismissDirection.endToStart,
           confirmDismiss: (direction) async {
-            return await showDialog(
+            return await AppDialog.show(
               context: context,
-              builder: (context1) => AlertDialog(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                title: const Text('내역 삭제', style: TextStyle(fontWeight: FontWeight.bold)),
-                content: const Text('정말로 이 내역을 삭제하시겠습니까?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context1, false),
-                    child: Text('취소', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context1, true),
-                    child: const Text('삭제', style: TextStyle(color: AppColors.expense, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
+              title: '내역 삭제',
+              content: '정말로 이 내역을 삭제하시겠습니까?',
+              icon: Icons.delete_outline_rounded,
+              cancelText: '취소',
+              confirmText: '삭제하기',
+              confirmColor: AppColors.expense,
+              onConfirm: () {},
             );
           },
           onDismissed: (direction) async {

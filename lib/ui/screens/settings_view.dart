@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme.dart';
+import '../widgets/app_dialog.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -95,25 +96,15 @@ class SettingsView extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context, AuthProvider authProvider) {
-    showDialog(
+    AppDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('로그아웃'),
-        content: const Text('정말 로그아웃 하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              authProvider.signOut();
-            },
-            child: const Text('로그아웃', style: TextStyle(color: Colors.redAccent)),
-          ),
-        ],
-      ),
+      title: '로그아웃',
+      content: '정말 로그아웃 하시겠습니까?',
+      icon: Icons.logout_rounded,
+      confirmColor: Colors.redAccent,
+      cancelText: '취소',
+      confirmText: '로그아웃',
+      onConfirm: () => authProvider.signOut(),
     );
   }
 

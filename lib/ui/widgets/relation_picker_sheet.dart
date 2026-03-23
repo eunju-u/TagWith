@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../data/models.dart';
 import '../../providers/transaction_provider.dart';
 import '../../core/theme.dart';
+import '../widgets/app_dialog.dart';
 
 class RelationPickerSheet {
   static void show({
@@ -10,20 +11,32 @@ class RelationPickerSheet {
     required List<Relation> selectedRelations,
     required Function(List<Relation>) onUpdate,
   }) {
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: theme.colorScheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.fromLTRB(32, 12, 32, 40),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.dividerColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -53,15 +66,22 @@ class RelationPickerSheet {
                       }
                       onUpdate(updatedRelations);
                       setModalState(() {});
-                      Navigator.pop(context); // Close as per ManualEntryScreen style
+                      Navigator.pop(context);
                     },
-                    selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                    selectedColor: AppColors.primary.withValues(alpha: 0.15),
                     checkmarkColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    labelStyle: TextStyle(
+                      color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    backgroundColor: theme.colorScheme.surface,
+                    side: BorderSide(
+                      color: isSelected ? AppColors.primary : theme.dividerColor,
+                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -70,33 +90,27 @@ class RelationPickerSheet {
   }
 
   static void _showAddTagDialog(BuildContext context, TransactionProvider provider, StateSetter setModalState) {
-    final theme = Theme.of(context);
     final controller = TextEditingController();
-    showDialog(
+    AppDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface,
-        title: const Text('새 태그 추가'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: '태그 이름 (예: 친구, 가족)'),
+      title: '새 태그 추가',
+      icon: Icons.label_outline_rounded,
+      contentWidget: TextField(
+        controller: controller,
+        autofocus: true,
+        decoration: const InputDecoration(
+          hintText: '태그 이름 (예: 친구, 가족)',
+          border: UnderlineInputBorder(),
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
-          ElevatedButton(
-            onPressed: () async {
-              final tagName = controller.text.trim();
-              if (tagName.isNotEmpty) {
-                await provider.addCustomRelation(tagName);
-                setModalState(() {});
-              }
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('추가'),
-          ),
-        ],
       ),
+      confirmText: '추가',
+      onConfirm: () async {
+        final tagName = controller.text.trim();
+        if (tagName.isNotEmpty) {
+          await provider.addCustomRelation(tagName);
+          setModalState(() {});
+        }
+      },
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../providers/transaction_provider.dart';
 import '../../data/models.dart';
+import '../widgets/app_dialog.dart';
 
 class FilterBottomSheet extends StatelessWidget {
   final bool forStats;
@@ -22,14 +23,14 @@ class FilterBottomSheet extends StatelessWidget {
     final selectedRelations = forStats ? provider.statsSelectedRelations : provider.calendarSelectedRelations;
 
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
           decoration: BoxDecoration(
             color: theme.colorScheme.surface.withValues(alpha: 0.9),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: SafeArea(
             bottom: true,
@@ -39,6 +40,17 @@ class FilterBottomSheet extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: theme.dividerColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -130,36 +142,27 @@ class FilterBottomSheet extends StatelessWidget {
   }
 
   void _showAddTagDialog(BuildContext context, TransactionProvider provider) {
-    final theme = Theme.of(context);
     final controller = TextEditingController();
-    showDialog(
+    AppDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface,
-        title: const Text('새 태그 추가'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: '태그 이름을 입력하세요 (예: 친구, 가족)',
-            hintStyle: TextStyle(fontSize: 14),
-          ),
+      title: '새 태그 추가',
+      icon: Icons.label_outline_rounded,
+      contentWidget: TextField(
+        controller: controller,
+        autofocus: true,
+        decoration: const InputDecoration(
+          hintText: '태그 이름을 입력하세요 (예: 친구, 가족)',
+          hintStyle: TextStyle(fontSize: 14),
+          border: UnderlineInputBorder(),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('취소', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              provider.addCustomRelation(controller.text);
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-            child: const Text('추가'),
-          ),
-        ],
       ),
+      cancelText: '취소',
+      confirmText: '추가',
+      onConfirm: () {
+        if (controller.text.trim().isNotEmpty) {
+          provider.addCustomRelation(controller.text.trim());
+        }
+      },
     );
   }
 }

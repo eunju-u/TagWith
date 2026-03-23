@@ -12,6 +12,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../core/theme.dart';
 import '../../providers/transaction_provider.dart';
 import '../../core/app_config.dart';
+import '../widgets/app_dialog.dart';
 
 
 class BudgetView extends StatefulWidget {
@@ -208,38 +209,24 @@ class _BudgetViewState extends State<BudgetView> {
   }
 
   void _showErrorDialog(String message) {
-    showDialog(
+    AppDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('알림', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(message),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('확인'))
-        ],
-      ),
+      title: '알림',
+      content: message,
+      icon: Icons.info_outline_rounded,
+      confirmText: '확인',
+      onConfirm: () {},
     );
   }
 
   void _showOptionDialog(String title, String message, String actionLabel, VoidCallback onAction) {
-    showDialog(
+    AppDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(message),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('닫기')),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              onAction();
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-            child: Text(actionLabel),
-          )
-        ],
-      ),
+      title: title,
+      content: message,
+      cancelText: '닫기',
+      confirmText: actionLabel,
+      onConfirm: onAction,
     );
   }
 
@@ -263,46 +250,32 @@ class _BudgetViewState extends State<BudgetView> {
     final controller = TextEditingController(text: currentBudget.toInt().toString());
     final theme = Theme.of(context);
 
-    showDialog(
+    AppDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: theme.colorScheme.surface,
-        title: Text('한 달 예산 설정', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: InputDecoration(
-            hintText: '예산을 입력하세요',
-            suffixText: '원',
-            filled: true,
-            fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-          ),
-          autofocus: true,
+      title: '한 달 예산 설정',
+      icon: Icons.account_balance_wallet_rounded,
+      contentWidget: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        decoration: InputDecoration(
+          hintText: '예산을 입력하세요',
+          suffixText: '원',
+          filled: true,
+          fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+          contentPadding: const EdgeInsets.all(20),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('취소', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newBudget = double.tryParse(controller.text) ?? 0.0;
-              Provider.of<TransactionProvider>(context, listen: false).updateMonthlyBudget(newBudget);
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 0,
-            ),
-            child: const Text('저장하기'),
-          ),
-        ],
+        autofocus: true,
+        textAlign: TextAlign.center,
       ),
+      cancelText: '취소',
+      confirmText: '저장하기',
+      onConfirm: () {
+        final newBudget = double.tryParse(controller.text) ?? 0.0;
+        Provider.of<TransactionProvider>(context, listen: false).updateMonthlyBudget(newBudget);
+      },
     );
   }
 
@@ -521,32 +494,15 @@ class _BudgetViewState extends State<BudgetView> {
   }
 
   void _showInfoDialog(BuildContext context) {
-    final theme = Theme.of(context);
-    showDialog(
+    AppDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: theme.colorScheme.surface,
-        title: Row(
-          children: [
-            const Icon(Icons.info_outline_rounded, color: AppColors.primary),
-            const SizedBox(width: 8),
-            Text('하루 권장 지출액이란?', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: const Text(
-          '예산이 30만 원 남았고, 이번 달이 10일 남았다면?\n'
-          '300,000 ÷ 10 = 30,000원이 하루 권장 지출액으로 표시됩니다.\n\n'
-          '내일 돈을 많이 쓰면 남은 예산이 줄어들어, 다음 날의 권장 지출액은 자동으로 낮아지게 됩니다!',
-          style: TextStyle(height: 1.6),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('확인', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
+      title: '하루 권장 지출액이란?',
+      content: '예산이 30만 원 남았고, 이번 달이 10일 남았다면?\n'
+               '300,000 ÷ 10 = 30,000원이 하루 권장 지출액으로 표시됩니다.\n\n'
+               '내일 돈을 많이 쓰면 남은 예산이 줄어들어, 다음 날의 권장 지출액은 자동으로 낮아지게 됩니다!',
+      icon: Icons.info_outline_rounded,
+      confirmText: '확인',
+      onConfirm: () {},
     );
   }
 

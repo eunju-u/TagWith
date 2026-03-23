@@ -6,6 +6,7 @@ import '../../providers/transaction_provider.dart';
 import '../widgets/category_picker_sheet.dart';
 import '../widgets/ocr_transaction_card.dart';
 import '../widgets/relation_picker_sheet.dart';
+import '../widgets/app_dialog.dart';
 
 class OCRView extends StatefulWidget {
   final List<Transaction> extractedItems;
@@ -197,34 +198,19 @@ class _OCRViewState extends State<OCRView> {
             flex: 2,
             child: ElevatedButton(
               onPressed: _isSaving ? null : () async {
-                // 중복 내역이 있는지 확인
                 final hasDuplicate = _extractedItems.any((item) => item.isDuplicate);
 
                 if (hasDuplicate) {
-                  // 중복 내역이 있을 때 팝업 표시
-                  final shouldSave = await showDialog<bool>(
+                  await AppDialog.show(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('중복 내역 발견', style: TextStyle(fontWeight: FontWeight.bold)),
-                      content: const Text('이미 저장된 것으로 보이는 내역이 있습니다. 그래도 저장하시겠습니까?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false), // 취소
-                          child: const Text('취소', style: TextStyle(color: Colors.grey)),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true), // 저장 진행
-                          child: const Text('저장하기', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
+                    title: '중복 내역 발견',
+                    content: '이미 저장된 것으로 보이는 내역이 있습니다. 그래도 저장하시겠습니까?',
+                    icon: Icons.priority_high_rounded,
+                    cancelText: '취소',
+                    confirmText: '저장하기',
+                    onConfirm: () => _saveTransactions(),
                   );
-
-                  if (shouldSave == true) {
-                    _saveTransactions();
-                  }
                 } else {
-                  // 중복 내역이 없으면 바로 저장
                   _saveTransactions();
                 }
               },

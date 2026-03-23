@@ -266,15 +266,23 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       builder: (context) {
+        final theme = Theme.of(context);
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 12),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Text('결제 수단 선택', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),

@@ -6,6 +6,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../../core/theme.dart';
 import '../../data/pdf_models.dart';
+import '../widgets/app_dialog.dart';
 
 class PDFEditorScreen extends StatefulWidget {
   const PDFEditorScreen({super.key});
@@ -173,40 +174,33 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
   }
 
   void _showInstructions() {
-    showDialog(
+    AppDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('💡 사용 가이드', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Divider(),
-            const SizedBox(height: 16),
-            const Text('📍 순서 변경 (Long Click)', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
-            const SizedBox(height: 8),
-            const Text(
-              '리스트의 항목을 길게 누르면 원하는 위치로 자유롭게 이동하여 순서를 바꿀 수 있습니다.',
-              style: TextStyle(fontSize: 14, color: Colors.black87),
-            ),
-            const SizedBox(height: 24),
-            const Text('📍 PDF 저장 방법', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
-            const SizedBox(height: 8),
-            const Text(
-              '상단의 "저장" 버튼을 클릭하면 생성된 PDF 파일을 카카오톡, 메일 등으로 공유하거나 기기에 저장할 수 있는 시스템 팝업이 나타납니다.',
-              style: TextStyle(fontSize: 14, color: Colors.black87),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('확인', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 16)),
-          ),
+      title: '사용 가이드',
+      icon: Icons.lightbulb_outline_rounded,
+      contentWidget: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 8),
+          _buildGuideItem('순서 변경 (Long Click)', '항목을 길게 눌러 원하는 위치로 이동하세요.'),
+          const SizedBox(height: 16),
+          _buildGuideItem('PDF 저장 방법', '상단 "저장" 버튼을 눌러 공유하거나 기기에 저장하세요.'),
         ],
       ),
+      confirmText: '확인',
+      onConfirm: () {},
+    );
+  }
+
+  Widget _buildGuideItem(String title, String desc) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 14)),
+        const SizedBox(height: 4),
+        Text(desc, style: const TextStyle(fontSize: 13, color: Colors.black54, height: 1.4)),
+      ],
     );
   }
 
@@ -272,17 +266,25 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
   }
 
   void _showAddItemMenu() {
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 12),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: theme.dividerColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
               child: Text('추가할 항목 선택', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
