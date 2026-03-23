@@ -104,6 +104,28 @@ class TransactionService {
     }
   }
 
+  // 가계부 내역 수정
+  Future<Transaction?> updateTransaction(Transaction transaction) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
+
+      final response = await _dio.put(
+        '/transactions/${transaction.id}',
+        data: transaction.toJson(),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return Transaction.fromJson(response.data);
+      }
+      return null;
+    } catch (e) {
+      print('Update Transaction Error: $e');
+      return null;
+    }
+  }
+
   // 공용 카테고리 가져오기
   Future<List<Category>> getCategories() async {
     try {

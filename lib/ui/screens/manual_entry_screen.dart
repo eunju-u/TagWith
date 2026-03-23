@@ -10,7 +10,8 @@ import '../widgets/relation_picker_sheet.dart';
 import '../widgets/category_picker_sheet.dart';
 
 class ManualEntryScreen extends StatefulWidget {
-  const ManualEntryScreen({super.key});
+  final Transaction? existingTransaction;
+  const ManualEntryScreen({super.key, this.existingTransaction});
 
   @override
   State<ManualEntryScreen> createState() => _ManualEntryScreenState();
@@ -30,12 +31,27 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
   void initState() {
     super.initState();
     final provider = Provider.of<TransactionProvider>(context, listen: false);
-    _selectedCategory = provider.allCategories.firstWhere((c) => c.name == '식비', orElse: () => provider.allCategories.first);
     
-    // Request focus once after build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _amountFocusNode.requestFocus();
-    });
+    if (widget.existingTransaction != null) {
+      final t = widget.existingTransaction!;
+      _amountController.text = formatCurrency(t.amount.toInt());
+      _descriptionController.text = t.description;
+      _selectedDate = t.date;
+      _selectedCategory = t.category;
+      _selectedRelations = List.from(t.relations);
+      _type = t.type;
+      _paymentMethod = t.paymentMethod;
+    } else {
+      _selectedCategory = provider.allCategories.firstWhere((c) => c.name == '식비', orElse: () => provider.allCategories.first);
+      // Request focus once after build only when creating new entry
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _amountFocusNode.requestFocus();
+      });
+    }
+  }
+
+  String formatCurrency(int amount) {
+    return NumberFormat('#,###').format(amount);
   }
 
   @override
@@ -57,7 +73,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     }
 
     final transaction = Transaction(
-      id: '', // Server will assign an ID
+      id: widget.existingTransaction?.id ?? '', 
       date: _selectedDate,
       amount: amount,
       description: _descriptionController.text.trim(),
@@ -67,13 +83,16 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       paymentMethod: _paymentMethod,
     );
 
-    final success = await Provider.of<TransactionProvider>(context, listen: false).addTransaction(transaction);
+    final provider = Provider.of<TransactionProvider>(context, listen: false);
+    final success = widget.existingTransaction != null
+        ? await provider.updateTransaction(transaction)
+        : await provider.addTransaction(transaction);
     
     if (mounted) {
       if (success) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('기록이 완료되었습니다!')),
+          SnackBar(content: Text(widget.existingTransaction != null ? '수정되었습니다!' : '기록이 완료되었습니다!')),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -255,7 +274,10 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               shadowColor: Colors.transparent,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             ),
-            child: const Text('기록 완료하기', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            child: Text(
+              widget.existingTransaction != null ? '수정 완료하기' : '기록 완료하기', 
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+            ),
           ),
         ),
       ),

@@ -7,6 +7,7 @@ import '../../providers/transaction_provider.dart';
 import '../../data/models.dart';
 import '../widgets/filter_bottom_sheet.dart';
 import '../widgets/app_dialog.dart';
+import 'manual_entry_screen.dart';
 
 enum CalendarViewType { year, month, week }
 
@@ -515,10 +516,21 @@ class _CalendarViewState extends State<CalendarView> {
             padding: const EdgeInsets.only(right: 24),
             child: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 28),
           ),
-          child: Container(
-            color: theme.colorScheme.surface,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: _buildTransactionItem(t),
+          child: InkWell(
+            onTap: () {
+              Navigator.pop(context); // 팝업 닫기
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ManualEntryScreen(existingTransaction: t),
+                ),
+              );
+            },
+            child: Container(
+              color: Colors.transparent, // 터치 영역 확보
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: _buildTransactionItem(t),
+            ),
           ),
         );
       },

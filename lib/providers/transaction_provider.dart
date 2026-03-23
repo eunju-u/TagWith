@@ -335,6 +335,21 @@ class TransactionProvider with ChangeNotifier {
     return success;
   }
 
+  Future<bool> updateTransaction(Transaction transaction) async {
+    final updated = await _service.updateTransaction(transaction);
+    if (updated != null) {
+      final index = _transactions.indexWhere((t) => t.id == transaction.id);
+      if (index != -1) {
+        _transactions[index] = updated;
+        // 통계 데이터도 다시 로드 (금액 등이 바뀌었을 수 있으므로)
+        await loadStatistics(year: transaction.date.year, month: transaction.date.month);
+        notifyListeners();
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// 모든 로컬 데이터 초기화 (로그아웃/회원탈퇴 시 호출)
   Future<void> clearData() async {
     _transactions = [];
