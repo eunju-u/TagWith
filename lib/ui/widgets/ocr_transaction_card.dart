@@ -73,7 +73,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(16, 12, 12, 16),
       decoration: BoxDecoration(
         color: t.isDuplicate ? theme.colorScheme.error.withValues(alpha: 0.03) : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
@@ -88,15 +88,15 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center, // 수직 수평 정렬을 일치시킴
             children: [
               if (t.isDuplicate)
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), // 내부 패딩 축소
                     decoration: BoxDecoration(
                       color: theme.colorScheme.error.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -129,7 +129,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: t.isDuplicate ? 8 : 0), // 중복 안내 문구가 있을 때만 간격 유지
           widget.headerBuilder('내용'),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

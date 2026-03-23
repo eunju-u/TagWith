@@ -92,14 +92,31 @@ class Relation {
 }
 
 class Transaction {
+  /// 내역의 고유 식별자 (ID)
   final String id;
+  
+  /// 거래가 발생한 날짜와 시간
   final DateTime date;
+  
+  /// 거래 금액
   final double amount;
+  
+  /// 거래에 대한 설명 (예: 맛있는 돈까스)
   final String description;
+  
+  /// 거래 유형 (수입: income, 지출: expense)
   final TransactionType type;
+  
+  /// 거래 카테고리 (식비, 교통, 수입 등)
   final Category category;
+  
+  /// 거래와 관련된 관계 또는 태그 목록 (예: 친구, 가족 등)
   final List<Relation> relations;
+  
+  /// 결제 수단 (현금, 체크카드, 신용카드)
   final PaymentMethod paymentMethod;
+  
+  /// 이미 저장된 내역인지 여부 (중복 체크 결과)
   final bool isDuplicate;
 
   Transaction({

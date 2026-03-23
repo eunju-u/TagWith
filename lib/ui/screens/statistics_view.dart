@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../providers/transaction_provider.dart';
 import '../../data/models.dart';
 import '../../core/theme.dart';
-import '../widgets/filter_bottom_sheet.dart';
 
 enum StatisticsMode { monthly, yearly }
 
