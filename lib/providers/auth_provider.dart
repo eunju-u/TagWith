@@ -69,6 +69,16 @@ class AuthProvider with ChangeNotifier {
     return await _authService.sendVerificationCode(email);
   }
 
+  // 비밀번호 찾기 (인증 번호 요청)
+  Future<bool> forgotPassword(String email) async {
+    return await _authService.forgotPassword(email);
+  }
+
+  // 비밀번호 재설정
+  Future<bool> resetPassword(String email, String code, String newPassword) async {
+    return await _authService.resetPassword(email, code, newPassword);
+  }
+
   // 인증 번호 확인
   Future<bool> verifyCode(String email, String code) async {
     return await _authService.verifyCode(email, code);

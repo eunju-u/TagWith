@@ -65,6 +65,32 @@ class AuthService {
     }
   }
 
+  // 비밀번호 찾기 (인정 번호 발송)
+  Future<bool> forgotPassword(String email) async {
+    try {
+      final response = await _dio.post('/auth/forgot-password', data: {'email': email});
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Forgot Password Error: $e');
+      return false;
+    }
+  }
+
+  // 비밀번호 재설정
+  Future<bool> resetPassword(String email, String code, String newPassword) async {
+    try {
+      final response = await _dio.post('/auth/reset-password', data: {
+        'email': email,
+        'code': code,
+        'new_password': newPassword,
+      });
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Reset Password Error: $e');
+      return false;
+    }
+  }
+
   // 인증 번호 확인
   Future<bool> verifyCode(String email, String code) async {
     try {
