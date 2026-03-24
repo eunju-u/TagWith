@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -20,6 +21,35 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isEmailVerified = false;
   bool _isVerifying = false;
   bool _obscurePassword = true;
+  final _storage = const FlutterSecureStorage();
+
+  Future<bool> _canRequestVerification() async {
+    final now = DateTime.now();
+    final todayStr = "${now.year}-${now.month}-${now.day}";
+    
+    final lastDate = await _storage.read(key: 'last_verification_date');
+    final countStr = await _storage.read(key: 'verification_request_count');
+    int count = int.tryParse(countStr ?? '0') ?? 0;
+
+    if (lastDate != todayStr) {
+      // New day, reset count
+      await _storage.write(key: 'last_verification_date', value: todayStr);
+      await _storage.write(key: 'verification_request_count', value: '0');
+      return true;
+    }
+
+    if (count >= 5) {
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<void> _incrementRequestCount() async {
+    final countStr = await _storage.read(key: 'verification_request_count');
+    int count = int.tryParse(countStr ?? '0') ?? 0;
+    await _storage.write(key: 'verification_request_count', value: (count + 1).toString());
+  }
 
 
   void _showSnackBar(BuildContext context, String message, ThemeData theme) {
@@ -110,44 +140,46 @@ class _LoginScreenState extends State<LoginScreen> {
                               icon: Icons.person_outline,
                             ),
                             const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildTextField(
-                                    controller: _emailController,
-                                    hint: '이메일',
-                                    icon: Icons.email_outlined,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                SizedBox(
-                                  height: 56,
-                                  child: ElevatedButton(
-                                    onPressed: _isEmailVerified ? null : () async {
-                                      if (_emailController.text.isEmpty) {
-                                        _showSnackBar(context, '이메일을 입력해 주세요.', theme);
-                                        return;
-                                      }
+                            _buildTextField(
+                              controller: _emailController,
+                              hint: '이메일',
+                              icon: Icons.email_outlined,
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: ElevatedButton(
+                                onPressed: _isEmailVerified ? null : () async {
+                                  if (_emailController.text.isEmpty) {
+                                    _showSnackBar(context, '이메일을 입력해 주세요.', theme);
+                                    return;
+                                  }
 
-                                      final success = await authProvider.sendVerificationCode(_emailController.text);
+                                  final canRequest = await _canRequestVerification();
+                                  if (!canRequest) {
+                                    _showSnackBar(context, '오늘 인증 요청 한도(5회)를 초과했습니다.', theme);
+                                    return;
+                                  }
 
-                                      if (success) {
-                                        setState(() => _isCodeSent = true);
-                                        _showSnackBar(context, '인증 코드가 발송되었습니다.', theme);
-                                      } else {
-                                        _showSnackBar(context, '코드 발송에 실패했습니다.', theme);
-                                      }
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white.withValues(alpha: 0.2),
-                                      foregroundColor: Colors.white,
-                                      elevation: 0,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                    ),
-                                    child: Text(_isEmailVerified ? '인증됨' : '인증 요청'),
-                                  ),
+                                  final success = await authProvider.sendVerificationCode(_emailController.text);
+
+                                  if (success) {
+                                    await _incrementRequestCount();
+                                    setState(() => _isCodeSent = true);
+                                    _showSnackBar(context, '인증 코드가 발송되었습니다.', theme);
+                                  } else {
+                                    _showSnackBar(context, '코드 발송에 실패했습니다.', theme);
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                 ),
-                              ],
+                                child: Text(_isEmailVerified ? '인증 완료됨' : '인증 요청'),
+                              ),
                             ),
                             if (_isCodeSent && !_isEmailVerified) ...[
                               const SizedBox(height: 16),
