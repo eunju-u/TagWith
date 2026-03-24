@@ -97,6 +97,18 @@ class AuthProvider with ChangeNotifier {
     return success;
   }
 
+  // 사용자 정보 새로고침 (OCR 횟수 등 동기화)
+  Future<void> refreshUser() async {
+    final token = await _authService.getToken();
+    if (token != null) {
+      final userData = await _authService.getCurrentUser(token);
+      if (userData != null) {
+        _user = userData;
+        notifyListeners();
+      }
+    }
+  }
+
   // 로그아웃
   Future<void> signOut() async {
     await _authService.signOut();

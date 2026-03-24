@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+
 import '../../core/theme.dart';
 import '../../data/models.dart';
+import '../../providers/auth_provider.dart';
 import '../../services/transaction_service.dart';
+
 import 'ocr_view.dart';
 
 class OCRLoadingScreen extends StatefulWidget {
@@ -20,7 +24,31 @@ class _OCRLoadingScreenState extends State<OCRLoadingScreen> {
   @override
   void initState() {
     super.initState();
-    // 만약 전달받은 경로가 있다면 바로 분석 시작, 없으면 Picker 호출
+    _checkLimitAndProceed();
+  }
+
+  Future<void> _checkLimitAndProceed() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    // 분석 시작 전 최신 사용자 정보 가져오기 (횟수 동기화)
+    await authProvider.refreshUser();
+    
+    final user = authProvider.user;
+    if (user != null) {
+      final int limit = user['ocr_limit'] ?? 10;
+      final int count = user['ocr_count'] ?? 0;
+
+      if (count >= limit) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('일일 영수증 분석 한도(${limit}회)를 모두 사용하셨습니다.'))
+          );
+          Navigator.pop(context);
+        }
+        return;
+      }
+    }
+
     if (widget.imagePath != null) {
       _startAnalysis(widget.imagePath!);
     } else {
@@ -47,6 +75,10 @@ class _OCRLoadingScreenState extends State<OCRLoadingScreen> {
     final service = TransactionService();
     try {
       final result = await service.uploadReceipt(path);
+      // 분석 성공 후 실제 카운트 동기화를 위해 유저 정보 새로고침
+      if (result != null && mounted) {
+        Provider.of<AuthProvider>(context, listen: false).refreshUser();
+      }
       
       final endTime = DateTime.now();
       final duration = endTime.difference(startTime);
