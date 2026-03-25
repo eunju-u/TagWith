@@ -68,7 +68,7 @@ class _CalendarViewState extends State<CalendarView> {
               }),
             ),
             const SizedBox(width: 8),
-            Text(_formatFocusedDate(), style: theme.textTheme.headlineMedium),
+            Text(_formatFocusedDate(), style: theme.textTheme.headlineMedium?.copyWith(fontSize: 25)),
             const SizedBox(width: 8),
             IconButton(
               icon: Icon(Icons.chevron_right_rounded, size: 24, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
@@ -95,73 +95,73 @@ class _CalendarViewState extends State<CalendarView> {
       ),
       body: provider.isLoading 
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: () => provider.loadTransactions(),
-              child: Column(
-                children: [
-                  _buildViewSelector(theme),
-                  _buildSummaryHeader(provider),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: _viewType == CalendarViewType.year
-                        ? _buildYearView(provider, theme)
-                        : Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 100), // 바텀 패딩을 조금 줄여 캘린더 공간 확보
-                            child: LayoutBuilder(
-                              builder: (context, constraints) {
-                                final availableHeight = constraints.maxHeight - 40;
-                                final calculatedRowHeight = availableHeight / 6;
-                                final rowHeight = calculatedRowHeight > 62.0 ? calculatedRowHeight : 62.0; // 최소 높이 보장
-
-                                return TableCalendar(
-                                  firstDay: DateTime.utc(2020, 1, 1),
-                                  lastDay: DateTime.utc(2030, 12, 31),
-                                  focusedDay: _focusedDay,
-                                  calendarFormat: _calendarFormat,
-                                  headerVisible: false,
-                                  daysOfWeekHeight: 40,
-                                  rowHeight: rowHeight,
-                                  onPageChanged: (focusedDay) {
-                                    setState(() => _focusedDay = focusedDay);
+          : Column(
+              children: [
+                _buildViewSelector(theme),
+                _buildSummaryHeader(provider),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: _viewType == CalendarViewType.year
+                      ? RefreshIndicator(
+                          onRefresh: () => provider.loadTransactions(),
+                          child: _buildYearView(provider, theme),
+                        )
+                      : Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                          child: RefreshIndicator(
+                            onRefresh: () => provider.loadTransactions(),
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.only(bottom: 120),
+                              child: TableCalendar(
+                                firstDay: DateTime.utc(2020, 1, 1),
+                                lastDay: DateTime.utc(2030, 12, 31),
+                                focusedDay: _focusedDay,
+                                calendarFormat: _calendarFormat,
+                                availableGestures: AvailableGestures.horizontalSwipe, // 수직 스크롤 허용
+                                headerVisible: false,
+                                daysOfWeekHeight: 40,
+                                rowHeight: 80.0,
+                                onPageChanged: (focusedDay) {
+                                  setState(() => _focusedDay = focusedDay);
+                                },
+                                daysOfWeekStyle: DaysOfWeekStyle(
+                                  weekdayStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 13, fontWeight: FontWeight.w600),
+                                  weekendStyle: TextStyle(color: AppColors.expense.withValues(alpha: 0.6), fontSize: 13, fontWeight: FontWeight.w600),
+                                ),
+                                calendarStyle: CalendarStyle(
+                                  todayDecoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.15),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  todayTextStyle: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                                  selectedDecoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                                  defaultTextStyle: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w500, fontSize: 16),
+                                  weekendTextStyle: const TextStyle(color: AppColors.expense, fontWeight: FontWeight.w500, fontSize: 16),
+                                  outsideDaysVisible: false,
+                                  cellMargin: const EdgeInsets.all(4),
+                                ),
+                                onDaySelected: (selectedDay, focusedDay) {
+                                  setState(() {
+                                    _focusedDay = focusedDay;
+                                  });
+                                  _showTransactionDetailPopup(context, selectedDay);
+                                },
+                                calendarBuilders: CalendarBuilders(
+                                  defaultBuilder: (context, day, focusedDay) {
+                                    final isWeekend = day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
+                                    return _buildDayCell(day, provider, theme, isWeekend: isWeekend);
                                   },
-                                  daysOfWeekStyle: DaysOfWeekStyle(
-                                    weekdayStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 13, fontWeight: FontWeight.w600),
-                                    weekendStyle: TextStyle(color: AppColors.expense.withValues(alpha: 0.6), fontSize: 13, fontWeight: FontWeight.w600),
-                                  ),
-                                  calendarStyle: CalendarStyle(
-                                    todayDecoration: BoxDecoration(
-                                      color: AppColors.primary.withValues(alpha: 0.15),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    todayTextStyle: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
-                                    selectedDecoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                                    defaultTextStyle: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w500, fontSize: 16),
-                                    weekendTextStyle: const TextStyle(color: AppColors.expense, fontWeight: FontWeight.w500, fontSize: 16),
-                                    outsideDaysVisible: false,
-                                    cellMargin: const EdgeInsets.all(4),
-                                  ),
-                                  onDaySelected: (selectedDay, focusedDay) {
-                                    setState(() {
-                                      _focusedDay = focusedDay;
-                                    });
-                                    _showTransactionDetailPopup(context, selectedDay);
-                                  },
-                                  calendarBuilders: CalendarBuilders(
-                                    defaultBuilder: (context, day, focusedDay) {
-                                      final isWeekend = day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
-                                      return _buildDayCell(day, provider, theme, isWeekend: isWeekend);
-                                    },
-                                    todayBuilder: (context, day, focusedDay) => _buildDayCell(day, provider, theme, isToday: true),
-                                    selectedBuilder: (context, day, focusedDay) => _buildDayCell(day, provider, theme, isSelected: true),
-                                    outsideBuilder: (context, day, focusedDay) => const SizedBox.shrink(),
-                                  ),
-                                );
-                              },
+                                  todayBuilder: (context, day, focusedDay) => _buildDayCell(day, provider, theme, isToday: true),
+                                  selectedBuilder: (context, day, focusedDay) => _buildDayCell(day, provider, theme, isSelected: true),
+                                  outsideBuilder: (context, day, focusedDay) => const SizedBox.shrink(),
+                                ),
+                              ),
                             ),
                           ),
-                  ),
-                ],
-              ),
+                        ),
+                ),
+              ],
             ),
     );
   }
