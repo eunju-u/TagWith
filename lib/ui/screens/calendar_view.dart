@@ -11,6 +11,7 @@ import '../widgets/filter_bottom_sheet.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/app_snackbar.dart';
 import 'manual_entry_screen.dart';
+import '../../core/app_icons.dart';
 
 enum CalendarViewType { year, month, week }
 
@@ -59,7 +60,7 @@ class _CalendarViewState extends State<CalendarView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: Icon(Icons.chevron_left_rounded, size: 24, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+              icon: Icon(AppIcons.chevronLeft, size: 24, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
               onPressed: () => setState(() {
                 if (_viewType == CalendarViewType.year) {
                   _focusedDay = DateTime(_focusedDay.year - 1, _focusedDay.month);
@@ -72,7 +73,7 @@ class _CalendarViewState extends State<CalendarView> {
             Text(_formatFocusedDate(), style: theme.textTheme.headlineMedium?.copyWith(fontSize: 25)),
             const SizedBox(width: 8),
             IconButton(
-              icon: Icon(Icons.chevron_right_rounded, size: 24, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+              icon: Icon(AppIcons.chevronRight, size: 24, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
               onPressed: () => setState(() {
                 if (_viewType == CalendarViewType.year) {
                   _focusedDay = DateTime(_focusedDay.year + 1, _focusedDay.month);
@@ -88,7 +89,7 @@ class _CalendarViewState extends State<CalendarView> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.tune_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.8)),
+            icon: Icon(AppIcons.filter, color: theme.colorScheme.onSurface.withValues(alpha: 0.8)),
             onPressed: () => _showFilterBottomSheet(context),
           ),
           const SizedBox(width: 8),

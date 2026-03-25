@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../widgets/app_snackbar.dart';
 import '../../core/app_strings.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/app_icons.dart';
+import '../widgets/loading_overlay.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -89,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     // 로고 및 브랜드 이름
                     const Icon(
-                      Icons.account_balance_wallet_outlined,
+                      AppIcons.wallet,
                       size: 90,
                       color: Colors.white,
                     ),
@@ -152,13 +154,13 @@ class _LoginScreenState extends State<LoginScreen> {
         _buildTextField(
           controller: _emailController,
           hint: AppStrings.emailHint,
-          icon: Icons.email_outlined,
+          icon: AppIcons.email,
         ),
         const SizedBox(height: 16),
         _buildTextField(
           controller: _passwordController,
           hint: AppStrings.passwordHint,
-          icon: Icons.lock_outline,
+          icon: AppIcons.password,
           isPassword: true,
         ),
         const SizedBox(height: 24),
@@ -210,13 +212,13 @@ class _LoginScreenState extends State<LoginScreen> {
         _buildTextField(
           controller: _nameController,
           hint: AppStrings.nameHint,
-          icon: Icons.person_outline,
+          icon: AppIcons.person,
         ),
         const SizedBox(height: 16),
         _buildTextField(
           controller: _emailController,
           hint: AppStrings.emailHint,
-          icon: Icons.email_outlined,
+          icon: AppIcons.email,
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -301,7 +303,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _buildTextField(
           controller: _emailController,
           hint: AppStrings.enterRegisteredEmail,
-          icon: Icons.email_outlined,
+          icon: AppIcons.email,
         ),
         const SizedBox(height: 12),
         if (!_isResetCodeVerified)
@@ -341,7 +343,7 @@ class _LoginScreenState extends State<LoginScreen> {
           _buildTextField(
             controller: _passwordController,
             hint: AppStrings.newPasswordHint,
-            icon: Icons.lock_outline,
+            icon: AppIcons.password,
             isPassword: true,
           ),
           const SizedBox(height: 24),
@@ -392,7 +394,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: _buildTextField(
             controller: _verificationCodeController,
             hint: AppStrings.verificationCodeHint,
-            icon: Icons.security,
+            icon: AppIcons.security,
           ),
         ),
         const SizedBox(width: 8),
@@ -450,7 +452,7 @@ class _LoginScreenState extends State<LoginScreen> {
         suffixIcon: isPassword
             ? IconButton(
                 icon: Icon(
-                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  _obscurePassword ? AppIcons.visibilityOff : AppIcons.visibility,
                   color: Colors.white70,
                 ),
                 onPressed: () {

@@ -10,6 +10,7 @@ import '../../providers/transaction_provider.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/loading_overlay.dart';
+import '../../core/app_icons.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -45,13 +46,13 @@ class SettingsView extends StatelessWidget {
                   const Divider(height: 1),
                 ],
                   ListTile(
-                    leading: const Icon(Icons.logout, color: Colors.redAccent),
-                    title: const Text(AppStrings.logout, style: TextStyle(color: Colors.redAccent)),
+                    leading: const Icon(AppIcons.logout, color: AppColors.primary),
+                    title: const Text(AppStrings.logout),
                     onTap: () => _showLogoutDialog(context, authProvider),
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(Icons.person_remove_outlined, color: Colors.grey),
+                    leading: const Icon(AppIcons.withdraw, color: Colors.grey),
                     title: const Text(AppStrings.withdraw, style: TextStyle(color: Colors.grey)),
                     onTap: () => _showWithdrawDialog(context, authProvider),
                   ),
@@ -67,7 +68,7 @@ class SettingsView extends StatelessWidget {
                   _buildThemeTile(
                     context,
                     title: AppStrings.systemTheme,
-                    icon: Icons.brightness_auto,
+                    icon: AppIcons.themeAuto,
                     mode: ThemeMode.system,
                     currentMode: themeProvider.themeMode,
                     onChanged: (mode) => themeProvider.setThemeMode(mode!),
@@ -76,7 +77,7 @@ class SettingsView extends StatelessWidget {
                   _buildThemeTile(
                     context,
                     title: AppStrings.lightTheme,
-                    icon: Icons.light_mode,
+                    icon: AppIcons.themeLight,
                     mode: ThemeMode.light,
                     currentMode: themeProvider.themeMode,
                     onChanged: (mode) => themeProvider.setThemeMode(mode!),
@@ -85,7 +86,7 @@ class SettingsView extends StatelessWidget {
                   _buildThemeTile(
                     context,
                     title: AppStrings.darkTheme,
-                    icon: Icons.dark_mode,
+                    icon: AppIcons.themeDark,
                     mode: ThemeMode.dark,
                     currentMode: themeProvider.themeMode,
                     onChanged: (mode) => themeProvider.setThemeMode(mode!),
@@ -112,7 +113,7 @@ class SettingsView extends StatelessWidget {
       context: context,
       title: AppStrings.logout,
       content: AppStrings.confirmLogout,
-      icon: Icons.logout_rounded,
+      icon: AppIcons.logout,
       confirmColor: Colors.redAccent,
       confirmText: AppStrings.logout,
       onConfirm: () async {
@@ -135,7 +136,7 @@ class SettingsView extends StatelessWidget {
       context: context,
       title: AppStrings.withdraw,
       content: AppStrings.confirmWithdraw,
-      icon: Icons.person_remove_rounded,
+      icon: AppIcons.withdraw,
       confirmColor: Colors.redAccent,
       cancelText: AppStrings.cancel,
       confirmText: AppStrings.withdrawSubmit,

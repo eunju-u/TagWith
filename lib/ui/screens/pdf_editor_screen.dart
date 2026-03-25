@@ -8,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../../core/app_strings.dart';
 import '../../core/theme.dart';
+import '../../core/app_icons.dart';
 import '../../data/pdf_models.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/app_snackbar.dart';
@@ -314,7 +315,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
               child: Text(AppStrings.pdfSaveOptionTitle, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             ),
             ListTile(
-              leading: const Icon(Icons.visibility_rounded, color: AppColors.primary),
+              leading: const Icon(AppIcons.pdfPreview, color: AppColors.primary),
               title: const Text(AppStrings.pdfPreviewLabel),
               onTap: () {
                 Navigator.pop(context);
@@ -322,7 +323,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.save_alt_rounded, color: AppColors.primary),
+              leading: const Icon(AppIcons.pdfSave, color: AppColors.primary),
               title: const Text(AppStrings.pdfSaveLabel),
               onTap: () {
                 Navigator.pop(context);
@@ -340,7 +341,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
     AppDialog.show(
       context: context,
       title: AppStrings.pdfGuideTitle,
-      icon: Icons.lightbulb_outline_rounded,
+      icon: AppIcons.pdfGuide,
       contentWidget: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,11 +381,11 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
         iconTheme: const IconThemeData(color: Colors.black),
         actions: [
           IconButton(
-            icon: const Icon(Icons.info_outline_rounded, color: Colors.grey),
+            icon: const Icon(AppIcons.info, color: Colors.grey),
             onPressed: _showInstructions,
           ),
           IconButton(
-            icon: const Icon(Icons.save_alt_rounded, color: AppColors.primary),
+            icon: const Icon(AppIcons.pdfSave, color: AppColors.primary),
             onPressed: _showSaveOptions,
           ),
           const SizedBox(width: 8),
@@ -443,7 +444,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
                 end: Alignment.bottomRight,
               ),
             ),
-            child: const Icon(Icons.add_rounded, color: Colors.white, size: 32),
+            child: const Icon(AppIcons.add, color: Colors.white, size: 32),
           ),
         ),
       ),
@@ -476,7 +477,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
               child: Text(AppStrings.pdfAddItemTitle, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             ),
             ListTile(
-              leading: const Icon(Icons.text_fields_rounded, color: AppColors.primary),
+              leading: const Icon(AppIcons.textFields, color: AppColors.primary),
               title: const Text(AppStrings.pdfTypeTextLabel),
               onTap: () {
                 _addItem(PDFItemType.text);
@@ -484,7 +485,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.image_rounded, color: AppColors.primary),
+              leading: const Icon(AppIcons.image, color: AppColors.primary),
               title: const Text(AppStrings.pdfTypeImageLabel),
               onTap: () {
                 _addItem(PDFItemType.images);
@@ -522,14 +523,14 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Icon(
-                item.type == PDFItemType.text ? Icons.text_fields_rounded : Icons.image_rounded,
+                item.type == PDFItemType.text ? AppIcons.textFields : AppIcons.image,
                 size: 20,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
               ),
               IconButton(
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
-                icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Colors.grey),
+                icon: const Icon(AppIcons.delete, size: 20, color: Colors.grey),
                 onPressed: () => _removeItem(index),
               ),
             ],
@@ -576,7 +577,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
                 ),
-                child: const Icon(Icons.add_a_photo_outlined, color: Colors.grey),
+                child: const Icon(AppIcons.addPhoto, color: Colors.grey),
               ),
             );
           }
@@ -607,7 +608,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(2),
                     decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                    child: const Icon(Icons.close, size: 16, color: Colors.white),
+                    child: const Icon(AppIcons.close, size: 16, color: Colors.white),
                   ),
                 ),
               ),

@@ -12,6 +12,7 @@ import '../widgets/relation_picker_sheet.dart';
 import '../widgets/category_picker_sheet.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/loading_overlay.dart';
+import '../../core/app_icons.dart';
 
 class ManualEntryScreen extends StatefulWidget {
   final Transaction? existingTransaction;
@@ -126,7 +127,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.close_rounded),
+                    icon: const Icon(AppIcons.close),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: () => Navigator.pop(context),
@@ -214,7 +215,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               const SizedBox(height: 24),
               _buildSectionHeader(AppStrings.dateLabel),
               _buildActionCard(
-                icon: Icons.calendar_today_rounded,
+                icon: AppIcons.calendar,
                 label: DateFormat('yyyy년 MM월 dd일').format(_selectedDate),
                 onTap: () async {
                   final date = await showDatePicker(
@@ -229,7 +230,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               const SizedBox(height: 24),
               _buildSectionHeader(AppStrings.categoryLabel),
               _buildActionCard(
-                icon: _selectedCategory?.icon ?? Icons.category_rounded,
+                icon: _selectedCategory?.icon ?? AppIcons.category,
                 label: _selectedCategory?.name ?? AppStrings.selectCategoryHint,
                 color: _selectedCategory?.color,
                 onTap: () => CategoryPickerSheet.show(
@@ -356,7 +357,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
             Expanded(
               child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
             ),
-            Icon(Icons.chevron_right_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+            Icon(AppIcons.chevronRight, color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
           ],
         ),
       ),
@@ -388,7 +389,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
           )),
           ActionChip(
             label: const Text(AppStrings.add),
-            avatar: const Icon(Icons.add, size: 16),
+            avatar: const Icon(AppIcons.add, size: 16),
             onPressed: () {
               _amountFocusNode.unfocus();
               _showRelationPicker(provider);
