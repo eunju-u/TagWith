@@ -1,13 +1,15 @@
-import 'package:flutter/material.dart';
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+
+import '../../core/app_strings.dart';
 import '../../core/theme.dart';
 import '../../providers/transaction_provider.dart';
 import 'calendar_view.dart';
 import 'statistics_view.dart';
 import 'budget_view.dart'; // Added BudgetView
-import 'ocr_view.dart';
 import 'ocr_loading_screen.dart';
 import 'settings_view.dart';
 import 'pdf_editor_screen.dart';
@@ -121,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text('가계부 기록 방식 선택', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(AppStrings.entryMenuTitle, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -129,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildMenuOption(
                     innerContext,
                     icon: Icons.receipt_long_rounded,
-                    label: '영수증 분석',
+                    label: AppStrings.ocrMenuLabel,
                     color: Colors.orange,
                     onTap: () async {
                       // 바텀 시트부터 닫음
@@ -151,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildMenuOption(
                     innerContext,
                     icon: Icons.edit_note_rounded,
-                    label: '직접 입력',
+                    label: AppStrings.manualEntryLabel,
                     color: Colors.blue,
                     onTap: () {
                       Navigator.pop(innerContext);
@@ -163,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildMenuOption(
                     innerContext,
                     icon: Icons.picture_as_pdf_rounded,
-                    label: 'PDF 만들기',
+                    label: AppStrings.pdfExportLabel,
                     color: AppColors.primary,
                     onTap: () {
                       Navigator.pop(innerContext);

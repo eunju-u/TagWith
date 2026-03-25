@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import '../../core/app_strings.dart';
 import '../../core/theme.dart';
 import '../../core/input_formatters.dart';
 import '../../data/models.dart';
@@ -104,7 +106,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
                         Icon(Icons.info_outline_rounded, size: 14, color: theme.colorScheme.error),
                         const SizedBox(width: 6),
                         Text(
-                          '이미 저장된 내역입니다', 
+                          AppStrings.ocrDuplicateItemLabel, 
                           style: TextStyle(
                             color: theme.colorScheme.error, 
                             fontSize: 12, 
@@ -129,8 +131,8 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
                 ),
             ],
           ),
-          SizedBox(height: t.isDuplicate ? 8 : 0), // 중복 안내 문구가 있을 때만 간격 유지
-          widget.headerBuilder('내용'),
+          SizedBox(height: t.isDuplicate ? 8 : 0),
+          widget.headerBuilder(AppStrings.descriptionLabel),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
@@ -142,7 +144,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
               controller: _descriptionController,
               onChanged: (val) => widget.onUpdate(t.copyWith(description: val)),
               decoration: const InputDecoration(
-                hintText: '무엇에 쓰셨나요?',
+                hintText: AppStrings.descriptionHint,
                 border: InputBorder.none,
                 isDense: true,
               ),
@@ -150,7 +152,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
             ),
           ),
           const SizedBox(height: 20),
-          widget.headerBuilder('금액'),
+          widget.headerBuilder(AppStrings.amountLabel),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
@@ -182,7 +184,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
               ),
               const SizedBox(width: 4),
               Text(
-                '원',
+                AppStrings.currencyUnit,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: AppColors.primary.withValues(alpha: 0.5),
@@ -195,7 +197,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
             child: Divider(height: 1),
           ),
           const SizedBox(height: 12),
-          widget.headerBuilder('날짜'),
+          widget.headerBuilder(AppStrings.dateLabel),
           InkWell(
             onTap: () async {
               final date = await showDatePicker(
@@ -232,13 +234,13 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _buildSmallChip(context, t.category.name, t.category.icon, onTap: widget.onPickCategory),
+               _buildSmallChip(context, t.category.name, t.category.icon, onTap: widget.onPickCategory),
               _buildSmallChip(context, _getPaymentMethodLabel(t.paymentMethod), _getPaymentMethodIcon(t.paymentMethod), onTap: _showPaymentMethodPicker),
               ...t.relations.map((rel) => _buildSmallChip(context, rel.name, Icons.person, onDelete: () {
                     final updatedRelations = List<Relation>.from(t.relations)..remove(rel);
                     widget.onUpdate(t.copyWith(relations: updatedRelations));
                   })),
-              _buildSmallChip(context, '관계(태그)', Icons.person_add_outlined, isAction: true, onTap: widget.onPickRelation),
+              _buildSmallChip(context, AppStrings.ocrRelationTagActionLabel, Icons.person_add_outlined, isAction: true, onTap: widget.onPickRelation),
             ],
           ),
         ],
@@ -248,9 +250,9 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
 
   String _getPaymentMethodLabel(PaymentMethod method) {
     switch (method) {
-      case PaymentMethod.cash: return '현금';
-      case PaymentMethod.checkCard: return '체크카드';
-      case PaymentMethod.creditCard: return '신용카드';
+      case PaymentMethod.cash: return AppStrings.cashLabel;
+      case PaymentMethod.checkCard: return AppStrings.checkCardLabel;
+      case PaymentMethod.creditCard: return AppStrings.creditCardLabel;
     }
   }
 
@@ -285,11 +287,11 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
               ),
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
-                child: Text('결제 수단 선택', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                child: Text(AppStrings.ocrPaymentMethodPickerTitle, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ),
               ListTile(
                 leading: const Icon(Icons.payments_outlined, color: AppColors.primary),
-                title: const Text('현금'),
+                title: const Text(AppStrings.cashLabel),
                 onTap: () {
                   widget.onUpdate(widget.transaction.copyWith(paymentMethod: PaymentMethod.cash));
                   Navigator.pop(context);
@@ -297,7 +299,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
               ),
               ListTile(
                 leading: const Icon(Icons.credit_card_outlined, color: AppColors.primary),
-                title: const Text('체크카드'),
+                title: const Text(AppStrings.checkCardLabel),
                 onTap: () {
                   widget.onUpdate(widget.transaction.copyWith(paymentMethod: PaymentMethod.checkCard));
                   Navigator.pop(context);
@@ -305,7 +307,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
               ),
               ListTile(
                 leading: const Icon(Icons.credit_card, color: AppColors.primary),
-                title: const Text('신용카드'),
+                title: const Text(AppStrings.creditCardLabel),
                 onTap: () {
                   widget.onUpdate(widget.transaction.copyWith(paymentMethod: PaymentMethod.creditCard));
                   Navigator.pop(context);

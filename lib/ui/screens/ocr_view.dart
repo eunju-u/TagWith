@@ -1,5 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../../core/app_strings.dart';
 import '../../core/theme.dart';
 import '../../data/models.dart';
 import '../../providers/transaction_provider.dart';
@@ -39,7 +42,7 @@ class _OCRViewState extends State<OCRView> {
         Scaffold(
           backgroundColor: theme.colorScheme.surface,
           appBar: AppBar(
-            title: const Text('분석 결과 확인', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            title: const Text(AppStrings.ocrReviewTitle, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
             backgroundColor: Colors.white,
             elevation: 0,
             surfaceTintColor: Colors.white,
@@ -72,7 +75,7 @@ class _OCRViewState extends State<OCRView> {
             Column(
               children: [
                 Text(
-                  '정보를 저장하고 있어요...',
+                  AppStrings.ocrSavingStatus,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurface,
@@ -80,7 +83,7 @@ class _OCRViewState extends State<OCRView> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '잠시만 기다려 주세요',
+                  AppStrings.ocrWaitMessage,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
@@ -100,11 +103,11 @@ class _OCRViewState extends State<OCRView> {
         children: [
           Icon(Icons.check_circle_outline_rounded, size: 64, color: Colors.grey[300]),
           const SizedBox(height: 16),
-          const Text('모든 내역이 처리되었습니다.', style: TextStyle(color: Colors.grey)),
+          const Text(AppStrings.ocrProcessedAll, style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 24),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('홈으로 돌아가기', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(AppStrings.ocrBackToHomeLabel, style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -123,12 +126,12 @@ class _OCRViewState extends State<OCRView> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('분석된 내역', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                  Text('${_extractedItems.length}건', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                  Text(AppStrings.ocrAnalyzedHistoryTitle, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                  Text('${_extractedItems.length}${AppStrings.countSuffix}', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 8),
-              Text('내용을 확인하고 저장해 주세요.', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+              Text(AppStrings.ocrReviewGuide, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
             ],
           ),
         ),
@@ -190,7 +193,7 @@ class _OCRViewState extends State<OCRView> {
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
               ),
-              child: const Text('취소'),
+              child: const Text(AppStrings.cancel),
             ),
           ),
           const SizedBox(width: 16),
@@ -203,11 +206,11 @@ class _OCRViewState extends State<OCRView> {
                 if (hasDuplicate) {
                   await AppDialog.show(
                     context: context,
-                    title: '중복 내역 발견',
-                    content: '이미 저장된 것으로 보이는 내역이 있습니다. 그래도 저장하시겠습니까?',
+                    title: AppStrings.ocrDuplicateFoundTitle,
+                    content: AppStrings.ocrDuplicateFoundMessage,
                     icon: Icons.priority_high_rounded,
-                    cancelText: '취소',
-                    confirmText: '저장하기',
+                    cancelText: AppStrings.cancel,
+                    confirmText: AppStrings.save,
                     onConfirm: () => _saveTransactions(),
                   );
                 } else {
@@ -221,7 +224,7 @@ class _OCRViewState extends State<OCRView> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 elevation: 0,
               ),
-              child: const Text('저장하기', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text(AppStrings.save, style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -241,7 +244,7 @@ class _OCRViewState extends State<OCRView> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${_extractedItems.length}건의 내역이 저장되었습니다.'))
+          SnackBar(content: Text('${_extractedItems.length}${AppStrings.ocrSaveSuccessMessageSuffix}'))
         );
         Navigator.pop(context);
       }
@@ -249,7 +252,7 @@ class _OCRViewState extends State<OCRView> {
       if (mounted) {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 중 오류가 발생했습니다: $e'))
+          SnackBar(content: Text('${AppStrings.ocrSaveErrorMessage}$e'))
         );
       }
     }

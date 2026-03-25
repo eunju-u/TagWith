@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/app_strings.dart';
 import '../../data/models.dart';
 import '../../providers/transaction_provider.dart';
 
@@ -42,7 +43,7 @@ class CategoryPickerSheet {
               ),
             ),
             const SizedBox(height: 24),
-            const Text('카테고리 선택', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text(AppStrings.categoryLabel, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
             Flexible(
               child: GridView.count(

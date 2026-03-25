@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../core/app_strings.dart';
 import '../../core/theme.dart';
 import '../../core/input_formatters.dart';
 import '../../data/models.dart';
@@ -67,7 +69,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     final amount = double.tryParse(amountStr) ?? 0;
     if (amount <= 0 || _descriptionController.text.trim().isEmpty || _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('금액과 내용을 입력해 주세요.')),
+        const SnackBar(content: Text(AppStrings.entryIncompleteError)),
       );
       return;
     }
@@ -92,11 +94,11 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       if (success) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.existingTransaction != null ? '수정되었습니다!' : '기록이 완료되었습니다!')),
+          SnackBar(content: Text(widget.existingTransaction != null ? AppStrings.updateComplete : AppStrings.saveComplete)),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('저장에 실패했습니다. 다시 시도해 주세요.')),
+          const SnackBar(content: Text(AppStrings.saveFailed)),
         );
       }
     }
@@ -133,9 +135,9 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               // Type Selector
               Row(
                 children: [
-                  _buildTypeButton(TransactionType.expense, '지출', theme),
+                  _buildTypeButton(TransactionType.expense, AppStrings.expenseLabel, theme),
                   const SizedBox(width: 12),
-                  _buildTypeButton(TransactionType.income, '수입', theme),
+                  _buildTypeButton(TransactionType.income, AppStrings.incomeLabel, theme),
                 ],
               ),
               const SizedBox(height: 40),
@@ -144,7 +146,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                 child: Column(
                   children: [
                     Text(
-                      _type == TransactionType.expense ? '얼마를 쓰셨나요?' : '얼마를 버셨나요?',
+                      _type == TransactionType.expense ? AppStrings.amountExpensePrompt : AppStrings.amountIncomePrompt,
                       style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
                     ),
                     const SizedBox(height: 8),
@@ -164,10 +166,10 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                           color: AppColors.primary,
                         ),
                         decoration: InputDecoration(
-                          hintText: '0',
+                          hintText: AppStrings.amountHint,
                           hintStyle: TextStyle(color: AppColors.primary.withValues(alpha: 0.3)),
                           border: InputBorder.none,
-                          suffixText: '원',
+                          suffixText: AppStrings.currencyUnit,
                           suffixStyle: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: AppColors.primary.withValues(alpha: 0.5),
@@ -180,7 +182,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               ),
               const SizedBox(height: 48),
               // Moved Details Form: Description first
-              _buildSectionHeader('내용'),
+              _buildSectionHeader(AppStrings.descriptionLabel),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 decoration: BoxDecoration(
@@ -191,24 +193,24 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                 child: TextField(
                   controller: _descriptionController,
                   decoration: const InputDecoration(
-                    hintText: '무엇에 쓰셨나요?',
+                    hintText: AppStrings.descriptionHint,
                     border: InputBorder.none,
                   ),
                 ),
               ),
               const SizedBox(height: 24),
-              _buildSectionHeader('결제 수단'),
+              _buildSectionHeader(AppStrings.paymentMethodLabel),
               Row(
                 children: [
-                  _buildPaymentMethodButton(PaymentMethod.cash, '현금', theme),
+                  _buildPaymentMethodButton(PaymentMethod.cash, AppStrings.cashLabel, theme),
                   const SizedBox(width: 8),
-                  _buildPaymentMethodButton(PaymentMethod.checkCard, '체크카드', theme),
+                  _buildPaymentMethodButton(PaymentMethod.checkCard, AppStrings.checkCardLabel, theme),
                   const SizedBox(width: 8),
-                  _buildPaymentMethodButton(PaymentMethod.creditCard, '신용카드', theme),
+                  _buildPaymentMethodButton(PaymentMethod.creditCard, AppStrings.creditCardLabel, theme),
                 ],
               ),
               const SizedBox(height: 24),
-              _buildSectionHeader('날짜'),
+              _buildSectionHeader(AppStrings.dateLabel),
               _buildActionCard(
                 icon: Icons.calendar_today_rounded,
                 label: DateFormat('yyyy년 MM월 dd일').format(_selectedDate),
@@ -223,10 +225,10 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                 },
               ),
               const SizedBox(height: 24),
-              _buildSectionHeader('카테고리'),
+              _buildSectionHeader(AppStrings.categoryLabel),
               _buildActionCard(
                 icon: _selectedCategory?.icon ?? Icons.category_rounded,
-                label: _selectedCategory?.name ?? '선택해주세요',
+                label: _selectedCategory?.name ?? AppStrings.selectCategoryHint,
                 color: _selectedCategory?.color,
                 onTap: () => CategoryPickerSheet.show(
                   context: context,
@@ -235,7 +237,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              _buildSectionHeader('관계 (태그)'),
+              _buildSectionHeader(AppStrings.relationLabel),
               _buildRelationCard(provider),
               const SizedBox(height: 180), // Increased bottom space for better scrolling
             ],
@@ -275,7 +277,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             ),
             child: Text(
-              widget.existingTransaction != null ? '수정 완료하기' : '기록 완료하기', 
+              widget.existingTransaction != null ? AppStrings.completeEditButton : AppStrings.completeEntryButton, 
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
             ),
           ),
@@ -383,7 +385,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           )),
           ActionChip(
-            label: const Text('추가'),
+            label: const Text(AppStrings.add),
             avatar: const Icon(Icons.add, size: 16),
             onPressed: () {
               _amountFocusNode.unfocus();

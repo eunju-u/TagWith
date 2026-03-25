@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../core/app_strings.dart';
 import '../data/models.dart';
 import '../services/transaction_service.dart';
 
@@ -78,12 +80,12 @@ class TransactionProvider with ChangeNotifier {
     // 카테고리가 비어있을 경우 기본값 세팅 (서버에서 아직 안 온 경우를 대비)
     if (_allCategories.isEmpty) {
       _allCategories = [
-        Category(id: '1', name: '식비', icon: Icons.restaurant, color: Colors.orange),
-        Category(id: '2', name: '카페/간식', icon: Icons.coffee, color: Colors.brown),
-        Category(id: '3', name: '수입', icon: Icons.account_balance_wallet, color: Colors.blue),
-        Category(id: '4', name: '교통', icon: Icons.directions_bus, color: Colors.teal),
-        Category(id: '5', name: '생활/쇼핑', icon: Icons.shopping_bag, color: Colors.purple),
-        Category(id: '6', name: '기타', icon: Icons.more_horiz, color: Colors.blueGrey),
+        Category(id: '1', name: AppStrings.categoryFood, icon: Icons.restaurant, color: Colors.orange),
+        Category(id: '2', name: AppStrings.categoryCafe, icon: Icons.coffee, color: Colors.brown),
+        Category(id: '3', name: AppStrings.incomeLabel, icon: Icons.account_balance_wallet, color: Colors.blue),
+        Category(id: '4', name: AppStrings.categoryTransport, icon: Icons.directions_bus, color: Colors.teal),
+        Category(id: '5', name: AppStrings.categoryShopping, icon: Icons.shopping_bag, color: Colors.purple),
+        Category(id: '6', name: AppStrings.categoryMisc, icon: Icons.more_horiz, color: Colors.blueGrey),
       ];
     }
     

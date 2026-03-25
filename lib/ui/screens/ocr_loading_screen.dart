@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/app_strings.dart';
 import '../../core/theme.dart';
 import '../../data/models.dart';
 import '../../providers/auth_provider.dart';
@@ -41,7 +42,7 @@ class _OCRLoadingScreenState extends State<OCRLoadingScreen> {
       if (count >= limit) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('일일 영수증 분석 한도(${limit}회)를 모두 사용하셨습니다.'))
+            SnackBar(content: Text('일일 영수증 분석 한도(${limit}회)를 모두 사용하셨습니다.')) // limit은 동적인 값이므로 수동 결합
           );
           Navigator.pop(context);
         }
@@ -150,7 +151,7 @@ class _OCRLoadingScreenState extends State<OCRLoadingScreen> {
             ),
             const SizedBox(height: 32),
             Text(
-              '영수증을 분석하고 있어요...',
+              AppStrings.ocrAnalyzing,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.onSurface,

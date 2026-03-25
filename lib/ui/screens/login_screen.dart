@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../core/app_strings.dart';
 import '../../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -105,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'TagWith',
+                      AppStrings.appName,
                       style: GoogleFonts.outfit(
                         fontSize: 44,
                         fontWeight: FontWeight.bold,
@@ -115,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '태그로 연결되는 스마트 가계부',
+                      AppStrings.tagline,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 16,
@@ -161,13 +163,13 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         _buildTextField(
           controller: _emailController,
-          hint: '이메일',
+          hint: AppStrings.emailHint,
           icon: Icons.email_outlined,
         ),
         const SizedBox(height: 16),
         _buildTextField(
           controller: _passwordController,
-          hint: '비밀번호',
+          hint: AppStrings.passwordHint,
           icon: Icons.lock_outline,
           isPassword: true,
         ),
@@ -181,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     _passwordController.text,
                   );
                   if (mounted) {
-                    _showSnackBar(context, success ? '로그인에 성공했습니다!' : '로그인에 실패했습니다.', theme);
+                    _showSnackBar(context, success ? AppStrings.loginSuccess : AppStrings.loginFailed, theme);
                   }
                 },
           style: ElevatedButton.styleFrom(
@@ -193,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           child: authProvider.status == AuthStatus.loading
               ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('로그인', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              : const Text(AppStrings.loginButton, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
         ),
         const SizedBox(height: 16),
         Row(
@@ -201,12 +203,12 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             TextButton(
               onPressed: () => setState(() => _isFindPassword = true),
-              child: const Text('비밀번호를 잊으셨나요?', style: TextStyle(color: Colors.white70)),
+              child: const Text(AppStrings.forgotPasswordQuestion, style: TextStyle(color: Colors.white70)),
             ),
             const Text('|', style: TextStyle(color: Colors.white38)),
             TextButton(
               onPressed: () => setState(() => _isSignUp = true),
-              child: const Text('회원가입', style: TextStyle(color: Colors.white70)),
+              child: const Text(AppStrings.signUpButton, style: TextStyle(color: Colors.white70)),
             ),
           ],
         ),
@@ -219,13 +221,13 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         _buildTextField(
           controller: _nameController,
-          hint: '이름',
+          hint: AppStrings.nameHint,
           icon: Icons.person_outline,
         ),
         const SizedBox(height: 16),
         _buildTextField(
           controller: _emailController,
-          hint: '이메일',
+          hint: AppStrings.emailHint,
           icon: Icons.email_outlined,
         ),
         const SizedBox(height: 12),
@@ -235,21 +237,21 @@ class _LoginScreenState extends State<LoginScreen> {
           child: ElevatedButton(
             onPressed: _isEmailVerified ? null : () async {
               if (_emailController.text.isEmpty) {
-                _showSnackBar(context, '이메일을 입력해 주세요.', theme);
+                _showSnackBar(context, AppStrings.enterEmail, theme);
                 return;
               }
               final canRequest = await _canRequestVerification();
               if (!canRequest) {
-                _showSnackBar(context, '오늘 인증 요청 한도(5회)를 초과했습니다.', theme);
+                _showSnackBar(context, AppStrings.dailyLimitExceeded, theme);
                 return;
               }
               final success = await authProvider.sendVerificationCode(_emailController.text);
               if (success) {
                 await _incrementRequestCount();
                 setState(() => _isCodeSent = true);
-                _showSnackBar(context, '인증 코드가 발송되었습니다.', theme);
+                _showSnackBar(context, AppStrings.verificationCodeSent, theme);
               } else {
-                _showSnackBar(context, '코드 발송에 실패했습니다.', theme);
+                _showSnackBar(context, AppStrings.verificationCodeFailed, theme);
               }
             },
             style: ElevatedButton.styleFrom(
@@ -258,7 +260,7 @@ class _LoginScreenState extends State<LoginScreen> {
               elevation: 0,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
-            child: Text(_isEmailVerified ? '인증 완료됨' : '인증 요청'),
+            child: Text(_isEmailVerified ? AppStrings.verificationDone : AppStrings.verificationRequest),
           ),
         ),
         if (_isCodeSent && !_isEmailVerified) ...[
@@ -268,7 +270,7 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 16),
         _buildTextField(
           controller: _passwordController,
-          hint: '비밀번호',
+          hint: AppStrings.passwordHint,
           icon: Icons.lock_outline,
           isPassword: true,
         ),
@@ -276,7 +278,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ElevatedButton(
           onPressed: () async {
             if (!_isEmailVerified) {
-              _showSnackBar(context, '이메일 인증을 완료해 주세요.', theme);
+              _showSnackBar(context, AppStrings.completeEmailVerification, theme);
               return;
             }
             final success = await authProvider.signUpWithEmail(
@@ -285,7 +287,7 @@ class _LoginScreenState extends State<LoginScreen> {
               _nameController.text,
             );
             if (mounted) {
-              _showSnackBar(context, success ? '회원가입 성공!' : '회원가입 실패', theme);
+              _showSnackBar(context, success ? AppStrings.signUpSuccess : AppStrings.signUpFailed, theme);
               if (success) setState(() => _isSignUp = false);
             }
           },
@@ -295,11 +297,11 @@ class _LoginScreenState extends State<LoginScreen> {
             minimumSize: const Size(double.infinity, 56),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           ),
-          child: const Text('회원가입', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          child: const Text(AppStrings.signUpButton, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
         ),
         TextButton(
           onPressed: () => setState(() => _isSignUp = false),
-          child: const Text('이미 계정이 있으신가요? 로그인', style: TextStyle(color: Colors.white70)),
+          child: const Text(AppStrings.alreadyHaveAccount, style: TextStyle(color: Colors.white70)),
         ),
       ],
     );
@@ -310,7 +312,7 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         _buildTextField(
           controller: _emailController,
-          hint: '가입된 이메일',
+          hint: AppStrings.enterRegisteredEmail,
           icon: Icons.email_outlined,
         ),
         const SizedBox(height: 12),
@@ -324,9 +326,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 final success = await authProvider.forgotPassword(_emailController.text);
                 if (success) {
                   setState(() => _isResetCodeSent = true);
-                  _showSnackBar(context, '인증 코드가 발송되었습니다.', theme);
+                  _showSnackBar(context, AppStrings.verificationCodeSent, theme);
                 } else {
-                  _showSnackBar(context, '가입되지 않은 이메일이거나 발송에 실패했습니다.', theme);
+                  _showSnackBar(context, AppStrings.verificationCodeFailed, theme);
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -334,7 +336,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: Text(_isResetCodeSent ? '인증 코드 재발송' : '인증 코드 받기'),
+              child: Text(_isResetCodeSent ? AppStrings.resendVerificationCode : AppStrings.getVerificationCode),
             ),
           ),
         if (_isResetCodeSent && !_isResetCodeVerified) ...[
@@ -345,7 +347,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 16),
           _buildTextField(
             controller: _passwordController,
-            hint: '새 비밀번호',
+            hint: AppStrings.newPasswordHint,
             icon: Icons.lock_outline,
             isPassword: true,
           ),
@@ -358,7 +360,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 _passwordController.text,
               );
               if (mounted) {
-                _showSnackBar(context, success ? '비밀번호가 변경되었습니다.' : '변경 실패', theme);
+                _showSnackBar(context, success ? AppStrings.passwordChangedSuccess : AppStrings.passwordChangeFailed, theme);
                 if (success) setState(() => _isFindPassword = false);
               }
             },
@@ -368,7 +370,7 @@ class _LoginScreenState extends State<LoginScreen> {
               minimumSize: const Size(double.infinity, 56),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
             ),
-            child: const Text('비밀번호 재설정', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            child: const Text(AppStrings.resetPasswordButton, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
           ),
         ],
         TextButton(
@@ -379,7 +381,7 @@ class _LoginScreenState extends State<LoginScreen> {
               _isResetCodeVerified = false;
             });
           },
-          child: const Text('로그인으로 돌아가기', style: TextStyle(color: Colors.white70)),
+          child: const Text(AppStrings.backToLogin, style: TextStyle(color: Colors.white70)),
         ),
       ],
     );
@@ -391,7 +393,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Expanded(
           child: _buildTextField(
             controller: _verificationCodeController,
-            hint: '인증 코드',
+            hint: AppStrings.verificationCodeHint,
             icon: Icons.security,
           ),
         ),
@@ -409,9 +411,9 @@ class _LoginScreenState extends State<LoginScreen> {
               setState(() => _isVerifying = false);
               if (success) {
                 setState(() => forReset ? _isResetCodeVerified = true : _isEmailVerified = true);
-                _showSnackBar(context, '인증에 성공했습니다!', theme);
+                _showSnackBar(context, AppStrings.verificationSuccess, theme);
               } else {
-                _showSnackBar(context, '인증 코드가 올바르지 않습니다.', theme);
+                _showSnackBar(context, AppStrings.invalidVerificationCode, theme);
               }
             },
             style: ElevatedButton.styleFrom(
@@ -421,7 +423,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             child: _isVerifying 
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Text('확인'),
+              : const Text(AppStrings.ok),
           ),
         ),
       ],

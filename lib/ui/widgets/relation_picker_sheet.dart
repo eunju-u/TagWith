@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/app_strings.dart';
 import '../../data/models.dart';
 import '../../providers/transaction_provider.dart';
 import '../../core/theme.dart';
@@ -41,7 +42,7 @@ class RelationPickerSheet {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('관계 (태그) 선택',
+                   const Text(AppStrings.relationPickerTitle,
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   IconButton(
                     icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
@@ -94,17 +95,17 @@ class RelationPickerSheet {
     final controller = TextEditingController();
     AppDialog.show(
       context: context,
-      title: '새 태그 추가',
+      title: AppStrings.addTagTitle,
       icon: Icons.label_outline_rounded,
       contentWidget: TextField(
         controller: controller,
         autofocus: true,
         decoration: const InputDecoration(
-          hintText: '태그 이름 (예: 친구, 가족)',
+          hintText: AppStrings.addTagHint,
           border: UnderlineInputBorder(),
         ),
       ),
-      confirmText: '추가',
+      confirmText: AppStrings.add,
       onConfirm: () async {
         final tagName = controller.text.trim();
         if (tagName.isNotEmpty) {

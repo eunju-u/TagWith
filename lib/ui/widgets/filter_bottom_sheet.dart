@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/app_strings.dart';
 import '../../core/theme.dart';
 import '../../providers/transaction_provider.dart';
 import '../../data/models.dart';
@@ -54,39 +55,39 @@ class FilterBottomSheet extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('필터 설정', style: theme.textTheme.titleLarge),
+                      Text(AppStrings.filterTitle, style: theme.textTheme.titleLarge),
                       TextButton(
                         onPressed: () => provider.clearFilters(forStats: forStats),
-                        child: const Text('초기화', style: TextStyle(color: AppColors.secondary)),
+                        child: const Text(AppStrings.filterReset, style: TextStyle(color: AppColors.secondary)),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  Text('구분', style: theme.textTheme.titleMedium),
+                  Text(AppStrings.filterSectionType, style: theme.textTheme.titleMedium),
                   const SizedBox(height: 10),
                   Row(
                     children: [
                       _FilterChip(
-                        label: '전체',
+                        label: AppStrings.filterAll,
                         isSelected: selectedType == null,
                         onSelected: (_) => provider.setTypeFilter(null, forStats: forStats),
                       ),
                       const SizedBox(width: 8),
                       _FilterChip(
-                        label: '수입',
+                        label: AppStrings.incomeLabel,
                         isSelected: selectedType == TransactionType.income,
                         onSelected: (_) => provider.setTypeFilter(TransactionType.income, forStats: forStats),
                       ),
                       const SizedBox(width: 8),
                       _FilterChip(
-                        label: '지출',
+                        label: AppStrings.expenseLabel,
                         isSelected: selectedType == TransactionType.expense,
                         onSelected: (_) => provider.setTypeFilter(TransactionType.expense, forStats: forStats),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  Text('1차 태그 (카테고리)', style: theme.textTheme.titleMedium),
+                  Text(AppStrings.filterSectionCategory, style: theme.textTheme.titleMedium),
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
@@ -101,7 +102,7 @@ class FilterBottomSheet extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('2차 태그 (관계)', style: theme.textTheme.titleMedium),
+                      Text(AppStrings.filterSectionRelation, style: theme.textTheme.titleMedium),
                       IconButton(
                         icon: const Icon(Icons.add_circle_outline, color: AppColors.primary, size: 20),
                         onPressed: () => _showAddTagDialog(context, provider),
@@ -129,7 +130,7 @@ class FilterBottomSheet extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('적용하기'),
+                      child: const Text(AppStrings.filterApply),
                     ),
                   ),
                 ],
@@ -145,19 +146,19 @@ class FilterBottomSheet extends StatelessWidget {
     final controller = TextEditingController();
     AppDialog.show(
       context: context,
-      title: '새 태그 추가',
+      title: AppStrings.addTagTitle,
       icon: Icons.label_outline_rounded,
       contentWidget: TextField(
         controller: controller,
         autofocus: true,
         decoration: const InputDecoration(
-          hintText: '태그 이름을 입력하세요 (예: 친구, 가족)',
+          hintText: AppStrings.addTagHint,
           hintStyle: TextStyle(fontSize: 14),
           border: UnderlineInputBorder(),
         ),
       ),
-      cancelText: '취소',
-      confirmText: '추가',
+      cancelText: AppStrings.cancel,
+      confirmText: AppStrings.add,
       onConfirm: () {
         if (controller.text.trim().isNotEmpty) {
           provider.addCustomRelation(controller.text.trim());

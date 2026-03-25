@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:table_calendar/table_calendar.dart';
+import '../../core/app_strings.dart';
 import '../../core/theme.dart';
 import '../../providers/transaction_provider.dart';
 import '../../data/models.dart';
@@ -30,7 +32,7 @@ class _CalendarViewState extends State<CalendarView> {
 
   String _formatFocusedDate() {
     if (_viewType == CalendarViewType.year) {
-      return DateFormat('yyyy년').format(_focusedDay);
+      return DateFormat('yyyy년').format(_focusedDay); // 년도는 어쩔 수 없이 포맷 유지
     }
     return DateFormat('yyyy년 MM월').format(_focusedDay);
   }
@@ -169,11 +171,11 @@ class _CalendarViewState extends State<CalendarView> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Row(
         children: [
-          _buildViewTypeButton('연', CalendarViewType.year, theme),
+          _buildViewTypeButton(AppStrings.yearLabel, CalendarViewType.year, theme),
           const SizedBox(width: 8),
-          _buildViewTypeButton('월', CalendarViewType.month, theme),
+          _buildViewTypeButton(AppStrings.monthLabel, CalendarViewType.month, theme),
           const SizedBox(width: 8),
-          _buildViewTypeButton('주', CalendarViewType.week, theme),
+          _buildViewTypeButton(AppStrings.weekLabel, CalendarViewType.week, theme),
         ],
       ),
     );
@@ -234,7 +236,7 @@ class _CalendarViewState extends State<CalendarView> {
         children: [
           Expanded(
             child: _buildSummaryItem(
-              '총 수입',
+              AppStrings.totalIncomeLabel,
               totalIncome,
               cashIncome,
               cardIncome,
@@ -245,7 +247,7 @@ class _CalendarViewState extends State<CalendarView> {
           Container(width: 1, height: 40, color: theme.dividerColor.withValues(alpha: 0.5)),
           Expanded(
             child: _buildSummaryItem(
-              '총 지출',
+              AppStrings.totalExpenseLabel,
               totalExpense,
               cashExpense,
               cardExpense,
@@ -301,7 +303,7 @@ class _CalendarViewState extends State<CalendarView> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '${index + 1}월',
+                  '${index + 1}${AppStrings.monthLabel}',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: month.month == DateTime.now().month && month.year == DateTime.now().year ? AppColors.primary : null,
@@ -348,7 +350,7 @@ class _CalendarViewState extends State<CalendarView> {
         ),
         const SizedBox(height: 4),
         Text(
-          '${format.format(total)}원',
+          '${format.format(total)}${AppStrings.currencyUnit}',
           style: theme.textTheme.titleMedium?.copyWith(
             color: color,
             fontWeight: FontWeight.w800,
@@ -362,18 +364,18 @@ class _CalendarViewState extends State<CalendarView> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('현금', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                Text(AppStrings.cashLabel, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
                 const SizedBox(height: 2),
-                Text('카드', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                Text(AppStrings.cardLabel, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
               ],
             ),
             const SizedBox(width: 8),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${format.format(cash)}원', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.7), fontWeight: FontWeight.w600)),
+                Text('${format.format(cash)}${AppStrings.currencyUnit}', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.7), fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
-                Text('${format.format(card)}원', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.7), fontWeight: FontWeight.w600)),
+                Text('${format.format(card)}${AppStrings.currencyUnit}', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.7), fontWeight: FontWeight.w600)),
               ],
             ),
           ],
@@ -470,7 +472,7 @@ class _CalendarViewState extends State<CalendarView> {
           children: [
             Icon(Icons.inbox_outlined, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
             const SizedBox(height: 12),
-            Text('내역이 없습니다', style: theme.textTheme.bodyMedium),
+            Text(AppStrings.noDataMessage, style: theme.textTheme.bodyMedium),
           ],
         ),
       );
@@ -487,11 +489,11 @@ class _CalendarViewState extends State<CalendarView> {
           confirmDismiss: (direction) async {
             return await AppDialog.show(
               context: context,
-              title: '내역 삭제',
-              content: '정말로 이 내역을 삭제하시겠습니까?',
+              title: AppStrings.deleteTransactionTitle,
+              content: AppStrings.deleteTransactionConfirm,
               icon: Icons.delete_outline_rounded,
-              cancelText: '취소',
-              confirmText: '삭제하기',
+              cancelText: AppStrings.cancel,
+              confirmText: AppStrings.deleteSubmitButton,
               confirmColor: AppColors.expense,
               onConfirm: () {},
             );
@@ -501,11 +503,11 @@ class _CalendarViewState extends State<CalendarView> {
             if (context.mounted) {
               if (success) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('삭제되었습니다.'))
+                  const SnackBar(content: Text(AppStrings.deleteSuccess))
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('삭제에 실패했습니다.'))
+                  const SnackBar(content: Text(AppStrings.deleteFailed))
                 );
               }
             }
@@ -561,7 +563,7 @@ class _CalendarViewState extends State<CalendarView> {
             ),
           ),
           Text(
-            '${t.type == TransactionType.income ? '+' : '-'}${NumberFormat('#,###').format(t.amount)}원',
+            '${t.type == TransactionType.income ? '+' : '-'}${NumberFormat('#,###').format(t.amount)}${AppStrings.currencyUnit}',
             style: theme.textTheme.titleMedium?.copyWith(
               color: t.type == TransactionType.income ? AppColors.income : AppColors.expense,
               fontWeight: FontWeight.w700,
@@ -602,7 +604,7 @@ class _CalendarViewState extends State<CalendarView> {
               children: [
                 Align(
                   alignment: Alignment.center,
-                  child: Text(DateFormat('MM월 dd일 내역').format(date), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                  child: Text('${DateFormat('MM월 dd일').format(date)} ${AppStrings.transactionDetailPopupSuffix}', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
                 ),
                 if (Provider.of<TransactionProvider>(context, listen: false).getTransactionsByDate(date).isNotEmpty)
                   Positioned(
@@ -612,10 +614,10 @@ class _CalendarViewState extends State<CalendarView> {
                       onPressed: () {
                         AppDialog.show(
                           context: context,
-                          title: '도움말',
-                          content: '• 내역을 왼쪽으로 스와이프하면 삭제할 수 있습니다.\n• 내역을 클릭하면 내용을 수정할 수 있습니다.',
+                          title: AppStrings.helpTitle,
+                          content: AppStrings.helpContent,
                           icon: Icons.help_outline_rounded,
-                          confirmText: '확인',
+                          confirmText: AppStrings.ok,
                           onConfirm: () {},
                         );
                       },
@@ -636,9 +638,9 @@ class _CalendarViewState extends State<CalendarView> {
 
   String _getPaymentMethodLabel(PaymentMethod method) {
     switch (method) {
-      case PaymentMethod.cash: return '현금';
-      case PaymentMethod.checkCard: return '체크카드';
-      case PaymentMethod.creditCard: return '신용카드';
+      case PaymentMethod.cash: return AppStrings.cashLabel;
+      case PaymentMethod.checkCard: return AppStrings.checkCardLabel;
+      case PaymentMethod.creditCard: return AppStrings.creditCardLabel;
     }
   }
 }

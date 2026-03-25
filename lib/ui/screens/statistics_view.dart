@@ -1,10 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../providers/transaction_provider.dart';
-import '../../data/models.dart';
+import 'package:provider/provider.dart';
+import 'package:fl_chart/fl_chart.dart';
+import '../../core/app_strings.dart';
 import '../../core/theme.dart';
+import '../../data/models.dart';
+import '../../providers/transaction_provider.dart';
 
 enum StatisticsMode { monthly, yearly }
 
@@ -92,7 +94,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                     totalExpense: 0, 
                     lastMonthExpense: 0, 
                     dailyAverageExpense: 0, 
-                    mostSpentWeekday: '데이터 없음', 
+                    mostSpentWeekday: AppStrings.noDataInsight, 
                     categorySpending: [], 
                     tagSpending: [], 
                     monthlyTrend: []
@@ -101,7 +103,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                 ],
                 _buildMonthlyTrendSection(context, provider),
                 const SizedBox(height: 40),
-                Text('카테고리별 지출', style: theme.textTheme.titleLarge),
+                Text(AppStrings.categorySpendingTitle, style: theme.textTheme.titleLarge),
                 const SizedBox(height: 24),
                 AspectRatio(
                   aspectRatio: 1.5,
@@ -111,7 +113,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                     children: [
                       Icon(Icons.pie_chart_outline_rounded, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
                       const SizedBox(height: 12),
-                      Text('기록된 지출 내역이 없습니다', style: theme.textTheme.bodyMedium),
+                      Text(AppStrings.noExpenseDataMessage, style: theme.textTheme.bodyMedium),
                     ],
                   ))
                       : Stack(
@@ -141,7 +143,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            '지출합계',
+                            AppStrings.totalExpenseSummary,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                               fontWeight: FontWeight.w600,
@@ -218,8 +220,8 @@ class _StatisticsViewState extends State<StatisticsView> {
               // 실제 텍스트 버튼들
               Row(
                 children: [
-                  _buildToggleButton('월간', StatisticsMode.monthly),
-                  _buildToggleButton('연간', StatisticsMode.yearly),
+                   _buildToggleButton(AppStrings.monthlyLabel, StatisticsMode.monthly),
+                  _buildToggleButton(AppStrings.yearlyLabel, StatisticsMode.yearly),
                 ],
               ),
             ],
@@ -234,8 +236,8 @@ class _StatisticsViewState extends State<StatisticsView> {
             const SizedBox(width: 24),
             Text(
               _selectedMode == StatisticsMode.monthly
-                  ? DateFormat('yyyy년 M월').format(_selectedMonthDate)
-                  : DateFormat('yyyy년').format(_selectedYearDate),
+                  ? DateFormat(AppStrings.dateFormatMonthly).format(_selectedMonthDate)
+                  : DateFormat(AppStrings.dateFormatYearly).format(_selectedYearDate),
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.5,
@@ -256,10 +258,10 @@ class _StatisticsViewState extends State<StatisticsView> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+          color: theme.colorScheme.onSurface.withOpacity(0.03),
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, size: 24, color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
+        child: Icon(icon, size: 24, color: theme.colorScheme.onSurface.withOpacity(0.7)),
       ),
     );
   }
@@ -281,7 +283,7 @@ class _StatisticsViewState extends State<StatisticsView> {
           child: Text(
             label,
             style: TextStyle(
-              color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withOpacity(0.4),
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
               fontSize: 14,
             ),
@@ -312,8 +314,8 @@ class _StatisticsViewState extends State<StatisticsView> {
         gradient: LinearGradient(
           colors: [
             AppColors.primary,
-            AppColors.primary.withValues(alpha: 0.8),
-            AppColors.primary.withValues(alpha: 0.6),
+            AppColors.primary.withOpacity(0.8),
+            AppColors.primary.withOpacity(0.6),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -321,7 +323,7 @@ class _StatisticsViewState extends State<StatisticsView> {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.25),
+            color: AppColors.primary.withOpacity(0.25),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -335,7 +337,7 @@ class _StatisticsViewState extends State<StatisticsView> {
             child: Icon(
               Icons.auto_graph_rounded,
               size: 150,
-              color: Colors.white.withValues(alpha: 0.1),
+              color: Colors.white.withOpacity(0.1),
             ),
           ),
           Column(
@@ -345,9 +347,9 @@ class _StatisticsViewState extends State<StatisticsView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _selectedMode == StatisticsMode.monthly ? '이번 달 총 지출' : '올해 총 지출',
+                    _selectedMode == StatisticsMode.monthly ? AppStrings.totalMonthlyExpense : AppStrings.totalYearlyExpense,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: Colors.white.withOpacity(0.7),
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 0.5,
@@ -356,13 +358,13 @@ class _StatisticsViewState extends State<StatisticsView> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       _selectedMode == StatisticsMode.monthly
-                          ? '${_selectedMonthDate.month}월 현황'
-                          : '${_selectedYearDate.year}년 현황',
+                          ? '${_selectedMonthDate.month}${AppStrings.monthLabel} ${AppStrings.monthlyStatusSuffix}'
+                          : '${_selectedYearDate.year}${AppStrings.yearLabel} ${AppStrings.monthlyStatusSuffix}',
                       style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -384,9 +386,9 @@ class _StatisticsViewState extends State<StatisticsView> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '원',
+                    AppStrings.currencyUnit,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: Colors.white.withOpacity(0.6),
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
                     ),
@@ -398,7 +400,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.1),
+                    color: Colors.black.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -412,10 +414,10 @@ class _StatisticsViewState extends State<StatisticsView> {
                       const SizedBox(width: 6),
                       Text(
                         isFuture 
-                            ? '미래 지출은 아직 0원이에요 📅'
-                            : '지난달보다 ${NumberFormat('#,###').format(diff.abs())}원 ($diffPercent%) ${isIncrease ? '늘었어요' : '줄었어요'}',
+                            ? AppStrings.futureExpenseMessage
+                            : '${AppStrings.incDecPrefix} ${NumberFormat('#,###').format(diff.abs())}${AppStrings.currencyUnit} ($diffPercent%) ${isIncrease ? AppStrings.increaseSuffix : AppStrings.decreaseSuffix}',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.9),
+                          color: Colors.white.withOpacity(0.9),
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
@@ -464,7 +466,7 @@ class _StatisticsViewState extends State<StatisticsView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(_selectedMode == StatisticsMode.monthly ? '최근 수입/지출 추이' : '월별 수입/지출 추이', style: theme.textTheme.titleLarge),
+            Text(_selectedMode == StatisticsMode.monthly ? AppStrings.trendTitleMonthly : AppStrings.trendTitleYearly, style: theme.textTheme.titleLarge),
             _buildChartLegend(theme),
           ],
         ),
@@ -473,26 +475,26 @@ class _StatisticsViewState extends State<StatisticsView> {
           height: 240,
           padding: const EdgeInsets.fromLTRB(16, 32, 24, 16),
           decoration: BoxDecoration(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+            color: theme.colorScheme.onSurface.withOpacity(0.03),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
+            border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
           ),
           child: LineChart(
             LineChartData(
               minY: 0, // Y축 최소값을 0으로 고정하여 음수 영역 방지
               lineTouchData: LineTouchData(
                 touchTooltipData: LineTouchTooltipData(
-                  getTooltipColor: (_) => theme.colorScheme.surface.withValues(alpha: 0.9),
+                  getTooltipColor: (_) => theme.colorScheme.surface.withOpacity(0.9),
                   tooltipRoundedRadius: 12,
                   getTooltipItems: (touchedSpots) {
                     return touchedSpots.map((spot) {
                       final isIncome = spot.barIndex == 0;
                       return LineTooltipItem(
-                        '${months[spot.x.toInt()].month}월 ${isIncome ? '수입' : '지출'}\n',
-                        theme.textTheme.labelSmall!.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                        '${months[spot.x.toInt()].month}${AppStrings.monthLabel} ${isIncome ? AppStrings.incomeLabel : AppStrings.expenseLabel}\n',
+                        theme.textTheme.labelSmall!.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6)),
                         children: [
                           TextSpan(
-                            text: '${NumberFormat('#,###').format(spot.y * 10000)}원',
+                            text: '${NumberFormat('#,###').format(spot.y * 10000)}${AppStrings.currencyUnit}',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: isIncome ? Colors.blueAccent : Colors.redAccent,
@@ -517,7 +519,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                       if (value < 0 || value >= months.length) return const SizedBox();
                       final month = months[value.toInt()].month;
                       // 월간일 때는 '1월', 연간일 때는 공간 확보를 위해 숫자만 표시
-                      final text = _selectedMode == StatisticsMode.monthly ? '$month월' : '$month';
+                       final text = _selectedMode == StatisticsMode.monthly ? '$month${AppStrings.monthLabel}' : '$month';
                       
                       return Padding(
                         padding: const EdgeInsets.only(top: 12.0),
@@ -574,9 +576,9 @@ class _StatisticsViewState extends State<StatisticsView> {
   Widget _buildChartLegend(ThemeData theme) {
     return Row(
       children: [
-        _legendItem('수입', Colors.blueAccent),
+        _legendItem(AppStrings.incomeLabel, Colors.blueAccent),
         const SizedBox(width: 12),
-        _legendItem('지출', Colors.redAccent),
+        _legendItem(AppStrings.expenseLabel, Colors.redAccent),
       ],
     );
   }
@@ -637,7 +639,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                       children: [
                         Text(e.key, style: theme.textTheme.titleMedium),
                         Text(
-                          '${NumberFormat('#,###').format(e.value)}원',
+                          '${NumberFormat('#,###').format(e.value)}${AppStrings.currencyUnit}',
                           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                         ),
                       ],
@@ -694,7 +696,7 @@ class _StatisticsViewState extends State<StatisticsView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('결제 수단별 지출', style: theme.textTheme.titleLarge),
+        Text(AppStrings.paymentMethodSpendingTitle, style: theme.textTheme.titleLarge),
         const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -707,15 +709,15 @@ class _StatisticsViewState extends State<StatisticsView> {
             switch (method) {
               case PaymentMethod.cash:
                 methodIcon = Icons.payments_outlined;
-                methodLabel = '현금';
+                methodLabel = AppStrings.cashLabel;
                 break;
               case PaymentMethod.checkCard:
                 methodIcon = Icons.credit_card_outlined;
-                methodLabel = '체크카드';
+                methodLabel = AppStrings.checkCardLabel;
                 break;
               case PaymentMethod.creditCard:
                 methodIcon = Icons.account_balance_wallet_outlined;
-                methodLabel = '신용카드';
+                methodLabel = AppStrings.creditCardLabel;
                 break;
             }
 
@@ -737,7 +739,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                     Text(methodLabel, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500)),
                     const SizedBox(height: 4),
                     Text(
-                      '${NumberFormat('#,###').format(amount)}원',
+                      '${NumberFormat('#,###').format(amount)}${AppStrings.currencyUnit}',
                       style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -818,7 +820,7 @@ class _StatisticsViewState extends State<StatisticsView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('태그별 지출', style: theme.textTheme.titleLarge),
+        Text(AppStrings.tagSpendingTitle, style: theme.textTheme.titleLarge),
         const SizedBox(height: 20),
         if (tagMap.isEmpty)
           Container(
@@ -831,7 +833,7 @@ class _StatisticsViewState extends State<StatisticsView> {
               children: [
                 Icon(Icons.label_off_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
                 const SizedBox(width: 12),
-                Text('기록된 태그가 없습니다', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                Text(AppStrings.noTagDataMessage, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
               ],
             ),
           )
@@ -865,7 +867,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                             children: [
                               Text(e.key, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
                               Text(
-                                '${NumberFormat('#,###').format(e.value)}원',
+                                '${NumberFormat('#,###').format(e.value)}${AppStrings.currencyUnit}',
                                 style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: AppColors.primary),
                               ),
                             ],
@@ -919,8 +921,8 @@ class _StatisticsViewState extends State<StatisticsView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('이번 달 소비 인사이트', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-            Text('스마트 분석', style: theme.textTheme.labelSmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            Text(AppStrings.insightTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            Text(AppStrings.smartAnalysisLabel, style: theme.textTheme.labelSmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(height: 16),
@@ -928,22 +930,22 @@ class _StatisticsViewState extends State<StatisticsView> {
           children: [
             _buildSmartInsightCard(
               theme,
-              '하루 평균 지출',
-              '${NumberFormat('#,###').format(stats.dailyAverageExpense.toInt())}원',
+              AppStrings.avgDailyExpenseLabel,
+              '${NumberFormat('#,###').format(stats.dailyAverageExpense.toInt())}${AppStrings.currencyUnit}',
               Icons.calendar_today_rounded,
               Colors.blue.withValues(alpha: 0.1),
               Colors.blue,
-              '지출 속도 체크',
+              AppStrings.expenseVelocityCheck,
             ),
             const SizedBox(width: 16),
             _buildSmartInsightCard(
               theme,
-              '최다 지출 요일',
+              AppStrings.mostSpentWeekdayLabel,
               stats.mostSpentWeekday,
               Icons.local_fire_department_rounded,
               Colors.orange.withValues(alpha: 0.1),
               Colors.orange,
-              '소비 점검일',
+              AppStrings.spendingCheckDay,
             ),
           ],
         ),

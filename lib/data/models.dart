@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../core/app_strings.dart';
 
 enum TransactionType { income, expense }
 
@@ -50,18 +52,18 @@ class Category {
 
   factory Category.fromName(String name) {
     switch (name) {
-      case '식비':
-        return Category(id: '1', name: '식비', icon: Icons.restaurant, color: Colors.orange);
-      case '카페/간식':
-        return Category(id: '2', name: '카페/간식', icon: Icons.coffee, color: Colors.brown);
-      case '수입':
-        return Category(id: '3', name: '수입', icon: Icons.account_balance_wallet, color: Colors.blue);
-      case '교통':
-        return Category(id: '4', name: '교통', icon: Icons.directions_bus, color: Colors.teal);
-      case '생활/쇼핑':
-        return Category(id: '5', name: '생활/쇼핑', icon: Icons.shopping_bag, color: Colors.purple);
-      case '기타':
-        return Category(id: '6', name: '기타', icon: Icons.more_horiz, color: Colors.blueGrey);
+      case AppStrings.categoryFood:
+        return Category(id: '1', name: AppStrings.categoryFood, icon: Icons.restaurant, color: Colors.orange);
+      case AppStrings.categoryCafe:
+        return Category(id: '2', name: AppStrings.categoryCafe, icon: Icons.coffee, color: Colors.brown);
+      case AppStrings.incomeLabel:
+        return Category(id: '3', name: AppStrings.incomeLabel, icon: Icons.account_balance_wallet, color: Colors.blue);
+      case AppStrings.categoryTransport:
+        return Category(id: '4', name: AppStrings.categoryTransport, icon: Icons.directions_bus, color: Colors.teal);
+      case AppStrings.categoryShopping:
+        return Category(id: '5', name: AppStrings.categoryShopping, icon: Icons.shopping_bag, color: Colors.purple);
+      case AppStrings.categoryMisc:
+        return Category(id: '6', name: AppStrings.categoryMisc, icon: Icons.more_horiz, color: Colors.blueGrey);
       default:
         return Category(id: '0', name: name, icon: Icons.category, color: Colors.grey);
     }
@@ -237,7 +239,7 @@ class Statistics {
       totalExpense: (json['total_expense'] as num?)?.toDouble() ?? 0.0,
       lastMonthExpense: (json['last_month_expense'] as num?)?.toDouble() ?? 0.0,
       dailyAverageExpense: (json['daily_average_expense'] as num?)?.toDouble() ?? 0.0,
-      mostSpentWeekday: json['most_spent_weekday'] ?? '없음',
+      mostSpentWeekday: json['most_spent_weekday'] ?? AppStrings.none,
       categorySpending: (json['category_spending'] as List?)
           ?.map((e) => CategorySpending.fromJson(e))
           .toList() ?? [],

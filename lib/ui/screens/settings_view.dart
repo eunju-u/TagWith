@@ -1,8 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../../core/app_strings.dart';
+import '../../core/theme.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../core/theme.dart';
 import '../../providers/transaction_provider.dart';
 import '../widgets/app_dialog.dart';
 
@@ -19,14 +22,14 @@ class SettingsView extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text('설정', style: theme.textTheme.headlineMedium),
+        title: Text(AppStrings.settingsTitle, style: theme.textTheme.headlineMedium),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          _buildSectionHeader(context, '계정'),
+          _buildSectionHeader(context, AppStrings.accountSection),
           const SizedBox(height: 10),
           Card(
             child: Column(
@@ -34,34 +37,34 @@ class SettingsView extends StatelessWidget {
                 if (user != null) ...[
                   ListTile(
                     leading: const Icon(Icons.person_outline),
-                    title: Text(user['name'] ?? '사용자'),
+                    title: Text(user['name'] ?? AppStrings.defaultUser),
                     subtitle: Text(user['email'] ?? ''),
                   ),
                   const Divider(height: 1),
                 ],
                   ListTile(
                     leading: const Icon(Icons.logout, color: Colors.redAccent),
-                    title: const Text('로그아웃', style: TextStyle(color: Colors.redAccent)),
+                    title: const Text(AppStrings.logout, style: TextStyle(color: Colors.redAccent)),
                     onTap: () => _showLogoutDialog(context, authProvider),
                   ),
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.person_remove_outlined, color: Colors.grey),
-                    title: const Text('회원 탈퇴', style: TextStyle(color: Colors.grey)),
+                    title: const Text(AppStrings.withdraw, style: TextStyle(color: Colors.grey)),
                     onTap: () => _showWithdrawDialog(context, authProvider),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 30),
-            _buildSectionHeader(context, '화면 설정'),
+            _buildSectionHeader(context, AppStrings.displaySection),
             const SizedBox(height: 10),
             Card(
               child: Column(
                 children: [
                   _buildThemeTile(
                     context,
-                    title: '시스템 설정',
+                    title: AppStrings.systemTheme,
                     icon: Icons.brightness_auto,
                     mode: ThemeMode.system,
                     currentMode: themeProvider.themeMode,
@@ -70,7 +73,7 @@ class SettingsView extends StatelessWidget {
                   const Divider(height: 1),
                   _buildThemeTile(
                     context,
-                    title: '라이트 모드',
+                    title: AppStrings.lightTheme,
                     icon: Icons.light_mode,
                     mode: ThemeMode.light,
                     currentMode: themeProvider.themeMode,
@@ -79,7 +82,7 @@ class SettingsView extends StatelessWidget {
                   const Divider(height: 1),
                   _buildThemeTile(
                     context,
-                    title: '다크 모드',
+                    title: AppStrings.darkTheme,
                     icon: Icons.dark_mode,
                     mode: ThemeMode.dark,
                     currentMode: themeProvider.themeMode,
@@ -89,11 +92,11 @@ class SettingsView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 30),
-            _buildSectionHeader(context, '정보'),
+            _buildSectionHeader(context, AppStrings.infoSection),
             const SizedBox(height: 10),
             Card(
               child: ListTile(
-                title: const Text('버전 정보'),
+                title: const Text(AppStrings.versionInfo),
                 trailing: Text('1.0.0', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
               ),
             ),
@@ -105,17 +108,17 @@ class SettingsView extends StatelessWidget {
   void _showLogoutDialog(BuildContext context, AuthProvider authProvider) {
     AppDialog.show(
       context: context,
-      title: '로그아웃',
-      content: '정말 로그아웃 하시겠습니까?',
+      title: AppStrings.logout,
+      content: AppStrings.confirmLogout,
       icon: Icons.logout_rounded,
       confirmColor: Colors.redAccent,
-      confirmText: '로그아웃',
+      confirmText: AppStrings.logout,
       onConfirm: () async {
         await authProvider.signOut();
         if (context.mounted) {
           Provider.of<TransactionProvider>(context, listen: false).clearData();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('로그아웃 되었습니다.')),
+            const SnackBar(content: Text(AppStrings.logoutSuccess)),
           );
         }
       },
@@ -125,22 +128,22 @@ class SettingsView extends StatelessWidget {
   void _showWithdrawDialog(BuildContext context, AuthProvider authProvider) {
     AppDialog.show(
       context: context,
-      title: '회원 탈퇴',
-      content: '정말 탈퇴하시겠습니까?\n탈퇴 시 모든 정보가 영구적으로 삭제되며 복구할 수 없습니다.',
+      title: AppStrings.withdraw,
+      content: AppStrings.confirmWithdraw,
       icon: Icons.person_remove_rounded,
       confirmColor: Colors.redAccent,
-      cancelText: '취소',
-      confirmText: '탈퇴하기',
+      cancelText: AppStrings.cancel,
+      confirmText: AppStrings.withdrawSubmit,
       onConfirm: () async {
         final success = await authProvider.withdraw();
         if (success && context.mounted) {
           Provider.of<TransactionProvider>(context, listen: false).clearData();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('탈퇴 처리가 완료되었습니다.')),
+            const SnackBar(content: Text(AppStrings.withdrawSuccess)),
           );
         } else if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('회원 탈퇴 처리 중 오류가 발생했습니다.')),
+            const SnackBar(content: Text(AppStrings.withdrawError)),
           );
         }
       },

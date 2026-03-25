@@ -1,14 +1,16 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:dio/dio.dart';
-import 'dart:convert';
-import 'package:geocoding/geocoding.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import '../../core/app_strings.dart';
 import '../../core/theme.dart';
 import '../../providers/transaction_provider.dart';
 import '../../core/app_config.dart';
@@ -102,7 +104,7 @@ class _BudgetViewState extends State<BudgetView> {
       try {
         bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
         if (!serviceEnabled) {
-          if (mounted) _showErrorDialog('위치 서비스가 꺼져 있습니다.');
+          if (mounted) _showErrorDialog(AppStrings.locationServiceDisabled);
           setState(() {
             _isAiRecommendEnabled = false; // 실패 시 다시 끕니다.
             _isLoadingLocation = false;
@@ -138,7 +140,7 @@ class _BudgetViewState extends State<BudgetView> {
         final lastDay = DateTime(now.year, now.month + 1, 0).day;
         final dailyAdvice = remaining / (lastDay - now.day + 1);
 
-        String typeKeyword = dailyAdvice < 2500 ? '편의점' : (dailyAdvice < 15000 ? '맛집' : '맛집 카페');
+        String typeKeyword = dailyAdvice < 2500 ? AppStrings.keywordConvenience : (dailyAdvice < 15000 ? AppStrings.keywordRestaurant : AppStrings.keywordCafe);
         String finalSearchQuery = "$neighborhood $typeKeyword".trim();
 
         final fetchedStores = await _fetchNaverStores(finalSearchQuery);
@@ -152,7 +154,7 @@ class _BudgetViewState extends State<BudgetView> {
       } catch (e) {
         debugPrint('Naver Search Error: $e');
         if (mounted) {
-          _showErrorDialog('정보를 가져오지 못했습니다.');
+          _showErrorDialog(AppStrings.locationFetchError);
           setState(() {
             _isAiRecommendEnabled = false;
             _isLoadingLocation = false;
@@ -194,7 +196,7 @@ class _BudgetViewState extends State<BudgetView> {
             cleanTitle,
             (item['category'] as String).split('>').last.trim(),
             4.0,
-            '주변',
+            AppStrings.nearbyDistanceLabel,
             item['address'] ?? '',
             query.contains('편의점') ? Colors.orange : AppColors.primary,
             mapX: item['mapx'] ?? "",
@@ -211,10 +213,10 @@ class _BudgetViewState extends State<BudgetView> {
   void _showErrorDialog(String message) {
     AppDialog.show(
       context: context,
-      title: '알림',
+      title: AppStrings.warning,
       content: message,
       icon: Icons.info_outline_rounded,
-      confirmText: '확인',
+      confirmText: AppStrings.ok,
       onConfirm: () {},
     );
   }
@@ -224,7 +226,7 @@ class _BudgetViewState extends State<BudgetView> {
       context: context,
       title: title,
       content: message,
-      cancelText: '닫기',
+      cancelText: AppStrings.close,
       confirmText: actionLabel,
       onConfirm: onAction,
     );
@@ -252,7 +254,7 @@ class _BudgetViewState extends State<BudgetView> {
 
     AppDialog.show(
       context: context,
-      title: '한 달 예산 설정',
+      title: AppStrings.budgetDialogTitle,
       icon: Icons.account_balance_wallet_rounded,
       contentWidget: TextField(
         controller: controller,
@@ -260,8 +262,8 @@ class _BudgetViewState extends State<BudgetView> {
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         decoration: InputDecoration(
-          hintText: '예산을 입력하세요',
-          suffixText: '원',
+          hintText: AppStrings.budgetHint,
+          suffixText: AppStrings.currencyUnit,
           filled: true,
           fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
@@ -270,8 +272,8 @@ class _BudgetViewState extends State<BudgetView> {
         autofocus: true,
         textAlign: TextAlign.center,
       ),
-      cancelText: '취소',
-      confirmText: '저장하기',
+      cancelText: AppStrings.cancel,
+      confirmText: AppStrings.save,
       onConfirm: () {
         final newBudget = double.tryParse(controller.text) ?? 0.0;
         Provider.of<TransactionProvider>(context, listen: false).updateMonthlyBudget(newBudget);
@@ -308,7 +310,7 @@ class _BudgetViewState extends State<BudgetView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '이번 달 예산 관리',
+                    AppStrings.budgetManagementTitle,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
@@ -317,7 +319,7 @@ class _BudgetViewState extends State<BudgetView> {
                   TextButton.icon(
                     onPressed: () => _showEditBudgetDialog(context, budgetGoal),
                     icon: const Icon(Icons.edit_rounded, size: 16),
-                    label: const Text('목표 수정'),
+                    label: const Text(AppStrings.editGoalButton),
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.primary,
                       backgroundColor: AppColors.primary.withValues(alpha: 0.1),
@@ -373,7 +375,7 @@ class _BudgetViewState extends State<BudgetView> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('현재까지 지출', style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                  Text(AppStrings.currentSpendingLabel, style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
                   const SizedBox(height: 8),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -387,7 +389,7 @@ class _BudgetViewState extends State<BudgetView> {
                         ),
                       ),
                       const SizedBox(width: 4),
-                      Text('원', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.3))),
+                      Text(AppStrings.currencyUnit, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.3))),
                     ],
                   ),
                 ],
@@ -450,9 +452,9 @@ class _BudgetViewState extends State<BudgetView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('0원', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.3))),
+              Text(AppStrings.currencyUnit, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.3))),
               Text(
-                '목표 ${NumberFormat('#,###').format(goal)}원', 
+                '${AppStrings.budgetGoalLabelPrefix} ${NumberFormat('#,###').format(goal)}${AppStrings.currencyUnit}', 
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
@@ -473,17 +475,17 @@ class _BudgetViewState extends State<BudgetView> {
           children: [
             _buildStatItem(
               theme, 
-              '남은 예산', 
-              '${NumberFormat('#,###').format(remaining.abs())}원', 
-              isOver ? '예산 초과' : '지출 가능',
+              AppStrings.remainingBudgetLabel, 
+              '${NumberFormat('#,###').format(remaining.abs())}${AppStrings.currencyUnit}', 
+              isOver ? AppStrings.overBudgetLabel : AppStrings.canSpendLabel,
               isOver ? Colors.redAccent : Colors.green,
             ),
             const SizedBox(width: 16),
             _buildStatItem(
               theme, 
-              '하루 권장', 
-              '${NumberFormat('#,###').format(dailyAdvice.toInt())}원', 
-              '이하 지출 권장',
+              AppStrings.dailyRecommendLabel, 
+              '${NumberFormat('#,###').format(dailyAdvice.toInt())}${AppStrings.currencyUnit}', 
+              AppStrings.dailySpendLimitLabel,
               AppColors.primary,
               onInfoTap: () => _showInfoDialog(context),
             ),
@@ -496,12 +498,10 @@ class _BudgetViewState extends State<BudgetView> {
   void _showInfoDialog(BuildContext context) {
     AppDialog.show(
       context: context,
-      title: '하루 권장 지출액이란?',
-      content: '예산이 30만 원 남았고, 이번 달이 10일 남았다면?\n'
-               '300,000 ÷ 10 = 30,000원이 하루 권장 지출액으로 표시됩니다.\n\n'
-               '내일 돈을 많이 쓰면 남은 예산이 줄어들어, 다음 날의 권장 지출액은 자동으로 낮아지게 됩니다!',
+      title: AppStrings.budgetHelpTitle,
+      content: AppStrings.budgetHelpContent,
       icon: Icons.info_outline_rounded,
-      confirmText: '확인',
+      confirmText: AppStrings.ok,
       onConfirm: () {},
     );
   }
@@ -552,27 +552,27 @@ class _BudgetViewState extends State<BudgetView> {
     IconData tipIcon = Icons.lightbulb_outline_rounded;
 
     if (progress >= 1.0) {
-      tip = '이번 달 예산을 모두 소진하셨네요! 이제부터는 필수적인 지출만 고려해서 남은 기간을 잘 마무리해 봅시다. 💪';
+      tip = AppStrings.budgetTipFull;
       tipColor = Colors.redAccent;
       tipIcon = Icons.check_circle_outline_rounded;
     } else if (isOver) {
-      tip = '예산을 초과했습니다! 이번 달 남은 기간은 최대한 지출을 자제하는 긴축 재정이 필요해요. 🚨';
+      tip = AppStrings.budgetTipOver;
       tipColor = Colors.redAccent;
       tipIcon = Icons.warning_amber_rounded;
     } else if (dailyAdvice < 5000) {
-      tip = '하루 5천 원도 안 남았어요! 비상 상황입니다. 당분간은 지갑을 닫고 생존 모드로 들어가야 할 것 같아요! 😱';
+      tip = AppStrings.budgetTipCritical;
       tipColor = Colors.orange;
       tipIcon = Icons.error_outline_rounded;
     } else if (dailyAdvice < 15000) {
-      tip = '하루 권장액이 1.5만 원 미만입니다. 당분간은 비싼 커피나 외식 대신 도시락이나 집밥을 애용해 보는 건 어떨까요? 🍱';
+      tip = AppStrings.budgetTipWarning;
       tipColor = Colors.orangeAccent;
       tipIcon = Icons.restaurant_rounded;
     } else if (progress > 0.8) {
-      tip = '예산의 80%를 이미 사용하셨네요. 남은 날짜가 많다면 조금 더 계획적인 소비가 필요해 보여요! 📉';
+      tip = AppStrings.budgetTipCaution;
       tipColor = Colors.amber;
       tipIcon = Icons.info_outline_rounded;
     } else {
-      tip = '지출 속도가 아주 훌륭합니다! 지금처럼만 계획적으로 소비하신다면 이번 달 예산을 멋지게 지켜낼 수 있어요. ✨';
+      tip = AppStrings.budgetTipGood;
       tipColor = AppColors.primary;
       tipIcon = Icons.thumb_up_alt_outlined;
     }
@@ -626,9 +626,9 @@ class _BudgetViewState extends State<BudgetView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('점심 추천 모드', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                Text(AppStrings.lunchRecommendModeTitle, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
                 Text(
-                  _isAiRecommendEnabled ? '위치 기반 추천 모드 활성화됨' : '권장금액 기반 식당 추천',
+                  _isAiRecommendEnabled ? AppStrings.lunchRecommendActiveSub : AppStrings.lunchRecommendInactiveSub,
                   style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
                 ),
               ],
@@ -656,21 +656,21 @@ class _BudgetViewState extends State<BudgetView> {
 
     if (dailyAdvice < 2500) {
       icon = Icons.store_rounded;
-      title = '가까운 편의점 추천';
-      description = '남은 예산이 빠듯해요!\n가까운 편의점에서 알뜰한 점심 한 끼 어떠세요?';
-      budgetTag = '절약 모드';
+      title = AppStrings.nearbyConvenienceTitle;
+      description = AppStrings.nearbyConvenienceDesc;
+      budgetTag = AppStrings.saveModeTag;
       color = Colors.orange;
     } else if (dailyAdvice < 9000) {
       icon = Icons.restaurant_rounded;
-      title = '가성비 식당';
-      description = '주변의 가성비 좋은 식당을 추천드려요.\n오늘 권장 금액 내에서 든든하게 드실 수 있습니다!';
-      budgetTag = '합리적 소비';
+      title = AppStrings.nearbyRationalTitle;
+      description = AppStrings.nearbyRationalDesc;
+      budgetTag = AppStrings.rationalSpendingTag;
       color = AppColors.primary;
     } else {
       icon = Icons.celebration_rounded;
-      title = '오늘은 맛집으로!';
-      description = '예산에 여유가 충분합니다.\n주변 평점 좋은 식당에서 기분 좋은 점심을 즐겨보세요!';
-      budgetTag = '오늘의 flex';
+      title = AppStrings.nearbyFlexTitle;
+      description = AppStrings.nearbyFlexDesc;
+      budgetTag = AppStrings.todayFlexTag;
       color = Colors.purple;
     }
 
@@ -702,9 +702,9 @@ class _BudgetViewState extends State<BudgetView> {
           Text(description, style: theme.textTheme.bodySmall?.copyWith(height: 1.5)),
           const SizedBox(height: 16),
           ElevatedButton.icon(
-            onPressed: () => _launchNearbySearch(title.contains('편의점') ? '주변 편의점' : '주변 맛집'),
+            onPressed: () => _launchNearbySearch(title.contains(AppStrings.nearbyConvenienceTitle) ? AppStrings.searchConvenience : AppStrings.searchRestaurant),
             icon: const Icon(Icons.near_me_rounded, size: 14),
-            label: const Text('주변 가게 찾기'),
+            label: const Text(AppStrings.nearbyStoreSearchButton),
             style: ElevatedButton.styleFrom(
               backgroundColor: color,
               foregroundColor: Colors.white,
@@ -736,7 +736,7 @@ class _BudgetViewState extends State<BudgetView> {
               children: [
                 Icon(Icons.location_on_rounded, color: color, size: 28),
                 const SizedBox(height: 4),
-                Text('추천 장소 위치 탐색됨', style: theme.textTheme.labelSmall?.copyWith(color: color.withValues(alpha: 0.5), fontSize: 9)),
+                Text(AppStrings.mapLocationDetected, style: theme.textTheme.labelSmall?.copyWith(color: color.withValues(alpha: 0.5), fontSize: 9)),
               ],
             ),
           ),
@@ -755,8 +755,8 @@ class _BudgetViewState extends State<BudgetView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('주변 추천 장소', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
-            Text('${_recommendedStores.length}곳', style: theme.textTheme.labelSmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            Text(AppStrings.nearbyRecommendationTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+            Text('${_recommendedStores.length}${AppStrings.countSuffix}', style: theme.textTheme.labelSmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(height: 16),
@@ -990,7 +990,7 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.query} 주변 네이버 지도', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+        title: Text('${widget.query} ${AppStrings.naverMapTitleSuffix}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0.5,

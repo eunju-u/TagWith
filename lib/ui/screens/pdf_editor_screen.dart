@@ -1,9 +1,12 @@
 import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import '../../core/app_strings.dart';
 import '../../core/theme.dart';
 import '../../data/pdf_models.dart';
 import '../widgets/app_dialog.dart';
@@ -68,7 +71,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
 
     final titleText = _titleController.text.trim();
     final fileName = titleText.isEmpty 
-        ? 'receipt_report_${DateTime.now().millisecondsSinceEpoch}.pdf'
+        ? '${AppStrings.pdfDefaultFileNamePrefix}${DateTime.now().millisecondsSinceEpoch}.pdf'
         : '$titleText.pdf';
 
     pdf.addPage(
@@ -158,14 +161,14 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
     final success = await Printing.sharePdf(
       bytes: await pdf.save(),
       filename: fileName,
-      subject: titleText.isEmpty ? '영수증 PDF 보고서' : titleText,
+      subject: titleText.isEmpty ? AppStrings.pdfDefaultSubject : titleText,
       body: '',
     );
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('PDF가 성공적으로 생성 및 전달되었습니다.'),
+          content: Text(AppStrings.pdfSuccessMessage),
           duration: Duration(seconds: 2),
           backgroundColor: AppColors.primary,
         ),
@@ -176,19 +179,19 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
   void _showInstructions() {
     AppDialog.show(
       context: context,
-      title: '사용 가이드',
+      title: AppStrings.pdfGuideTitle,
       icon: Icons.lightbulb_outline_rounded,
       contentWidget: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 8),
-          _buildGuideItem('순서 변경 (Long Click)', '항목을 길게 눌러 원하는 위치로 이동하세요.'),
+          _buildGuideItem(AppStrings.pdfGuideReorderTitle, AppStrings.pdfGuideReorderDesc),
           const SizedBox(height: 16),
-          _buildGuideItem('PDF 저장 방법', '상단 "저장" 버튼을 눌러 공유하거나 기기에 저장하세요.'),
+          _buildGuideItem(AppStrings.pdfGuideSaveTitle, AppStrings.pdfGuideSaveDesc),
         ],
       ),
-      confirmText: '확인',
+      confirmText: AppStrings.ok,
       onConfirm: () {},
     );
   }
@@ -209,7 +212,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('영수증 PDF 만들기', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text(AppStrings.pdfCreatorTitle, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
@@ -223,7 +226,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
           TextButton(
             onPressed: _items.isEmpty ? null : _generatePdf,
             child: const Text(
-              '저장',
+              AppStrings.save,
               style: TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
@@ -242,7 +245,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
             controller: _titleController,
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
-              hintText: '제목을 입력하세요',
+              hintText: AppStrings.pdfTitleHint,
               hintStyle: TextStyle(color: Colors.grey[300]),
               border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[200]!)),
               enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[200]!)),
@@ -287,11 +290,11 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
             ),
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
-              child: Text('추가할 항목 선택', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              child: Text(AppStrings.pdfAddItemTitle, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             ),
             ListTile(
               leading: const Icon(Icons.text_fields_rounded, color: AppColors.primary),
-              title: const Text('텍스트 (내용 입력)'),
+              title: const Text(AppStrings.pdfTypeTextLabel),
               onTap: () {
                 _addItem(PDFItemType.text);
                 Navigator.pop(context);
@@ -299,7 +302,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.image_rounded, color: AppColors.primary),
-              title: const Text('이미지 (영수증 사진)'),
+              title: const Text(AppStrings.pdfTypeImageLabel),
               onTap: () {
                 _addItem(PDFItemType.images);
                 Navigator.pop(context);
@@ -353,7 +356,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
             TextField(
               maxLines: null,
               decoration: const InputDecoration(
-                hintText: '내용을 입력하세요...',
+                hintText: AppStrings.pdfContentHint,
                 border: InputBorder.none,
               ),
               onChanged: (val) => item.text = val,
