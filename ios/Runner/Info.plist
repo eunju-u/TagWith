@@ -75,5 +75,11 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>영수증 분석을 위해 카메라 접근 권한이 필요합니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>영수증 이미지를 불러오기 위해 갤러리 접근 권한이 필요합니다.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>영수증 이미지를 저장하기 위해 권한이 필요합니다.</string>
 </dict>
 </plist>
