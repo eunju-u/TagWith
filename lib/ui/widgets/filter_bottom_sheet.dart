@@ -28,113 +28,121 @@ class FilterBottomSheet extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
         child: Container(
+          height: MediaQuery.of(context).size.height * 2 / 3, // 화면 크기의 2/3 설정
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
           decoration: BoxDecoration(
             color: theme.colorScheme.surface.withValues(alpha: 0.9),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: SafeArea(
-            bottom: true,
-            top: false,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: theme.dividerColor,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+            child: Column(
+              children: [
+                // 핸들러 바
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: theme.dividerColor,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(AppStrings.filterTitle, style: theme.textTheme.titleLarge),
-                      TextButton(
-                        onPressed: () => provider.clearFilters(forStats: forStats),
-                        child: const Text(AppStrings.filterReset, style: TextStyle(color: AppColors.secondary)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Text(AppStrings.filterSectionType, style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      _FilterChip(
-                        label: AppStrings.filterAll,
-                        isSelected: selectedType == null,
-                        onSelected: (_) => provider.setTypeFilter(null, forStats: forStats),
-                      ),
-                      const SizedBox(width: 8),
-                      _FilterChip(
-                        label: AppStrings.incomeLabel,
-                        isSelected: selectedType == TransactionType.income,
-                        onSelected: (_) => provider.setTypeFilter(TransactionType.income, forStats: forStats),
-                      ),
-                      const SizedBox(width: 8),
-                      _FilterChip(
-                        label: AppStrings.expenseLabel,
-                        isSelected: selectedType == TransactionType.expense,
-                        onSelected: (_) => provider.setTypeFilter(TransactionType.expense, forStats: forStats),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Text(AppStrings.filterSectionCategory, style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: allCategories.map((cat) => _FilterChip(
-                          label: cat.name,
-                          isSelected: selectedCategories.contains(cat.id),
-                          onSelected: (_) => provider.toggleCategoryFilter(cat.id, forStats: forStats),
-                        )).toList(),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(AppStrings.filterSectionRelation, style: theme.textTheme.titleMedium),
-                      IconButton(
-                        icon: const Icon(Icons.add_circle_outline, color: AppColors.primary, size: 20),
-                        onPressed: () => _showAddTagDialog(context, provider),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: provider.customRelations.map((rel) => _FilterChip(
-                          label: rel.name,
-                          isSelected: selectedRelations.contains(rel.id),
-                          onSelected: (_) => provider.toggleRelationFilter(rel.id, forStats: forStats),
-                        )).toList(),
-                  ),
-                  const SizedBox(height: 30),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text(AppStrings.filterApply),
+                ),
+                const SizedBox(height: 20),
+                // 스크롤 가능한 영역
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(AppStrings.filterTitle, style: theme.textTheme.titleLarge),
+                            TextButton(
+                              onPressed: () => provider.clearFilters(forStats: forStats),
+                              child: const Text(AppStrings.filterReset, style: TextStyle(color: AppColors.primary)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Text(AppStrings.filterSectionType, style: theme.textTheme.titleMedium),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            _FilterChip(
+                              label: AppStrings.filterAll,
+                              isSelected: selectedType == null,
+                              onSelected: (_) => provider.setTypeFilter(null, forStats: forStats),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: AppStrings.incomeLabel,
+                              isSelected: selectedType == TransactionType.income,
+                              onSelected: (_) => provider.setTypeFilter(TransactionType.income, forStats: forStats),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: AppStrings.expenseLabel,
+                              isSelected: selectedType == TransactionType.expense,
+                              onSelected: (_) => provider.setTypeFilter(TransactionType.expense, forStats: forStats),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Text(AppStrings.filterSectionCategory, style: theme.textTheme.titleMedium),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: allCategories.map((cat) => _FilterChip(
+                                label: cat.name,
+                                isSelected: selectedCategories.contains(cat.id),
+                                onSelected: (_) => provider.toggleCategoryFilter(cat.id, forStats: forStats),
+                              )).toList(),
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(AppStrings.filterSectionRelation, style: theme.textTheme.titleMedium),
+                            IconButton(
+                              icon: const Icon(Icons.add_circle_outline, color: AppColors.primary, size: 20),
+                              onPressed: () => _showAddTagDialog(context, provider),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: provider.customRelations.map((rel) => _FilterChip(
+                                label: rel.name,
+                                isSelected: selectedRelations.contains(rel.id),
+                                onSelected: (_) => provider.toggleRelationFilter(rel.id, forStats: forStats),
+                              )).toList(),
+                        ),
+                        const SizedBox(height: 20), // 하단 여백 추가
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                // 하단 고정 버튼 영역
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text(AppStrings.filterApply),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
