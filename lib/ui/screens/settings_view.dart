@@ -9,6 +9,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/app_snackbar.dart';
+import '../widgets/loading_overlay.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -115,10 +116,15 @@ class SettingsView extends StatelessWidget {
       confirmColor: Colors.redAccent,
       confirmText: AppStrings.logout,
       onConfirm: () async {
-        await authProvider.signOut();
-        if (context.mounted) {
-          Provider.of<TransactionProvider>(context, listen: false).clearData();
-          AppSnackBar.show(context, AppStrings.logoutSuccess);
+        try {
+          AppLoadingOverlay.show(context);
+          await authProvider.signOut();
+          if (context.mounted) {
+            Provider.of<TransactionProvider>(context, listen: false).clearData();
+            AppSnackBar.show(context, AppStrings.logoutSuccess);
+          }
+        } finally {
+          AppLoadingOverlay.hide();
         }
       },
     );
@@ -134,12 +140,17 @@ class SettingsView extends StatelessWidget {
       cancelText: AppStrings.cancel,
       confirmText: AppStrings.withdrawSubmit,
       onConfirm: () async {
-        final success = await authProvider.withdraw();
-        if (success && context.mounted) {
-          Provider.of<TransactionProvider>(context, listen: false).clearData();
-          AppSnackBar.show(context, AppStrings.withdrawSuccess);
-        } else if (context.mounted) {
-          AppSnackBar.show(context, AppStrings.withdrawError);
+        try {
+          AppLoadingOverlay.show(context);
+          final success = await authProvider.withdraw();
+          if (success && context.mounted) {
+            Provider.of<TransactionProvider>(context, listen: false).clearData();
+            AppSnackBar.show(context, AppStrings.withdrawSuccess);
+          } else if (context.mounted) {
+            AppSnackBar.show(context, AppStrings.withdrawError);
+          }
+        } finally {
+          AppLoadingOverlay.hide();
         }
       },
     );

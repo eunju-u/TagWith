@@ -11,6 +11,7 @@ import '../../providers/transaction_provider.dart';
 import '../widgets/relation_picker_sheet.dart';
 import '../widgets/category_picker_sheet.dart';
 import '../widgets/app_snackbar.dart';
+import '../widgets/loading_overlay.dart';
 
 class ManualEntryScreen extends StatefulWidget {
   final Transaction? existingTransaction;
@@ -73,29 +74,35 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       return;
     }
 
-    final transaction = Transaction(
-      id: widget.existingTransaction?.id ?? '', 
-      date: _selectedDate,
-      amount: amount,
-      description: _descriptionController.text.trim(),
-      type: _type,
-      category: _selectedCategory!,
-      relations: _selectedRelations,
-      paymentMethod: _paymentMethod,
-    );
+    try {
+      AppLoadingOverlay.show(context);
 
-    final provider = Provider.of<TransactionProvider>(context, listen: false);
-    final success = widget.existingTransaction != null
-        ? await provider.updateTransaction(transaction)
-        : await provider.addTransaction(transaction);
-    
-    if (mounted) {
-      if (success) {
-        Navigator.pop(context);
-        AppSnackBar.show(context, widget.existingTransaction != null ? AppStrings.updateComplete : AppStrings.saveComplete);
-      } else {
-        AppSnackBar.show(context, AppStrings.saveFailed);
+      final transaction = Transaction(
+        id: widget.existingTransaction?.id ?? '', 
+        date: _selectedDate,
+        amount: amount,
+        description: _descriptionController.text.trim(),
+        type: _type,
+        category: _selectedCategory!,
+        relations: _selectedRelations,
+        paymentMethod: _paymentMethod,
+      );
+
+      final provider = Provider.of<TransactionProvider>(context, listen: false);
+      final success = widget.existingTransaction != null
+          ? await provider.updateTransaction(transaction)
+          : await provider.addTransaction(transaction);
+      
+      if (mounted) {
+        if (success) {
+          Navigator.pop(context);
+          AppSnackBar.show(context, widget.existingTransaction != null ? AppStrings.updateComplete : AppStrings.saveComplete);
+        } else {
+          AppSnackBar.show(context, AppStrings.saveFailed);
+        }
       }
+    } finally {
+      AppLoadingOverlay.hide();
     }
   }
 

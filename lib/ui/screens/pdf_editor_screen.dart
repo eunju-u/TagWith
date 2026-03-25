@@ -11,6 +11,7 @@ import '../../core/theme.dart';
 import '../../data/pdf_models.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/app_snackbar.dart';
+import '../widgets/loading_overlay.dart';
 
 class PDFEditorScreen extends StatefulWidget {
   const PDFEditorScreen({super.key});
@@ -223,10 +224,13 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
 
   Future<void> _previewPdf() async {
     try {
-      AppSnackBar.show(context, AppStrings.pdfGeneratingMessage);
+      AppLoadingOverlay.show(context);
       
       final pdf = await _createPdfDocument();
-      if (pdf == null) return;
+      if (pdf == null) {
+        AppLoadingOverlay.hide();
+        return;
+      }
 
       final titleText = _titleController.text.trim();
       final fileName = titleText.isEmpty 
@@ -243,15 +247,20 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
       if (mounted) {
         AppSnackBar.show(context, '${AppStrings.pdfErrorMessage}: $e');
       }
+    } finally {
+      AppLoadingOverlay.hide();
     }
   }
 
   Future<void> _savePdf() async {
     try {
-      AppSnackBar.show(context, AppStrings.pdfGeneratingMessage);
+      AppLoadingOverlay.show(context);
 
       final pdf = await _createPdfDocument();
-      if (pdf == null) return;
+      if (pdf == null) {
+        AppLoadingOverlay.hide();
+        return;
+      }
 
       final titleText = _titleController.text.trim();
       final fileName = titleText.isEmpty 
@@ -275,10 +284,13 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
       if (mounted) {
         AppSnackBar.show(context, '${AppStrings.pdfErrorMessage}: $e');
       }
+    } finally {
+      AppLoadingOverlay.hide();
     }
   }
 
   void _showSaveOptions() {
+    FocusManager.instance.primaryFocus?.unfocus(); // 키보드 숨기기
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -378,33 +390,39 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: ReorderableListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
-        header: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 24, left: 4, right: 4),
-              child: TextField(
-                controller: _titleController,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                decoration: InputDecoration(
-                  hintText: AppStrings.pdfTitleHint,
-                  hintStyle: TextStyle(color: Colors.grey[300]),
-                  border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[200]!)),
-                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[200]!)),
-                  focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary, width: 2)),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: ReorderableListView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+          header: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 24, left: 4, right: 4),
+                child: TextField(
+                  controller: _titleController,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  textInputAction: TextInputAction.done, // 완료 버튼으로 변경
+                  onSubmitted: (_) => FocusManager.instance.primaryFocus?.unfocus(), // 엔터 시 키보드 내리기
+                  decoration: InputDecoration(
+                    hintText: AppStrings.pdfTitleHint,
+                    hintStyle: TextStyle(color: Colors.grey[300]),
+                    border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[200]!)),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[200]!)),
+                    focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary, width: 2)),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-          ],
+              const SizedBox(height: 12),
+            ],
+          ),
+          itemCount: _items.length,
+          onReorder: _onReorder,
+          itemBuilder: (context, index) {
+            final item = _items[index];
+            return _buildItemCell(item, index, theme);
+          },
         ),
-        itemCount: _items.length,
-        onReorder: _onReorder,
-        itemBuilder: (context, index) {
-          final item = _items[index];
-          return _buildItemCell(item, index, theme);
-        },
       ),
       floatingActionButton: SizedBox(
         height: 64,
@@ -433,6 +451,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
   }
 
   void _showAddItemMenu() {
+    FocusManager.instance.primaryFocus?.unfocus(); // 더 강력한 전역 언포커스 적용
     final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,

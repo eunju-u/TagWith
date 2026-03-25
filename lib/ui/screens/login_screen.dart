@@ -311,12 +311,17 @@ class _LoginScreenState extends State<LoginScreen> {
             child: ElevatedButton(
               onPressed: () async {
                 if (_emailController.text.isEmpty) return;
-                final success = await authProvider.forgotPassword(_emailController.text);
-                if (success) {
-                  setState(() => _isResetCodeSent = true);
-                  AppSnackBar.show(context, AppStrings.verificationCodeSent);
-                } else {
-                  AppSnackBar.show(context, AppStrings.verificationCodeFailed);
+                try {
+                  AppLoadingOverlay.show(context);
+                  final success = await authProvider.forgotPassword(_emailController.text);
+                  if (success) {
+                    setState(() => _isResetCodeSent = true);
+                    AppSnackBar.show(context, AppStrings.verificationCodeSent);
+                  } else {
+                    AppSnackBar.show(context, AppStrings.verificationCodeFailed);
+                  }
+                } finally {
+                  AppLoadingOverlay.hide();
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -342,14 +347,19 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () async {
-              final success = await authProvider.resetPassword(
-                _emailController.text,
-                _verificationCodeController.text,
-                _passwordController.text,
-              );
-              if (mounted) {
-                AppSnackBar.show(context, success ? AppStrings.passwordChangedSuccess : AppStrings.passwordChangeFailed);
-                if (success) setState(() => _isFindPassword = false);
+              try {
+                AppLoadingOverlay.show(context);
+                final success = await authProvider.resetPassword(
+                  _emailController.text,
+                  _verificationCodeController.text,
+                  _passwordController.text,
+                );
+                if (mounted) {
+                  AppSnackBar.show(context, success ? AppStrings.passwordChangedSuccess : AppStrings.passwordChangeFailed);
+                  if (success) setState(() => _isFindPassword = false);
+                }
+              } finally {
+                AppLoadingOverlay.hide();
               }
             },
             style: ElevatedButton.styleFrom(
@@ -391,17 +401,22 @@ class _LoginScreenState extends State<LoginScreen> {
           child: ElevatedButton(
             onPressed: _isVerifying ? null : () async {
               if (_verificationCodeController.text.isEmpty) return;
-              setState(() => _isVerifying = true);
-              final success = await authProvider.verifyCode(
-                _emailController.text,
-                _verificationCodeController.text,
-              );
-              setState(() => _isVerifying = false);
-              if (success) {
-                setState(() => forReset ? _isResetCodeVerified = true : _isEmailVerified = true);
-                AppSnackBar.show(context, AppStrings.verificationSuccess);
-              } else {
-                AppSnackBar.show(context, AppStrings.invalidVerificationCode);
+              try {
+                AppLoadingOverlay.show(context);
+                setState(() => _isVerifying = true);
+                final success = await authProvider.verifyCode(
+                  _emailController.text,
+                  _verificationCodeController.text,
+                );
+                if (success) {
+                  setState(() => forReset ? _isResetCodeVerified = true : _isEmailVerified = true);
+                  AppSnackBar.show(context, AppStrings.verificationSuccess);
+                } else {
+                  AppSnackBar.show(context, AppStrings.invalidVerificationCode);
+                }
+              } finally {
+                setState(() => _isVerifying = false);
+                AppLoadingOverlay.hide();
               }
             },
             style: ElevatedButton.styleFrom(
