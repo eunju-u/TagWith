@@ -186,10 +186,10 @@ class AppStrings {
   static const String nearbyRecommendationTitle = '주변 추천 장소';
   static const String countSuffix = '곳';
   static const String naverMapTitleSuffix = '주변 네이버 지도';
-  static const String locationServiceDisabled = '위치 서비스가 꺼습니다.';
+  static const String locationServiceDisabled = '위치 서비스가 꺼져 있습니다.';
   static const String locationFetchError = '정보를 가져오지 못했습니다.';
   static const String budgetTipFull = '이번 달 예산을 모두 소진하셨네요! 이제부터는 필수적인 지출만 고려해서 남은 기간을 잘 마무리해 봅시다. 💪';
-  static const String budgetTipOver = '예산을 초과했습니다! 이번 달 남은 기간은 최대한 지출을 자제하는 긴축 재정이 필요해요. 🚨';
+  static const String budgetTipOver = '예산을 초과했습니다! 이번 달 남은 기간은 최대한 지출을 자제하는 긴축 재정 필요해요. 🚨';
   static const String budgetTipCritical = '하루 5천 원도 안 남았어요! 비상 상황입니다. 당분간은 지갑을 닫고 생존 모드로 들어가야 할 것 같아요! 😱';
   static const String budgetTipWarning = '하루 권장액이 1.5만 원 미만입니다. 당분간은 비싼 커피나 외식 대신 도시락이나 집밥을 애용해 보는 건 어떨까요? 🍱';
   static const String budgetTipCaution = '예산의 80%를 이미 사용하셨네요. 남은 날짜가 많다면 조금 더 계획적인 소비가 필요해 보여요! 📉';
@@ -225,7 +225,8 @@ class AppStrings {
   static const String pdfAddItemTitle = '추가할 항목 선택';
   static const String pdfTypeTextLabel = '텍스트 (내용 입력)';
   static const String pdfTypeImageLabel = '이미지 (영수증 사진)';
-  static const String pdfContentHint = '내용을 입력하세요...';
+  static const String pdfContentHint = '내용을 입력하세요.';
+  static const String pdfEmptyError = '내용을 입력해 주세요.';
 
   // --- 설정 ---
   static const String settingsTitle = '설정';

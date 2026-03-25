@@ -63,6 +63,17 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
   }
 
   Future<void> _generatePdf() async {
+    if (_items.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(AppStrings.pdfEmptyError),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     final pdf = pw.Document();
     
     // 한글 폰트 로드
@@ -224,7 +235,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
             onPressed: _showInstructions,
           ),
           TextButton(
-            onPressed: _items.isEmpty ? null : _generatePdf,
+            onPressed: _generatePdf,
             child: const Text(
               AppStrings.save,
               style: TextStyle(
@@ -260,10 +271,28 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
           return _buildItemCell(item, index, theme);
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddItemMenu,
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.white),
+      floatingActionButton: SizedBox(
+        height: 64,
+        width: 64,
+        child: FloatingActionButton(
+          onPressed: _showAddItemMenu,
+          backgroundColor: AppColors.primary,
+          elevation: 4,
+          shape: const CircleBorder(),
+          child: Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: const Icon(Icons.add_rounded, color: Colors.white, size: 32),
+          ),
+        ),
       ),
     );
   }
