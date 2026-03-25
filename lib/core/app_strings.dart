@@ -230,6 +230,12 @@ class AppStrings {
   static const String pdfSaveOptionTitle = '파일 작업 선택';
   static const String pdfPreviewLabel = '미리보기';
   static const String pdfSaveLabel = '저장 (파일 공유)';
+  static const String pdfGeneratingMessage = 'PDF를 생성하고 있습니다. 잠시만 기다려 주세요...';
+  static const String pdfErrorMessage = 'PDF 생성 중 오류가 발생했습니다';
+  static const String pdfImageSizeLabel = '이미지 크기 선택';
+  static const String pdfImageSizeSmall = '작게';
+  static const String pdfImageSizeMedium = '중간';
+  static const String pdfImageSizeLarge = '크게';
 
   // --- 설정 ---
   static const String settingsTitle = '설정';

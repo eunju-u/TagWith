@@ -36,6 +36,44 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
     });
   }
 
+  Widget _buildItemSizeSelector(PDFContentItem item) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            _buildSizeChip(item, PDFImageSize.small, AppStrings.pdfImageSizeSmall),
+            const SizedBox(width: 8),
+            _buildSizeChip(item, PDFImageSize.medium, AppStrings.pdfImageSizeMedium),
+            const SizedBox(width: 8),
+            _buildSizeChip(item, PDFImageSize.large, AppStrings.pdfImageSizeLarge),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSizeChip(PDFContentItem item, PDFImageSize size, String label) {
+    final isSelected = item.imageSize == size;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (val) {
+        if (val) setState(() => item.imageSize = size);
+      },
+      selectedColor: AppColors.primary.withValues(alpha: 0.1),
+      labelStyle: TextStyle(
+        color: isSelected ? AppColors.primary : Colors.grey,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: isSelected ? AppColors.primary : Colors.grey.withValues(alpha: 0.2)),
+      ),
+      showCheckmark: false,
+    );
+  }
+
   void _removeItem(int index) {
     setState(() => _items.removeAt(index));
   }
@@ -125,16 +163,23 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
               );
             } else if (item.type == PDFItemType.images && item.imagePaths.isNotEmpty) {
               final List<pw.Widget> images = [];
+              double imageWidth;
+              switch (item.imageSize ?? PDFImageSize.large) {
+                case PDFImageSize.small: imageWidth = 160; break;
+                case PDFImageSize.medium: imageWidth = 200; break;
+                case PDFImageSize.large: imageWidth = 260; break;
+              }
+
               for (var path in item.imagePaths) {
                 final file = File(path);
                 if (file.existsSync()) {
                   images.add(
                     pw.Container(
-                      width: 160,
-                      height: 160,
+                      width: imageWidth,
+                      padding: const pw.EdgeInsets.only(right: 10, bottom: 10),
                       child: pw.Image(
                         pw.MemoryImage(file.readAsBytesSync()),
-                        fit: pw.BoxFit.cover,
+                        dpi: 400,
                       ),
                     ),
                   );
@@ -142,16 +187,28 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
               }
               
               if (images.isNotEmpty) {
-                widgets.add(
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.symmetric(vertical: 10),
-                    child: pw.Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: images,
+                // 한 줄에 몇 개씩 배치할지 계산
+                int perRow = 2; // 기본값 (Medium)
+                final size = item.imageSize ?? PDFImageSize.large;
+                if (size == PDFImageSize.small) {
+                    perRow = 3;
+                } else if (size == PDFImageSize.large) {
+                    perRow = 1;
+                }
+
+                for (var i = 0; i < images.length; i += perRow) {
+                  final chunk = images.sublist(i, i + perRow > images.length ? images.length : i + perRow);
+                  widgets.add(
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.symmetric(vertical: 5),
+                      child: pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.start,
+                        children: chunk,
+                      ),
                     ),
-                  ),
-                );
+                  );
+                }
+                widgets.add(pw.SizedBox(height: 10)); // 아이템 간 간격 추가
               }
             }
           }
@@ -165,39 +222,59 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
   }
 
   Future<void> _previewPdf() async {
-    final pdf = await _createPdfDocument();
-    if (pdf == null) return;
+    try {
+      AppSnackBar.show(context, AppStrings.pdfGeneratingMessage);
+      
+      final pdf = await _createPdfDocument();
+      if (pdf == null) return;
 
-    final titleText = _titleController.text.trim();
-    final fileName = titleText.isEmpty 
-        ? '${AppStrings.pdfDefaultFileNamePrefix}${DateTime.now().millisecondsSinceEpoch}.pdf'
-        : '$titleText.pdf';
+      final titleText = _titleController.text.trim();
+      final fileName = titleText.isEmpty 
+          ? '${AppStrings.pdfDefaultFileNamePrefix}${DateTime.now().millisecondsSinceEpoch}.pdf'
+          : '$titleText.pdf';
 
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
-      name: fileName,
-    );
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+        name: fileName,
+      );
+    } catch (e, stack) {
+      debugPrint('PDF Preview Error: $e');
+      debugPrint(stack.toString());
+      if (mounted) {
+        AppSnackBar.show(context, '${AppStrings.pdfErrorMessage}: $e');
+      }
+    }
   }
 
   Future<void> _savePdf() async {
-    final pdf = await _createPdfDocument();
-    if (pdf == null) return;
+    try {
+      AppSnackBar.show(context, AppStrings.pdfGeneratingMessage);
 
-    final titleText = _titleController.text.trim();
-    final fileName = titleText.isEmpty 
-        ? '${AppStrings.pdfDefaultFileNamePrefix}${DateTime.now().millisecondsSinceEpoch}.pdf'
-        : '$titleText.pdf';
+      final pdf = await _createPdfDocument();
+      if (pdf == null) return;
 
-    // PDF 생성 및 시스템 공유 시트 호출
-    final success = await Printing.sharePdf(
-      bytes: await pdf.save(),
-      filename: fileName,
-      subject: titleText.isEmpty ? AppStrings.pdfDefaultSubject : titleText,
-      body: '',
-    );
+      final titleText = _titleController.text.trim();
+      final fileName = titleText.isEmpty 
+          ? '${AppStrings.pdfDefaultFileNamePrefix}${DateTime.now().millisecondsSinceEpoch}.pdf'
+          : '$titleText.pdf';
 
-    if (success && mounted) {
-      AppSnackBar.show(context, AppStrings.pdfSuccessMessage);
+      // PDF 생성 및 시스템 공유 시트 호출
+      final success = await Printing.sharePdf(
+        bytes: await pdf.save(),
+        filename: fileName,
+        subject: titleText.isEmpty ? AppStrings.pdfDefaultSubject : titleText,
+        body: '',
+      );
+
+      if (success && mounted) {
+        AppSnackBar.show(context, AppStrings.pdfSuccessMessage);
+      }
+    } catch (e, stack) {
+      debugPrint('PDF Save Error: $e');
+      debugPrint(stack.toString());
+      if (mounted) {
+        AppSnackBar.show(context, '${AppStrings.pdfErrorMessage}: $e');
+      }
     }
   }
 
@@ -303,19 +380,24 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
       ),
       body: ReorderableListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
-        header: Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 24, left: 4, right: 4),
-          child: TextField(
-            controller: _titleController,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            decoration: InputDecoration(
-              hintText: AppStrings.pdfTitleHint,
-              hintStyle: TextStyle(color: Colors.grey[300]),
-              border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[200]!)),
-              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[200]!)),
-              focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary, width: 2)),
+        header: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 24, left: 4, right: 4),
+              child: TextField(
+                controller: _titleController,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                decoration: InputDecoration(
+                  hintText: AppStrings.pdfTitleHint,
+                  hintStyle: TextStyle(color: Colors.grey[300]),
+                  border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[200]!)),
+                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[200]!)),
+                  focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary, width: 2)),
+                ),
+              ),
             ),
-          ),
+            const SizedBox(height: 12),
+          ],
         ),
         itemCount: _items.length,
         onReorder: _onReorder,
@@ -444,7 +526,14 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
               onChanged: (val) => item.text = val,
             )
           else
-            _buildImageHorizontalList(item, index),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildImageHorizontalList(item, index),
+                const SizedBox(height: 16),
+                _buildItemSizeSelector(item),
+              ],
+            ),
         ],
       ),
     );
