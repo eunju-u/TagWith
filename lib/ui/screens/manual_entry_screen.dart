@@ -10,6 +10,7 @@ import '../../data/models.dart';
 import '../../providers/transaction_provider.dart';
 import '../widgets/relation_picker_sheet.dart';
 import '../widgets/category_picker_sheet.dart';
+import '../widgets/app_snackbar.dart';
 
 class ManualEntryScreen extends StatefulWidget {
   final Transaction? existingTransaction;
@@ -68,9 +69,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     final amountStr = _amountController.text.replaceAll(',', '');
     final amount = double.tryParse(amountStr) ?? 0;
     if (amount <= 0 || _descriptionController.text.trim().isEmpty || _selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.entryIncompleteError)),
-      );
+      AppSnackBar.show(context, AppStrings.entryIncompleteError);
       return;
     }
 
@@ -93,13 +92,9 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     if (mounted) {
       if (success) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.existingTransaction != null ? AppStrings.updateComplete : AppStrings.saveComplete)),
-        );
+        AppSnackBar.show(context, widget.existingTransaction != null ? AppStrings.updateComplete : AppStrings.saveComplete);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.saveFailed)),
-        );
+        AppSnackBar.show(context, AppStrings.saveFailed);
       }
     }
   }

@@ -10,6 +10,7 @@ import '../../core/app_strings.dart';
 import '../../core/theme.dart';
 import '../../data/pdf_models.dart';
 import '../widgets/app_dialog.dart';
+import '../widgets/app_snackbar.dart';
 
 class PDFEditorScreen extends StatefulWidget {
   const PDFEditorScreen({super.key});
@@ -62,16 +63,11 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
     }
   }
 
-  Future<void> _generatePdf() async {
+
+  Future<pw.Document?> _createPdfDocument() async {
     if (_items.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(AppStrings.pdfEmptyError),
-          duration: Duration(seconds: 2),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
+      AppSnackBar.show(context, AppStrings.pdfEmptyError);
+      return null;
     }
 
     final pdf = pw.Document();
@@ -81,9 +77,6 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
     final boldFontData = await PdfGoogleFonts.notoSansKRBold();
 
     final titleText = _titleController.text.trim();
-    final fileName = titleText.isEmpty 
-        ? '${AppStrings.pdfDefaultFileNamePrefix}${DateTime.now().millisecondsSinceEpoch}.pdf'
-        : '$titleText.pdf';
 
     pdf.addPage(
       pw.MultiPage(
@@ -168,6 +161,33 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
       ),
     );
 
+    return pdf;
+  }
+
+  Future<void> _previewPdf() async {
+    final pdf = await _createPdfDocument();
+    if (pdf == null) return;
+
+    final titleText = _titleController.text.trim();
+    final fileName = titleText.isEmpty 
+        ? '${AppStrings.pdfDefaultFileNamePrefix}${DateTime.now().millisecondsSinceEpoch}.pdf'
+        : '$titleText.pdf';
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: fileName,
+    );
+  }
+
+  Future<void> _savePdf() async {
+    final pdf = await _createPdfDocument();
+    if (pdf == null) return;
+
+    final titleText = _titleController.text.trim();
+    final fileName = titleText.isEmpty 
+        ? '${AppStrings.pdfDefaultFileNamePrefix}${DateTime.now().millisecondsSinceEpoch}.pdf'
+        : '$titleText.pdf';
+
     // PDF 생성 및 시스템 공유 시트 호출
     final success = await Printing.sharePdf(
       bytes: await pdf.save(),
@@ -177,14 +197,54 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
     );
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(AppStrings.pdfSuccessMessage),
-          duration: Duration(seconds: 2),
-          backgroundColor: AppColors.primary,
-        ),
-      );
+      AppSnackBar.show(context, AppStrings.pdfSuccessMessage);
     }
+  }
+
+  void _showSaveOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).dividerColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Text(AppStrings.pdfSaveOptionTitle, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.visibility_rounded, color: AppColors.primary),
+              title: const Text(AppStrings.pdfPreviewLabel),
+              onTap: () {
+                Navigator.pop(context);
+                _previewPdf();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.save_alt_rounded, color: AppColors.primary),
+              title: const Text(AppStrings.pdfSaveLabel),
+              onTap: () {
+                Navigator.pop(context);
+                _savePdf();
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showInstructions() {
@@ -234,16 +294,9 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
             icon: const Icon(Icons.info_outline_rounded, color: Colors.grey),
             onPressed: _showInstructions,
           ),
-          TextButton(
-            onPressed: _generatePdf,
-            child: const Text(
-              AppStrings.save,
-              style: TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
+          IconButton(
+            icon: const Icon(Icons.save_alt_rounded, color: AppColors.primary),
+            onPressed: _showSaveOptions,
           ),
           const SizedBox(width: 8),
         ],

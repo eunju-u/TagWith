@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../widgets/app_snackbar.dart';
 import '../../core/app_strings.dart';
 import '../../providers/auth_provider.dart';
 
@@ -57,19 +58,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
 
-  void _showSnackBar(BuildContext context, String message, ThemeData theme) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: TextStyle(color: theme.colorScheme.onSurface),
-        ),
-        backgroundColor: const Color(0xFFF3F4F6),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -183,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     _passwordController.text,
                   );
                   if (mounted) {
-                    _showSnackBar(context, success ? AppStrings.loginSuccess : AppStrings.loginFailed, theme);
+                    AppSnackBar.show(context, success ? AppStrings.loginSuccess : AppStrings.loginFailed);
                   }
                 },
           style: ElevatedButton.styleFrom(
@@ -237,21 +225,21 @@ class _LoginScreenState extends State<LoginScreen> {
           child: ElevatedButton(
             onPressed: _isEmailVerified ? null : () async {
               if (_emailController.text.isEmpty) {
-                _showSnackBar(context, AppStrings.enterEmail, theme);
+                AppSnackBar.show(context, AppStrings.enterEmail);
                 return;
               }
               final canRequest = await _canRequestVerification();
               if (!canRequest) {
-                _showSnackBar(context, AppStrings.dailyLimitExceeded, theme);
+                AppSnackBar.show(context, AppStrings.dailyLimitExceeded);
                 return;
               }
               final success = await authProvider.sendVerificationCode(_emailController.text);
               if (success) {
                 await _incrementRequestCount();
                 setState(() => _isCodeSent = true);
-                _showSnackBar(context, AppStrings.verificationCodeSent, theme);
+                AppSnackBar.show(context, AppStrings.verificationCodeSent);
               } else {
-                _showSnackBar(context, AppStrings.verificationCodeFailed, theme);
+                AppSnackBar.show(context, AppStrings.verificationCodeFailed);
               }
             },
             style: ElevatedButton.styleFrom(
@@ -278,7 +266,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ElevatedButton(
           onPressed: () async {
             if (!_isEmailVerified) {
-              _showSnackBar(context, AppStrings.completeEmailVerification, theme);
+              AppSnackBar.show(context, AppStrings.completeEmailVerification);
               return;
             }
             final success = await authProvider.signUpWithEmail(
@@ -287,7 +275,7 @@ class _LoginScreenState extends State<LoginScreen> {
               _nameController.text,
             );
             if (mounted) {
-              _showSnackBar(context, success ? AppStrings.signUpSuccess : AppStrings.signUpFailed, theme);
+              AppSnackBar.show(context, success ? AppStrings.signUpSuccess : AppStrings.signUpFailed);
               if (success) setState(() => _isSignUp = false);
             }
           },
@@ -326,9 +314,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 final success = await authProvider.forgotPassword(_emailController.text);
                 if (success) {
                   setState(() => _isResetCodeSent = true);
-                  _showSnackBar(context, AppStrings.verificationCodeSent, theme);
+                  AppSnackBar.show(context, AppStrings.verificationCodeSent);
                 } else {
-                  _showSnackBar(context, AppStrings.verificationCodeFailed, theme);
+                  AppSnackBar.show(context, AppStrings.verificationCodeFailed);
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -360,7 +348,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 _passwordController.text,
               );
               if (mounted) {
-                _showSnackBar(context, success ? AppStrings.passwordChangedSuccess : AppStrings.passwordChangeFailed, theme);
+                AppSnackBar.show(context, success ? AppStrings.passwordChangedSuccess : AppStrings.passwordChangeFailed);
                 if (success) setState(() => _isFindPassword = false);
               }
             },
@@ -411,9 +399,9 @@ class _LoginScreenState extends State<LoginScreen> {
               setState(() => _isVerifying = false);
               if (success) {
                 setState(() => forReset ? _isResetCodeVerified = true : _isEmailVerified = true);
-                _showSnackBar(context, AppStrings.verificationSuccess, theme);
+                AppSnackBar.show(context, AppStrings.verificationSuccess);
               } else {
-                _showSnackBar(context, AppStrings.invalidVerificationCode, theme);
+                AppSnackBar.show(context, AppStrings.invalidVerificationCode);
               }
             },
             style: ElevatedButton.styleFrom(

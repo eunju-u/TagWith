@@ -9,6 +9,7 @@ import '../../providers/auth_provider.dart';
 import '../../services/transaction_service.dart';
 
 import 'ocr_view.dart';
+import '../widgets/app_snackbar.dart';
 
 class OCRLoadingScreen extends StatefulWidget {
   final String? imagePath;
@@ -41,9 +42,7 @@ class _OCRLoadingScreenState extends State<OCRLoadingScreen> {
 
       if (count >= limit) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('일일 영수증 분석 한도(${limit}회)를 모두 사용하셨습니다.')) // limit은 동적인 값이므로 수동 결합
-          );
+          AppSnackBar.show(context, '일일 영수증 분석 한도(${limit}회)를 모두 사용하셨습니다.');
           Navigator.pop(context);
         }
         return;
@@ -131,7 +130,7 @@ class _OCRLoadingScreenState extends State<OCRLoadingScreen> {
 
   void _handleError(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      AppSnackBar.show(context, message);
       Navigator.pop(context);
     }
   }

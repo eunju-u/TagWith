@@ -8,6 +8,7 @@ import '../../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../widgets/app_dialog.dart';
+import '../widgets/app_snackbar.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -117,9 +118,7 @@ class SettingsView extends StatelessWidget {
         await authProvider.signOut();
         if (context.mounted) {
           Provider.of<TransactionProvider>(context, listen: false).clearData();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text(AppStrings.logoutSuccess)),
-          );
+          AppSnackBar.show(context, AppStrings.logoutSuccess);
         }
       },
     );
@@ -138,13 +137,9 @@ class SettingsView extends StatelessWidget {
         final success = await authProvider.withdraw();
         if (success && context.mounted) {
           Provider.of<TransactionProvider>(context, listen: false).clearData();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text(AppStrings.withdrawSuccess)),
-          );
+          AppSnackBar.show(context, AppStrings.withdrawSuccess);
         } else if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text(AppStrings.withdrawError)),
-          );
+          AppSnackBar.show(context, AppStrings.withdrawError);
         }
       },
     );

@@ -212,7 +212,7 @@ class AppStrings {
   static const String nearbyDistanceLabel = '주변';
 
   // --- PDF 만들기 ---
-  static const String pdfCreatorTitle = '영수증 PDF 만들기';
+  static const String pdfCreatorTitle = 'PDF 만들기';
   static const String pdfGuideTitle = '사용 가이드';
   static const String pdfGuideReorderTitle = '순서 변경 (Long Click)';
   static const String pdfGuideReorderDesc = '항목을 길게 눌러 원하는 위치로 이동하세요.';
@@ -220,13 +220,16 @@ class AppStrings {
   static const String pdfGuideSaveDesc = '상단 "저장" 버튼을 눌러 공유하거나 기기에 저장하세요.';
   static const String pdfSuccessMessage = 'PDF가 성공적으로 생성 및 전달되었습니다.';
   static const String pdfDefaultFileNamePrefix = 'receipt_report_';
-  static const String pdfDefaultSubject = '영수증 PDF 보고서';
+  static const String pdfDefaultSubject = 'PDF 보고서';
   static const String pdfTitleHint = '제목을 입력하세요';
   static const String pdfAddItemTitle = '추가할 항목 선택';
   static const String pdfTypeTextLabel = '텍스트 (내용 입력)';
   static const String pdfTypeImageLabel = '이미지 (영수증 사진)';
   static const String pdfContentHint = '내용을 입력하세요.';
   static const String pdfEmptyError = '내용을 입력해 주세요.';
+  static const String pdfSaveOptionTitle = '파일 작업 선택';
+  static const String pdfPreviewLabel = '미리보기';
+  static const String pdfSaveLabel = '저장 (파일 공유)';
 
   // --- 설정 ---
   static const String settingsTitle = '설정';

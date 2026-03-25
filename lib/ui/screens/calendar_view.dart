@@ -9,6 +9,7 @@ import '../../providers/transaction_provider.dart';
 import '../../data/models.dart';
 import '../widgets/filter_bottom_sheet.dart';
 import '../widgets/app_dialog.dart';
+import '../widgets/app_snackbar.dart';
 import 'manual_entry_screen.dart';
 
 enum CalendarViewType { year, month, week }
@@ -501,15 +502,7 @@ class _CalendarViewState extends State<CalendarView> {
           onDismissed: (direction) async {
             final success = await provider.deleteTransaction(t.id);
             if (context.mounted) {
-              if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text(AppStrings.deleteSuccess))
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text(AppStrings.deleteFailed))
-                );
-              }
+              AppSnackBar.show(context, success ? AppStrings.deleteSuccess : AppStrings.deleteFailed);
             }
           },
           background: Container(

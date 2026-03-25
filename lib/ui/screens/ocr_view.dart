@@ -10,6 +10,7 @@ import '../widgets/category_picker_sheet.dart';
 import '../widgets/ocr_transaction_card.dart';
 import '../widgets/relation_picker_sheet.dart';
 import '../widgets/app_dialog.dart';
+import '../widgets/app_snackbar.dart';
 
 class OCRView extends StatefulWidget {
   final List<Transaction> extractedItems;
@@ -243,17 +244,13 @@ class _OCRViewState extends State<OCRView> {
       }
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${_extractedItems.length}${AppStrings.ocrSaveSuccessMessageSuffix}'))
-        );
+        AppSnackBar.show(context, '${_extractedItems.length}${AppStrings.ocrSaveSuccessMessageSuffix}');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppStrings.ocrSaveErrorMessage}$e'))
-        );
+        AppSnackBar.show(context, '${AppStrings.ocrSaveErrorMessage}$e');
       }
     }
   }
