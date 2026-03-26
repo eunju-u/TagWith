@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../data/models.dart';
 import '../core/app_config.dart';
+import '../core/app_log.dart';
+
 
 class TransactionService {
   final _dio = Dio(BaseOptions(baseUrl: AppConfig.baseUrl));
@@ -29,7 +31,7 @@ class TransactionService {
       }
       return [];
     } catch (e) {
-      print('Get Transactions Error: $e');
+      AppLog.logD('TransactionService', 'getTransactions', 'Get Transactions Error: $e');
       return [];
     }
   }
@@ -50,14 +52,14 @@ class TransactionService {
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       
-       print('getStatistics Server Data Raw JSON: ${response.data}');
+       AppLog.logD('TransactionService', 'getStatistics', 'Server Data Raw JSON: ${response.data}');
 
       if (response.statusCode == 200) {
         return Statistics.fromJson(response.data);
       }
       return null;
     } catch (e) {
-      print('getStatistics Get Statistics Error: $e');
+      AppLog.logD('TransactionService', 'getStatistics', 'Get Statistics Error: $e');
       return null;
     }
   }
@@ -74,14 +76,14 @@ class TransactionService {
         data: transaction.toJson(),
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      print('createTransaction response : $response');
+      AppLog.logD('TransactionService', 'createTransaction', 'response : $response');
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         return Transaction.fromJson(response.data);
       }
       return null;
     } catch (e) {
-      print('Create Transaction Error: $e');
+      AppLog.logD('TransactionService', 'createTransaction', 'Create Transaction Error: $e');
       return null;
     }
   }
@@ -99,7 +101,7 @@ class TransactionService {
 
       return response.statusCode == 200 || response.statusCode == 204;
     } catch (e) {
-      print('Delete Transaction Error: $e');
+      AppLog.logD('TransactionService', 'deleteTransaction', 'Delete Transaction Error: $e');
       return false;
     }
   }
@@ -121,7 +123,7 @@ class TransactionService {
       }
       return null;
     } catch (e) {
-      print('Update Transaction Error: $e');
+      AppLog.logD('TransactionService', 'updateTransaction', 'Update Transaction Error: $e');
       return null;
     }
   }
@@ -136,7 +138,7 @@ class TransactionService {
       }
       return [];
     } catch (e) {
-      print('Get Categories Error: $e');
+      AppLog.logD('TransactionService', 'getCategories', 'Get Categories Error: $e');
       return [];
     }
   }
@@ -158,7 +160,7 @@ class TransactionService {
       }
       return [];
     } catch (e) {
-      print('Get Tags Error: $e');
+      AppLog.logD('TransactionService', 'getTags', 'Get Tags Error: $e');
       return [];
     }
   }
@@ -180,7 +182,7 @@ class TransactionService {
       }
       return null;
     } catch (e) {
-      print('Create Tag Error: $e');
+      AppLog.logD('TransactionService', 'createTag', 'Create Tag Error: $e');
       return null;
     }
   }
@@ -208,7 +210,7 @@ class TransactionService {
       }
       return null;
     } catch (e) {
-      print('Upload Receipt Error: $e');
+      AppLog.logD('TransactionService', 'uploadReceipt', 'Upload Receipt Error: $e');
       return null;
     }
   }

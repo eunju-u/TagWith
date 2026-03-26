@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import '../../core/app_log.dart';
+
 
 import '../../core/app_strings.dart';
 import '../../core/theme.dart';
@@ -95,7 +97,7 @@ class _OCRLoadingScreenState extends State<OCRLoadingScreen> {
             String normalizedDate = receipt.date.replaceAll('.', '-');
             parsedDate = DateTime.parse(normalizedDate);
           } catch (e) {
-            print('날짜 파싱 실패: ${receipt.date}, 현재 시간으로 대체합니다.');
+            AppLog.logD('OCRLoadingScreen', '', '날짜 파싱 실패: ${receipt.date}, 현재 시간으로 대체합니다.');
             parsedDate = DateTime.now();
           }
           

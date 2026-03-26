@@ -3,6 +3,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../core/app_config.dart';
+import '../core/app_log.dart';
+
 
 class AuthService {
 
@@ -18,36 +20,36 @@ class AuthService {
   // 이메일 로그인
   Future<Map<String, dynamic>?> signInWithEmail(String email, String password) async {
     try {
-      print('[AuthService] 로그인 시도: $email');
+      AppLog.logD('AuthService', 'signInWithEmail', '로그인 시도: $email');
       final response = await _dio.post('/auth/login', data: {
         'email': email,
         'password': password,
       });
 
-      print('[AuthService] 응답 상태 코드: ${response.statusCode}');
+      AppLog.logD('AuthService', 'signInWithEmail', '응답 상태 코드: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final token = response.data['access_token'];
-        print('[AuthService] 토큰 획득 성공');
+        AppLog.logD('AuthService', 'signInWithEmail', '토큰 획득 성공');
         
         // 로그인 성공 후 사용자 정보 가져오기
         final userData = await getCurrentUser(token);
         
         if (userData != null) {
           await _saveSession(token, userData);
-          print('[AuthService] 세션 저장 및 로그인 완료');
+          AppLog.logD('AuthService', 'signInWithEmail', '세션 저장 및 로그인 완료');
           return userData;
         } else {
-          print('[AuthService] 로그인 성공했으나 사용자 정보 조회 실패');
+          AppLog.logD('AuthService', 'signInWithEmail', '로그인 성공했으나 사용자 정보 조회 실패');
         }
       }
       return null;
     } catch (e) {
       if (e is DioException) {
-        print('[AuthService] 로그인 API 에러: ${e.response?.statusCode}');
-        print('[AuthService] 에러 내용: ${e.response?.data}');
+        AppLog.logD('AuthService', 'signInWithEmail', '로그인 API 에러: ${e.response?.statusCode}');
+        AppLog.logD('AuthService', 'signInWithEmail', '에러 내용: ${e.response?.data}');
       } else {
-        print('[AuthService] 알 수 없는 로그인 에러: $e');
+        AppLog.logD('AuthService', 'signInWithEmail', '알 수 없는 로그인 에러: $e');
       }
       return null;
     }
@@ -60,7 +62,7 @@ class AuthService {
       final response = await _dio.post('/auth/send-verification', data: {'email': email});
       return response.statusCode == 200;
     } catch (e) {
-      print('Send Verification Error: $e');
+      AppLog.logD('AuthService', 'sendVerificationCode', 'Send Verification Error: $e');
       return false;
     }
   }
@@ -71,7 +73,7 @@ class AuthService {
       final response = await _dio.post('/auth/forgot-password', data: {'email': email});
       return response.statusCode == 200;
     } catch (e) {
-      print('Forgot Password Error: $e');
+      AppLog.logD('AuthService', 'forgotPassword', 'Forgot Password Error: $e');
       return false;
     }
   }
@@ -86,7 +88,7 @@ class AuthService {
       });
       return response.statusCode == 200;
     } catch (e) {
-      print('Reset Password Error: $e');
+      AppLog.logD('AuthService', 'resetPassword', 'Reset Password Error: $e');
       return false;
     }
   }
@@ -100,7 +102,7 @@ class AuthService {
       });
       return response.statusCode == 200;
     } catch (e) {
-      print('Verify Code Error: $e');
+      AppLog.logD('AuthService', 'verifyCode', 'Verify Code Error: $e');
       return false;
     }
   }
@@ -119,10 +121,10 @@ class AuthService {
       return response.statusCode == 201 || response.statusCode == 200;
     } catch (e) {
       if (e is DioException) {
-        print('Email Sign-Up Error Status: ${e.response?.statusCode}');
-        print('Email Sign-Up Error Data: ${e.response?.data}');
+        AppLog.logD('AuthService', 'signUpWithEmail', 'Email Sign-Up Error Status: ${e.response?.statusCode}');
+        AppLog.logD('AuthService', 'signUpWithEmail', 'Email Sign-Up Error Data: ${e.response?.data}');
       }
-      print('Email Sign-Up Error: $e');
+      AppLog.logD('AuthService', 'signUpWithEmail', 'Email Sign-Up Error: $e');
       return false;
     }
   }
@@ -150,7 +152,7 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('Get Current User Error: $e');
+      AppLog.logD('AuthService', 'getCurrentUser', 'Get Current User Error: $e');
       return null;
     }
   }
@@ -184,13 +186,13 @@ class AuthService {
         );
       }
     } catch (e) {
-      print('Sign-Out API Error: $e');
+      AppLog.logD('AuthService', 'signOut', 'Sign-Out API Error: $e');
     } finally {
       try {
         await _storage.delete(key: _tokenKey);
         await _storage.delete(key: _userKey);
       } catch (e) {
-        print('Sign-Out Local Storage Error: $e');
+        AppLog.logD('AuthService', 'signOut', 'Sign-Out Local Storage Error: $e');
       }
     }
   }
@@ -214,16 +216,16 @@ class AuthService {
         // 탈퇴 성공 시 로컬 세션 정보 삭제
         await _storage.delete(key: _tokenKey);
         await _storage.delete(key: _userKey);
-        print('[AuthService] 회원 탈퇴 및 로컬 세션 삭제 완료');
+        AppLog.logD('AuthService', 'withdraw', '회원 탈퇴 및 로컬 세션 삭제 완료');
         return true;
       }
       return false;
     } catch (e) {
       if (e is DioException) {
-        print('[AuthService] 회원 탈퇴 API 에러: ${e.response?.statusCode}');
-        print('[AuthService] 에러 내용: ${e.response?.data}');
+        AppLog.logD('AuthService', 'withdraw', '회원 탈퇴 API 에러: ${e.response?.statusCode}');
+        AppLog.logD('AuthService', 'withdraw', '에러 내용: ${e.response?.data}');
       } else {
-        print('[AuthService] 알 수 없는 회원 탈퇴 에러: $e');
+        AppLog.logD('AuthService', 'withdraw', '알 수 없는 회원 탈퇴 에러: $e');
       }
       return false;
     }

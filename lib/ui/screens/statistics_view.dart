@@ -1,7 +1,8 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../core/app_log.dart';
+
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/app_strings.dart';
 import '../../core/theme.dart';
@@ -447,7 +448,7 @@ class _StatisticsViewState extends State<StatisticsView> {
           DateTime parsed = DateTime.parse(dateStr.length == 7 ? '$dateStr-01' : dateStr).toLocal();
           trendData[parsed] = { 'income': e.income, 'expense': e.expense };
         } catch (err) {
-          print('통계 날짜 파싱 실패: ${e.date}, 에러: $err');
+          AppLog.logD('StatisticsView', '', '통계 날짜 파싱 실패: ${e.date}, 에러: $err');
           // 파싱 실패한 데이터는 skip하거나 기본값 처리
         }
       }
@@ -605,7 +606,7 @@ class _StatisticsViewState extends State<StatisticsView> {
     final theme = Theme.of(context);
     final sortedEntries = data.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
 
-    print('eunju 통계 그리드 데이터: ${data.length}개 항목, 총합: $total');
+    AppLog.logD('StatisticsView', '', '통계 그리드 데이터: ${data.length}개 항목, 총합: $total');
 
     return Column(
       children: sortedEntries.map((e) {

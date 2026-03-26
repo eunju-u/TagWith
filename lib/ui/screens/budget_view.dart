@@ -10,6 +10,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../../core/app_log.dart';
+
 import '../../core/app_strings.dart';
 import '../../core/theme.dart';
 import '../../providers/transaction_provider.dart';
@@ -84,7 +86,7 @@ class _BudgetViewState extends State<BudgetView> {
         }
       }
     } catch (e) {
-      debugPrint('Config Fetch Error: $e');
+      AppLog.logD('BudgetView', '', 'Config Fetch Error: $e');
       if (mounted) {
         setState(() => _isServerLunchEnabled = false);
       }
@@ -152,7 +154,7 @@ class _BudgetViewState extends State<BudgetView> {
           });
         }
       } catch (e) {
-        debugPrint('Naver Search Error: $e');
+        AppLog.logD('BudgetView', '', 'Naver Search Error: $e');
         if (mounted) {
           _showErrorDialog(AppStrings.locationFetchError);
           setState(() {
@@ -205,7 +207,7 @@ class _BudgetViewState extends State<BudgetView> {
         }).toList();
       }
     } catch (e) {
-      debugPrint('Naver Local API Error: $e');
+      AppLog.logD('BudgetView', '', 'Naver Local API Error: $e');
     }
     return [];
   }
@@ -876,7 +878,7 @@ class _NaverMapScreenState extends State<NaverMapScreen> {
             if (mounted) setState(() => _isLoading = false);
           },
           onWebResourceError: (error) {
-            debugPrint('Naver Map Error: ${error.description}');
+            AppLog.logD('NaverMapScreen', '', 'Naver Map Error: ${error.description}');
           },
         ),
       )
