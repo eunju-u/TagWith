@@ -46,3 +46,5 @@ app.*.map.json
 
 # Security / Config
 config.json
+android/key.properties
+*.jks

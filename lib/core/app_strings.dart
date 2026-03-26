@@ -2,7 +2,7 @@ import 'app_config.dart';
 
 class AppStrings {
   // --- 공통 ---
-  static const String appName = 'TagWith';
+  static const String appName = '태그윗 가계부';
   static const String tagline = '태그로 연결되는 스마트 가계부';
   static const String ok = '확인';
   static const String cancel = '취소';
