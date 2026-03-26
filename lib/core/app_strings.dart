@@ -259,4 +259,6 @@ class AppStrings {
   static const String versionInfo = '버전 정보';
   static const String privacyPolicyLabel = '개인정보 처리방침';
   static const String privacyPolicyUrl = '${AppConfig.baseUrl}/privacy';
+  static const String privacyAgreementPrefix = '가입 시 ';
+  static const String privacyAgreementSuffix = '에 동의하는 것으로 간주합니다.';
 }

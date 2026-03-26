@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../widgets/app_snackbar.dart';
 import '../../core/app_strings.dart';
 import '../../providers/auth_provider.dart';
@@ -119,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // 로그인 카드 (Glassmorphism 효과)
                     Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.white.withAlpha(38), // 0.15 alpha
                         borderRadius: BorderRadius.circular(28),
@@ -291,6 +292,43 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           child: const Text(AppStrings.signUpButton, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
         ),
+        const SizedBox(height: 15),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 2,
+            children: [
+              Text(
+                AppStrings.privacyAgreementPrefix,
+                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11),
+              ),
+              GestureDetector(
+                onTap: () async {
+                  final url = Uri.parse(AppStrings.privacyPolicyUrl);
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  }
+                },
+                child: Text(
+                  AppStrings.privacyPolicyLabel,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 10,
+                    decoration: TextDecoration.underline,
+                    decorationColor: Colors.white38,
+                  ),
+                ),
+              ),
+              Text(
+                AppStrings.privacyAgreementSuffix,
+                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 0),
         TextButton(
           onPressed: () => setState(() => _isSignUp = false),
           child: const Text(AppStrings.alreadyHaveAccount, style: TextStyle(color: Colors.white70)),
