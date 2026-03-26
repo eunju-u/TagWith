@@ -111,7 +111,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                       ? Center(child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.pie_chart_outline_rounded, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                      Icon(Icons.pie_chart_outline_rounded, size: 48, color: theme.colorScheme.onSurface.withOpacity(0.1)),
                       const SizedBox(height: 12),
                       Text(AppStrings.noExpenseDataMessage, style: theme.textTheme.bodyMedium),
                     ],
@@ -145,7 +145,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                           Text(
                             AppStrings.totalExpenseSummary,
                             style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                              color: theme.colorScheme.onSurface.withOpacity(0.5),
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.5,
                             ),
@@ -187,7 +187,7 @@ class _StatisticsViewState extends State<StatisticsView> {
           height: 48,
           margin: const EdgeInsets.symmetric(horizontal: 40),
           decoration: BoxDecoration(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+            color: theme.colorScheme.onSurface.withOpacity(0.05),
             borderRadius: BorderRadius.circular(24),
           ),
           child: Stack(
@@ -208,7 +208,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: Colors.black.withOpacity(0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -526,7 +526,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                         child: Text(
                           text,
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            color: theme.colorScheme.onSurface.withOpacity(0.5),
                             fontWeight: FontWeight.bold,
                             fontSize: _selectedMode == StatisticsMode.monthly ? 10 : 8.5, // 폰트 크기 조정
                           ),
@@ -592,7 +592,7 @@ class _StatisticsViewState extends State<StatisticsView> {
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
-            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 4)],
+            boxShadow: [BoxShadow(color: color.withOpacity(0.4), blurRadius: 4)],
           ),
         ),
         const SizedBox(width: 6),
@@ -624,7 +624,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: cat.color.withValues(alpha: 0.1),
+                  color: cat.color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(cat.icon, color: cat.color, size: 22),
@@ -661,7 +661,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                             height: 6,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: [cat.color, cat.color.withValues(alpha: 0.6)],
+                                colors: [cat.color, cat.color.withOpacity(0.6)],
                               ),
                               borderRadius: BorderRadius.circular(3),
                             ),
@@ -728,13 +728,13 @@ class _StatisticsViewState extends State<StatisticsView> {
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+                  color: theme.colorScheme.onSurface.withOpacity(0.03),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
+                  border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
                 ),
                 child: Column(
                   children: [
-                    Icon(methodIcon, size: 24, color: AppColors.primary.withValues(alpha: 0.7)),
+                    Icon(methodIcon, size: 24, color: AppColors.primary.withOpacity(0.7)),
                     const SizedBox(height: 8),
                     Text(methodLabel, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500)),
                     const SizedBox(height: 4),
@@ -746,7 +746,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                     ),
                     Text(
                       '$percentage%',
-                      style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                      style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.5)),
                     ),
                   ],
                 ),
@@ -768,7 +768,7 @@ class _StatisticsViewState extends State<StatisticsView> {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: color.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, size: 20, color: color),
@@ -793,7 +793,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                 borderRadius: BorderRadius.circular(10),
                 child: LinearProgressIndicator(
                   value: percentage,
-                  backgroundColor: theme.dividerColor.withValues(alpha: 0.1),
+                  backgroundColor: theme.dividerColor.withOpacity(0.1),
                   valueColor: AlwaysStoppedAnimation<Color>(color),
                   minHeight: 6,
                 ),
@@ -826,14 +826,14 @@ class _StatisticsViewState extends State<StatisticsView> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+              color: theme.colorScheme.onSurface.withOpacity(0.03),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
               children: [
-                Icon(Icons.label_off_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+                Icon(Icons.label_off_rounded, color: theme.colorScheme.onSurface.withOpacity(0.2)),
                 const SizedBox(width: 12),
-                Text(AppStrings.noTagDataMessage, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                Text(AppStrings.noTagDataMessage, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.4))),
               ],
             ),
           )
@@ -843,16 +843,16 @@ class _StatisticsViewState extends State<StatisticsView> {
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+                  color: theme.colorScheme.onSurface.withOpacity(0.03),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
+                  border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
+                        color: AppColors.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(Icons.label_rounded, size: 18, color: AppColors.primary),
@@ -877,8 +877,8 @@ class _StatisticsViewState extends State<StatisticsView> {
                             borderRadius: BorderRadius.circular(4),
                             child: LinearProgressIndicator(
                               value: totalExpense > 0 ? e.value / totalExpense : 0,
-                              backgroundColor: theme.dividerColor.withValues(alpha: 0.5),
-                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary.withValues(alpha: 0.6)),
+                              backgroundColor: theme.dividerColor.withOpacity(0.5),
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary.withOpacity(0.6)),
                               minHeight: 4,
                             ),
                           ),
@@ -901,12 +901,12 @@ class _StatisticsViewState extends State<StatisticsView> {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
+        border: Border.all(color: color.withOpacity(0.2), width: 1.5),
       ),
       child: Center(
         child: Icon(icon, size: 16, color: color),
@@ -933,7 +933,7 @@ class _StatisticsViewState extends State<StatisticsView> {
               AppStrings.avgDailyExpenseLabel,
               '${NumberFormat('#,###').format(stats.dailyAverageExpense.toInt())}${AppStrings.currencyUnit}',
               Icons.calendar_today_rounded,
-              Colors.blue.withValues(alpha: 0.1),
+              Colors.blue.withOpacity(0.1),
               Colors.blue,
               AppStrings.expenseVelocityCheck,
             ),
@@ -943,7 +943,7 @@ class _StatisticsViewState extends State<StatisticsView> {
               AppStrings.mostSpentWeekdayLabel,
               stats.mostSpentWeekday,
               Icons.local_fire_department_rounded,
-              Colors.orange.withValues(alpha: 0.1),
+              Colors.orange.withOpacity(0.1),
               Colors.orange,
               AppStrings.spendingCheckDay,
             ),
@@ -960,10 +960,10 @@ class _StatisticsViewState extends State<StatisticsView> {
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.08)),
+          border: Border.all(color: theme.dividerColor.withOpacity(0.08)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
+              color: Colors.black.withOpacity(0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -981,7 +981,7 @@ class _StatisticsViewState extends State<StatisticsView> {
               child: Icon(icon, size: 20, color: iconColor),
             ),
             const SizedBox(height: 16),
-            Text(title, style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+            Text(title, style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.4))),
             const SizedBox(height: 8),
             Text(
               value,
@@ -990,7 +990,7 @@ class _StatisticsViewState extends State<StatisticsView> {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
-            Text(sub, style: theme.textTheme.labelSmall?.copyWith(color: iconColor.withValues(alpha: 0.6), fontWeight: FontWeight.bold)),
+            Text(sub, style: theme.textTheme.labelSmall?.copyWith(color: iconColor.withOpacity(0.6), fontWeight: FontWeight.bold)),
           ],
         ),
       ),

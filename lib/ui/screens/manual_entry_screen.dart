@@ -150,7 +150,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                   children: [
                     Text(
                       _type == TransactionType.expense ? AppStrings.amountExpensePrompt : AppStrings.amountIncomePrompt,
-                      style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                      style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.5)),
                     ),
                     const SizedBox(height: 8),
                     IntrinsicWidth(
@@ -170,12 +170,12 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                         ),
                         decoration: InputDecoration(
                           hintText: AppStrings.amountHint,
-                          hintStyle: TextStyle(color: AppColors.primary.withValues(alpha: 0.3)),
+                          hintStyle: TextStyle(color: AppColors.primary.withOpacity(0.3)),
                           border: InputBorder.none,
                           suffixText: AppStrings.currencyUnit,
                           suffixStyle: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: AppColors.primary.withValues(alpha: 0.5),
+                            color: AppColors.primary.withOpacity(0.5),
                           ),
                         ),
                       ),
@@ -189,7 +189,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+                  color: theme.colorScheme.onSurface.withOpacity(0.03),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: theme.dividerColor),
                 ),
@@ -258,14 +258,14 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
           height: 60,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
+              colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.3),
+                color: AppColors.primary.withOpacity(0.3),
                 blurRadius: 15,
                 offset: const Offset(0, 8),
               ),
@@ -301,7 +301,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+            color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withOpacity(0.05),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Center(
@@ -309,7 +309,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               label,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                color: isSelected ? Colors.white : theme.colorScheme.onSurface.withOpacity(0.4),
               ),
             ),
           ),
@@ -339,7 +339,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+          color: theme.colorScheme.onSurface.withOpacity(0.03),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: theme.dividerColor),
         ),
@@ -348,7 +348,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: (color ?? AppColors.primary).withValues(alpha: 0.1),
+                color: (color ?? AppColors.primary).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color ?? AppColors.primary, size: 20),
@@ -357,7 +357,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
             Expanded(
               child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
             ),
-            Icon(AppIcons.chevronRight, color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+            Icon(AppIcons.chevronRight, color: theme.colorScheme.onSurface.withOpacity(0.2)),
           ],
         ),
       ),
@@ -370,7 +370,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+        color: theme.colorScheme.onSurface.withOpacity(0.03),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: theme.dividerColor),
       ),
@@ -381,7 +381,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
           ..._selectedRelations.map((rel) => Chip(
             label: Text(rel.name),
             onDeleted: () => setState(() => _selectedRelations.remove(rel)),
-            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+            backgroundColor: AppColors.primary.withOpacity(0.1),
             deleteIconColor: AppColors.primary,
             labelStyle: const TextStyle(color: AppColors.primary, fontSize: 13),
             side: BorderSide.none,
@@ -427,10 +427,10 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+            color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withOpacity(0.05),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? AppColors.primary : theme.dividerColor.withValues(alpha: 0.1),
+              color: isSelected ? AppColors.primary : theme.dividerColor.withOpacity(0.1),
             ),
           ),
           child: Center(
@@ -439,7 +439,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               style: TextStyle(
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 fontSize: 13,
-                color: isSelected ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                color: isSelected ? Colors.white : theme.colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
           ),

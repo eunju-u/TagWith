@@ -31,7 +31,7 @@ class FilterBottomSheet extends StatelessWidget {
           height: MediaQuery.of(context).size.height * 2 / 3, // 화면 크기의 2/3 설정
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withValues(alpha: 0.9),
+            color: theme.colorScheme.surface.withOpacity(0.9),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: SafeArea(
@@ -194,10 +194,10 @@ class _FilterChip extends StatelessWidget {
       label: Text(label),
       selected: isSelected,
       onSelected: onSelected,
-      selectedColor: AppColors.primary.withValues(alpha: 0.2),
+      selectedColor: AppColors.primary.withOpacity(0.2),
       checkmarkColor: AppColors.primary,
       labelStyle: TextStyle(
-        color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+        color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withOpacity(0.7),
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       backgroundColor: theme.colorScheme.surface,

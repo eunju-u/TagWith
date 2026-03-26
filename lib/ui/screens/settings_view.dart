@@ -116,7 +116,7 @@ class SettingsView extends StatelessWidget {
                   const Divider(height: 1),
                   ListTile(
                     title: const Text(AppStrings.versionInfo),
-                    trailing: Text('1.0.0', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                    trailing: Text('1.0.0', style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.5))),
                   ),
                 ],
               ),

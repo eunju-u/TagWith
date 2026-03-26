@@ -21,7 +21,7 @@ class CategoryPickerSheet {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 20,
               offset: const Offset(0, -10),
             ),
@@ -69,7 +69,7 @@ class CategoryPickerSheet {
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: cat.color.withValues(alpha: 0.1),
+                            color: cat.color.withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(cat.icon, color: cat.color, size: 24),

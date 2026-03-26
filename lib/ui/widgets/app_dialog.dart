@@ -66,7 +66,7 @@ class AppDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: (confirmColor ?? AppColors.primary).withValues(alpha: 0.1),
+                  color: (confirmColor ?? AppColors.primary).withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -92,7 +92,7 @@ class AppDialog extends StatelessWidget {
               Text(
                 content!,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
@@ -111,7 +111,7 @@ class AppDialog extends StatelessWidget {
                       child: Text(
                         cancelText!,
                         style: TextStyle(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                          color: theme.colorScheme.onSurface.withOpacity(0.4),
                           fontWeight: FontWeight.bold,
                         ),
                       ),

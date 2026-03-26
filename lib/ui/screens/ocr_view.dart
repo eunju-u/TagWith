@@ -86,7 +86,7 @@ class _OCRViewState extends State<OCRView> {
                 Text(
                   AppStrings.ocrWaitMessage,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    color: theme.colorScheme.onSurface.withOpacity(0.5),
                   ),
                 ),
               ],
@@ -132,7 +132,7 @@ class _OCRViewState extends State<OCRView> {
                 ],
               ),
               const SizedBox(height: 8),
-              Text(AppStrings.ocrReviewGuide, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+              Text(AppStrings.ocrReviewGuide, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6))),
             ],
           ),
         ),
@@ -155,7 +155,7 @@ class _OCRViewState extends State<OCRView> {
                   child: Text(
                     title,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: theme.colorScheme.onSurface.withOpacity(0.5),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -176,7 +176,7 @@ class _OCRViewState extends State<OCRView> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),

@@ -70,10 +70,10 @@ class RelationPickerSheet {
                       setModalState(() {});
                       Navigator.pop(context);
                     },
-                    selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                    selectedColor: AppColors.primary.withOpacity(0.15),
                     checkmarkColor: AppColors.primary,
                     labelStyle: TextStyle(
-                      color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withOpacity(0.7),
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                     backgroundColor: theme.colorScheme.surface,

@@ -77,13 +77,13 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
       margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.fromLTRB(16, 12, 12, 16),
       decoration: BoxDecoration(
-        color: t.isDuplicate ? theme.colorScheme.error.withValues(alpha: 0.03) : theme.colorScheme.surface,
+        color: t.isDuplicate ? theme.colorScheme.error.withOpacity(0.03) : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         border: t.isDuplicate 
-            ? Border.all(color: theme.colorScheme.error.withValues(alpha: 0.2)) 
+            ? Border.all(color: theme.colorScheme.error.withOpacity(0.2)) 
             : Border.all(color: theme.dividerColor),
         boxShadow: theme.brightness == Brightness.light && !t.isDuplicate 
-            ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)] 
+            ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)] 
             : null,
       ),
       child: Column(
@@ -97,7 +97,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), // 내부 패딩 축소
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.error.withValues(alpha: 0.05),
+                      color: theme.colorScheme.error.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
@@ -125,7 +125,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
                   child: IconButton(
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    icon: Icon(Icons.close_rounded, size: 22, color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+                    icon: Icon(Icons.close_rounded, size: 22, color: theme.colorScheme.onSurface.withOpacity(0.2)),
                     onPressed: widget.onDelete,
                   ),
                 ),
@@ -136,9 +136,9 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+              color: theme.colorScheme.onSurface.withOpacity(0.03),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+              border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
             ),
             child: TextField(
               controller: _descriptionController,
@@ -187,7 +187,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
                 AppStrings.currencyUnit,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primary.withValues(alpha: 0.5),
+                  color: AppColors.primary.withOpacity(0.5),
                 ),
               ),
             ],
@@ -212,9 +212,9 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+                color: theme.colorScheme.onSurface.withOpacity(0.03),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+                border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -328,16 +328,16 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isAction ? Colors.transparent : AppColors.primary.withValues(alpha: 0.1),
+          color: isAction ? Colors.transparent : AppColors.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(20),
           border: isAction ? Border.all(color: theme.dividerColor) : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: isAction ? theme.colorScheme.onSurface.withValues(alpha: 0.5) : AppColors.primary),
+            Icon(icon, size: 14, color: isAction ? theme.colorScheme.onSurface.withOpacity(0.5) : AppColors.primary),
             const SizedBox(width: 4),
-            Text(label, style: TextStyle(fontSize: 12, color: isAction ? theme.colorScheme.onSurface.withValues(alpha: 0.7) : AppColors.primary)),
+            Text(label, style: TextStyle(fontSize: 12, color: isAction ? theme.colorScheme.onSurface.withOpacity(0.7) : AppColors.primary)),
             if (onDelete != null) ...[
               const SizedBox(width: 4),
               GestureDetector(

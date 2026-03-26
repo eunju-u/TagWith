@@ -73,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
+                colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -92,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
         rightCornerRadius: 32,
         backgroundColor: theme.colorScheme.surface,
         activeColor: AppColors.primary,
-        inactiveColor: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+        inactiveColor: theme.colorScheme.onSurface.withOpacity(0.4),
         onTap: (index) => setState(() => _bottomNavIndex = index),
         // Adding shadow and elevation for premium look
         elevation: 20,
@@ -193,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(icon, color: color, size: 32),

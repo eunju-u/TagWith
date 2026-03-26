@@ -160,7 +160,7 @@ class _OCRLoadingScreenState extends State<OCRLoadingScreen> {
             Text(
               '잠시만 기다려 주세요',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurface.withOpacity(0.5),
               ),
             ),
           ],

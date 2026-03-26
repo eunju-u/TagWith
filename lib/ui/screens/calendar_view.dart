@@ -60,7 +60,7 @@ class _CalendarViewState extends State<CalendarView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: Icon(AppIcons.chevronLeft, size: 24, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+              icon: Icon(AppIcons.chevronLeft, size: 24, color: theme.colorScheme.onSurface.withOpacity(0.5)),
               onPressed: () => setState(() {
                 if (_viewType == CalendarViewType.year) {
                   _focusedDay = DateTime(_focusedDay.year - 1, _focusedDay.month);
@@ -73,7 +73,7 @@ class _CalendarViewState extends State<CalendarView> {
             Text(_formatFocusedDate(), style: theme.textTheme.headlineMedium?.copyWith(fontSize: 25)),
             const SizedBox(width: 8),
             IconButton(
-              icon: Icon(AppIcons.chevronRight, size: 24, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+              icon: Icon(AppIcons.chevronRight, size: 24, color: theme.colorScheme.onSurface.withOpacity(0.5)),
               onPressed: () => setState(() {
                 if (_viewType == CalendarViewType.year) {
                   _focusedDay = DateTime(_focusedDay.year + 1, _focusedDay.month);
@@ -89,7 +89,7 @@ class _CalendarViewState extends State<CalendarView> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(AppIcons.filter, color: theme.colorScheme.onSurface.withValues(alpha: 0.8)),
+            icon: Icon(AppIcons.filter, color: theme.colorScheme.onSurface.withOpacity(0.8)),
             onPressed: () => _showFilterBottomSheet(context),
           ),
           const SizedBox(width: 8),
@@ -128,12 +128,12 @@ class _CalendarViewState extends State<CalendarView> {
                                   setState(() => _focusedDay = focusedDay);
                                 },
                                 daysOfWeekStyle: DaysOfWeekStyle(
-                                  weekdayStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 13, fontWeight: FontWeight.w600),
-                                  weekendStyle: TextStyle(color: AppColors.expense.withValues(alpha: 0.6), fontSize: 13, fontWeight: FontWeight.w600),
+                                  weekdayStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.4), fontSize: 13, fontWeight: FontWeight.w600),
+                                  weekendStyle: TextStyle(color: AppColors.expense.withOpacity(0.6), fontSize: 13, fontWeight: FontWeight.w600),
                                 ),
                                 calendarStyle: CalendarStyle(
                                   todayDecoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(alpha: 0.15),
+                                    color: AppColors.primary.withOpacity(0.15),
                                     shape: BoxShape.circle,
                                   ),
                                   todayTextStyle: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
@@ -197,13 +197,13 @@ class _CalendarViewState extends State<CalendarView> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+          color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withOpacity(0.05),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+            color: isSelected ? Colors.white : theme.colorScheme.onSurface.withOpacity(0.4),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             fontSize: 13,
           ),
@@ -246,7 +246,7 @@ class _CalendarViewState extends State<CalendarView> {
               theme,
             ),
           ),
-          Container(width: 1, height: 40, color: theme.dividerColor.withValues(alpha: 0.5)),
+          Container(width: 1, height: 40, color: theme.dividerColor.withOpacity(0.5)),
           Expanded(
             child: _buildSummaryItem(
               AppStrings.totalExpenseLabel,
@@ -289,12 +289,12 @@ class _CalendarViewState extends State<CalendarView> {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: month.month == DateTime.now().month && month.year == DateTime.now().year
-                    ? AppColors.primary.withValues(alpha: 0.3)
+                    ? AppColors.primary.withOpacity(0.3)
                     : theme.dividerColor,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
+                  color: Colors.black.withOpacity(0.02),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -329,7 +329,7 @@ class _CalendarViewState extends State<CalendarView> {
                 if (income == 0 && expense == 0)
                   Text(
                     '-',
-                    style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.1), fontSize: 12),
+                    style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.1), fontSize: 12),
                   ),
               ],
             ),
@@ -346,7 +346,7 @@ class _CalendarViewState extends State<CalendarView> {
         Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            color: theme.colorScheme.onSurface.withOpacity(0.5),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -366,18 +366,18 @@ class _CalendarViewState extends State<CalendarView> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(AppStrings.cashLabel, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                Text(AppStrings.cashLabel, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.4))),
                 const SizedBox(height: 2),
-                Text(AppStrings.cardLabel, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                Text(AppStrings.cardLabel, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.4))),
               ],
             ),
             const SizedBox(width: 8),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${format.format(cash)}${AppStrings.currencyUnit}', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.7), fontWeight: FontWeight.w600)),
+                Text('${format.format(cash)}${AppStrings.currencyUnit}', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.7), fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
-                Text('${format.format(card)}${AppStrings.currencyUnit}', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.7), fontWeight: FontWeight.w600)),
+                Text('${format.format(card)}${AppStrings.currencyUnit}', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.7), fontWeight: FontWeight.w600)),
               ],
             ),
           ],
@@ -419,7 +419,7 @@ class _CalendarViewState extends State<CalendarView> {
                     decoration: isSelected
                         ? const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle)
                         : BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
+                            color: AppColors.primary.withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
                   ),
@@ -472,7 +472,7 @@ class _CalendarViewState extends State<CalendarView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox_outlined, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+            Icon(Icons.inbox_outlined, size: 48, color: theme.colorScheme.onSurface.withOpacity(0.1)),
             const SizedBox(height: 12),
             Text(AppStrings.noDataMessage, style: theme.textTheme.bodyMedium),
           ],
@@ -551,7 +551,7 @@ class _CalendarViewState extends State<CalendarView> {
                 const SizedBox(height: 2),
                 Text(
                   '${t.category.name} • ${_getPaymentMethodLabel(t.paymentMethod)}${t.relations.isNotEmpty ? ' • ${t.relations.map((r) => r.name).join(', ')}' : ''}',
-                  style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                  style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, color: theme.colorScheme.onSurface.withOpacity(0.6)),
                 ),
               ],
             ),
@@ -604,7 +604,7 @@ class _CalendarViewState extends State<CalendarView> {
                   Positioned(
                     right: 20,
                     child: IconButton(
-                      icon: Icon(Icons.info_outline_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.5), size: 20),
+                      icon: Icon(Icons.info_outline_rounded, color: theme.colorScheme.onSurface.withOpacity(0.5), size: 20),
                       onPressed: () {
                         AppDialog.show(
                           context: context,

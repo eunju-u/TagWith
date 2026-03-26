@@ -63,14 +63,14 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
       onSelected: (val) {
         if (val) setState(() => item.imageSize = size);
       },
-      selectedColor: AppColors.primary.withValues(alpha: 0.1),
+      selectedColor: AppColors.primary.withOpacity(0.1),
       labelStyle: TextStyle(
         color: isSelected ? AppColors.primary : Colors.grey,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: isSelected ? AppColors.primary : Colors.grey.withValues(alpha: 0.2)),
+        side: BorderSide(color: isSelected ? AppColors.primary : Colors.grey.withOpacity(0.2)),
       ),
       showCheckmark: false,
     );
@@ -439,7 +439,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
+                colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -510,7 +510,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
         border: Border.all(color: theme.dividerColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -525,7 +525,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
               Icon(
                 item.type == PDFItemType.text ? AppIcons.textFields : AppIcons.image,
                 size: 20,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                color: theme.colorScheme.onSurface.withOpacity(0.4),
               ),
               IconButton(
                 padding: EdgeInsets.zero,

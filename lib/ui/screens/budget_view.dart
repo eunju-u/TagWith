@@ -265,7 +265,7 @@ class _BudgetViewState extends State<BudgetView> {
           hintText: AppStrings.budgetHint,
           suffixText: AppStrings.currencyUnit,
           filled: true,
-          fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+          fillColor: theme.colorScheme.onSurface.withOpacity(0.05),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
           contentPadding: const EdgeInsets.all(20),
         ),
@@ -322,7 +322,7 @@ class _BudgetViewState extends State<BudgetView> {
                     label: const Text(AppStrings.editGoalButton),
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.primary,
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                      backgroundColor: AppColors.primary.withOpacity(0.1),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
@@ -358,10 +358,10 @@ class _BudgetViewState extends State<BudgetView> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
+        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 30,
             offset: const Offset(0, 12),
           ),
@@ -375,7 +375,7 @@ class _BudgetViewState extends State<BudgetView> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(AppStrings.currentSpendingLabel, style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                  Text(AppStrings.currentSpendingLabel, style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.4))),
                   const SizedBox(height: 8),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -389,7 +389,7 @@ class _BudgetViewState extends State<BudgetView> {
                         ),
                       ),
                       const SizedBox(width: 4),
-                      Text(AppStrings.currencyUnit, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.3))),
+                      Text(AppStrings.currencyUnit, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.3))),
                     ],
                   ),
                 ],
@@ -397,7 +397,7 @@ class _BudgetViewState extends State<BudgetView> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  color: (progress > 0.8 ? Colors.deepOrange : AppColors.primary).withValues(alpha: 0.1),
+                  color: (progress > 0.8 ? Colors.deepOrange : AppColors.primary).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
@@ -419,7 +419,7 @@ class _BudgetViewState extends State<BudgetView> {
                     height: 16,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: theme.dividerColor.withValues(alpha: 0.05),
+                      color: theme.dividerColor.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
@@ -432,12 +432,12 @@ class _BudgetViewState extends State<BudgetView> {
                       gradient: LinearGradient(
                         colors: progress > 0.8 
                             ? [Colors.orange, Colors.deepOrange]
-                            : [AppColors.primary, AppColors.primary.withValues(alpha: 0.7)],
+                            : [AppColors.primary, AppColors.primary.withOpacity(0.7)],
                       ),
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: (progress > 0.8 ? Colors.deepOrange : AppColors.primary).withValues(alpha: 0.3),
+                          color: (progress > 0.8 ? Colors.deepOrange : AppColors.primary).withOpacity(0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -452,12 +452,12 @@ class _BudgetViewState extends State<BudgetView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(AppStrings.currencyUnit, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.3))),
+              Text(AppStrings.currencyUnit, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.3))),
               Text(
                 '${AppStrings.budgetGoalLabelPrefix} ${NumberFormat('#,###').format(goal)}${AppStrings.currencyUnit}', 
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
                 ),
               ),
             ],
@@ -511,22 +511,22 @@ class _BudgetViewState extends State<BudgetView> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+          color: theme.colorScheme.onSurface.withOpacity(0.03),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.08)),
+          border: Border.all(color: theme.dividerColor.withOpacity(0.08)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Text(title, style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                Text(title, style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.4))),
                 if (onInfoTap != null)
                   Padding(
                     padding: const EdgeInsets.only(left: 4),
                     child: GestureDetector(
                       onTap: onInfoTap,
-                      child: Icon(Icons.info_outline_rounded, size: 14, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+                      child: Icon(Icons.info_outline_rounded, size: 14, color: theme.colorScheme.onSurface.withOpacity(0.3)),
                     ),
                   ),
               ],
@@ -580,9 +580,9 @@ class _BudgetViewState extends State<BudgetView> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: tipColor.withValues(alpha: 0.05),
+        color: tipColor.withOpacity(0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: tipColor.withValues(alpha: 0.08)),
+        border: Border.all(color: tipColor.withOpacity(0.08)),
       ),
       child: Row(
         children: [
@@ -592,7 +592,7 @@ class _BudgetViewState extends State<BudgetView> {
             child: Text(
               tip,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: tipColor.withValues(alpha: 0.8),
+                color: tipColor.withOpacity(0.8),
                 fontWeight: FontWeight.w600,
                 height: 1.5,
               ),
@@ -607,16 +607,16 @@ class _BudgetViewState extends State<BudgetView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.05),
+        color: AppColors.primary.withOpacity(0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: AppColors.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.auto_awesome_rounded, color: AppColors.primary, size: 20),
@@ -629,7 +629,7 @@ class _BudgetViewState extends State<BudgetView> {
                 Text(AppStrings.lunchRecommendModeTitle, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
                 Text(
                   _isAiRecommendEnabled ? AppStrings.lunchRecommendActiveSub : AppStrings.lunchRecommendInactiveSub,
-                  style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                  style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.5)),
                 ),
               ],
             ),
@@ -678,9 +678,9 @@ class _BudgetViewState extends State<BudgetView> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.05),
+        color: color.withOpacity(0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withValues(alpha: 0.1)),
+        border: Border.all(color: color.withOpacity(0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -691,7 +691,7 @@ class _BudgetViewState extends State<BudgetView> {
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
                 child: Text(budgetTag, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
               ),
             ],
@@ -723,9 +723,9 @@ class _BudgetViewState extends State<BudgetView> {
       height: 140,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+        color: theme.colorScheme.onSurface.withOpacity(0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.1)),
+        border: Border.all(color: color.withOpacity(0.1)),
       ),
       child: Stack(
         children: [
@@ -736,13 +736,13 @@ class _BudgetViewState extends State<BudgetView> {
               children: [
                 Icon(Icons.location_on_rounded, color: color, size: 28),
                 const SizedBox(height: 4),
-                Text(AppStrings.mapLocationDetected, style: theme.textTheme.labelSmall?.copyWith(color: color.withValues(alpha: 0.5), fontSize: 9)),
+                Text(AppStrings.mapLocationDetected, style: theme.textTheme.labelSmall?.copyWith(color: color.withOpacity(0.5), fontSize: 9)),
               ],
             ),
           ),
-          Positioned(top: 30, left: 80, child: Icon(Icons.location_on_rounded, color: color.withValues(alpha: 0.6), size: 20)),
-          Positioned(bottom: 40, right: 60, child: Icon(Icons.location_on_rounded, color: color.withValues(alpha: 0.4), size: 16)),
-          Positioned(top: 70, right: 120, child: Icon(Icons.location_on_rounded, color: color.withValues(alpha: 0.5), size: 16)),
+          Positioned(top: 30, left: 80, child: Icon(Icons.location_on_rounded, color: color.withOpacity(0.6), size: 20)),
+          Positioned(bottom: 40, right: 60, child: Icon(Icons.location_on_rounded, color: color.withOpacity(0.4), size: 16)),
+          Positioned(top: 70, right: 120, child: Icon(Icons.location_on_rounded, color: color.withOpacity(0.5), size: 16)),
         ],
       ),
     );
@@ -783,8 +783,8 @@ class _BudgetViewState extends State<BudgetView> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.08)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 4))],
+        border: Border.all(color: theme.dividerColor.withOpacity(0.08)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -794,7 +794,7 @@ class _BudgetViewState extends State<BudgetView> {
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: store.color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(color: store.color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
                 child: Text(store.category, style: TextStyle(color: store.color, fontSize: 9, fontWeight: FontWeight.bold)),
               ),
               Row(
@@ -808,12 +808,12 @@ class _BudgetViewState extends State<BudgetView> {
           const SizedBox(height: 10),
           Text(store.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 4),
-          Text(store.description, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 10), maxLines: 1),
+          Text(store.description, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.4), fontSize: 10), maxLines: 1),
           const Spacer(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(store.distance, style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.3), fontSize: 10)),
+              Text(store.distance, style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.3), fontSize: 10)),
               Icon(Icons.arrow_forward_ios_rounded, size: 10, color: store.color),
             ],
           ),
