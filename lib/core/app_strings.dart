@@ -77,7 +77,7 @@ class AppStrings {
   static const String ocrDuplicateFoundMessage = '이미 저장된 것으로 보이는 내역이 있습니다. 그래도 저장하시겠습니까?';
   static const String ocrDuplicateItemLabel = '이미 저장된 내역입니다';
   static const String ocrPaymentMethodPickerTitle = '결제 수단 선택';
-  static const String ocrRelationTagActionLabel = '관계(태그)';
+  static const String ocrRelationTagActionLabel = '태그';
   static const String ocrSaveSuccessMessageSuffix = '건의 내역이 저장되었습니다.';
   static const String ocrSaveErrorMessage = '저장 중 오류가 발생했습니다: ';
 
@@ -99,7 +99,7 @@ class AppStrings {
   static const String cardLabel = '카드';
   static const String dateLabel = '날짜';
   static const String categoryLabel = '카테고리';
-  static const String relationLabel = '관계 (태그)';
+  static const String relationLabel = '태그';
   static const String selectCategoryHint = '선택해주세요';
   static const String saveComplete = '기록이 완료되었습니다!';
   static const String updateComplete = '수정되었습니다!';
@@ -134,12 +134,12 @@ class AppStrings {
   static const String filterReset = '초기화';
   static const String filterSectionType = '구분';
   static const String filterAll = '전체';
-  static const String filterSectionCategory = '1차 태그 (카테고리)';
-  static const String filterSectionRelation = '2차 태그 (관계)';
+  static const String filterSectionCategory = '카테고리';
+  static const String filterSectionRelation = '태그';
   static const String filterApply = '적용하기';
   static const String addTagTitle = '새 태그 추가';
   static const String addTagHint = '태그 이름을 입력하세요 (예: 친구, 가족)';
-  static const String relationPickerTitle = '관계 (태그) 선택';
+  static const String relationPickerTitle = '태그 선택';
 
   // --- 통계 및 분석 ---
   static const String monthlyLabel = '월간';
