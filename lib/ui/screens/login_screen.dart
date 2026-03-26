@@ -169,6 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
           onPressed: authProvider.status == AuthStatus.loading
               ? null
               : () async {
+                  FocusScope.of(context).unfocus();
                   final success = await authProvider.signInWithEmail(
                     _emailController.text,
                     _passwordController.text,
@@ -227,6 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
           height: 56,
           child: ElevatedButton(
             onPressed: _isEmailVerified ? null : () async {
+              FocusScope.of(context).unfocus();
               if (_emailController.text.isEmpty) {
                 AppSnackBar.show(context, AppStrings.enterEmail);
                 return;
@@ -268,6 +270,7 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 24),
         ElevatedButton(
           onPressed: () async {
+            FocusScope.of(context).unfocus();
             if (!_isEmailVerified) {
               AppSnackBar.show(context, AppStrings.completeEmailVerification);
               return;
@@ -313,6 +316,7 @@ class _LoginScreenState extends State<LoginScreen> {
             height: 56,
             child: ElevatedButton(
               onPressed: () async {
+                FocusScope.of(context).unfocus();
                 if (_emailController.text.isEmpty) return;
                 try {
                   AppLoadingOverlay.show(context);
@@ -350,6 +354,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () async {
+              FocusScope.of(context).unfocus();
               try {
                 AppLoadingOverlay.show(context);
                 final success = await authProvider.resetPassword(
@@ -403,6 +408,7 @@ class _LoginScreenState extends State<LoginScreen> {
           height: 56,
           child: ElevatedButton(
             onPressed: _isVerifying ? null : () async {
+              FocusScope.of(context).unfocus();
               if (_verificationCodeController.text.isEmpty) return;
               try {
                 AppLoadingOverlay.show(context);
