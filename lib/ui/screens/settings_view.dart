@@ -12,6 +12,8 @@ import '../widgets/app_snackbar.dart';
 import '../widgets/loading_overlay.dart';
 import '../../core/app_icons.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
 
@@ -98,9 +100,25 @@ class SettingsView extends StatelessWidget {
             _buildSectionHeader(context, AppStrings.infoSection),
             const SizedBox(height: 10),
             Card(
-              child: ListTile(
-                title: const Text(AppStrings.versionInfo),
-                trailing: Text('1.0.0', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(AppIcons.info, size: 20),
+                    title: const Text(AppStrings.privacyPolicyLabel),
+                    trailing: const Icon(Icons.chevron_right, size: 20),
+                    onTap: () async {
+                      final url = Uri.parse(AppStrings.privacyPolicyUrl);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    title: const Text(AppStrings.versionInfo),
+                    trailing: Text('1.0.0', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                  ),
+                ],
               ),
             ),
           ],

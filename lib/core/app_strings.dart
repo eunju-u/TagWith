@@ -1,3 +1,5 @@
+import 'app_config.dart';
+
 class AppStrings {
   // --- 공통 ---
   static const String appName = 'TagWith';
@@ -255,4 +257,6 @@ class AppStrings {
   static const String lightTheme = '라이트 모드';
   static const String darkTheme = '다크 모드';
   static const String versionInfo = '버전 정보';
+  static const String privacyPolicyLabel = '개인정보 처리방침';
+  static const String privacyPolicyUrl = '${AppConfig.baseUrl}/privacy';
 }
