@@ -90,10 +90,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // 로고 및 브랜드 이름
-                    const Icon(
-                      AppIcons.wallet,
-                      size: 90,
-                      color: Colors.white,
+                    Image.asset(
+                      'assets/icons/app_logo.png',
+                      width: 130,
+                      height: 130,
+                      fit: BoxFit.contain,
                     ),
                     const SizedBox(height: 16),
                     Text(

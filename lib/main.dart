@@ -9,9 +9,12 @@ import 'ui/screens/home_screen.dart';
 import 'ui/screens/login_screen.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  
   await initializeDateFormatting('ko_KR', null);
   runApp(
     MultiProvider(
@@ -32,6 +35,11 @@ class TagWithApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer2<ThemeProvider, AuthProvider>(
       builder: (context, themeProvider, authProvider, child) {
+        // 초기화 완료 시 네이티브 스플래시 제거
+        if (authProvider.isInitialized) {
+          FlutterNativeSplash.remove();
+        }
+
         return MaterialApp(
           title: 'TagWith',
           debugShowCheckedModeBanner: false,
@@ -52,9 +60,7 @@ class TagWithApp extends StatelessWidget {
             '/login': (context) => const LoginScreen(),
             '/home': (context) => const HomeScreen(),
           },
-          home: !authProvider.isInitialized
-              ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-              : authProvider.status == AuthStatus.authenticated
+          home: authProvider.status == AuthStatus.authenticated
                   ? const HomeScreen()
                   : const LoginScreen(),
         );
