@@ -8,6 +8,8 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../../core/app_strings.dart';
 import '../../core/theme.dart';
+import '../../core/app_config.dart';
+import '../../core/app_log.dart';
 import '../../core/app_icons.dart';
 import '../../data/pdf_models.dart';
 import '../widgets/app_dialog.dart';
@@ -163,6 +165,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
                   ),
                 ),
               );
+              widgets.add(pw.SizedBox(height: 10)); // 텍스트 아이템 후 줄바꿈 간격 추가
             } else if (item.type == PDFItemType.images && item.imagePaths.isNotEmpty) {
               final List<pw.Widget> images = [];
               double imageWidth;
@@ -243,8 +246,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
         name: fileName,
       );
     } catch (e, stack) {
-      debugPrint('PDF Preview Error: $e');
-      debugPrint(stack.toString());
+      AppLog.logD('PDFEditorScreen', '', 'PDF Preview Error: $e\nStack: $stack');
       if (mounted) {
         AppSnackBar.show(context, '${AppStrings.pdfErrorMessage}: $e');
       }
@@ -280,8 +282,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
         AppSnackBar.show(context, AppStrings.pdfSuccessMessage);
       }
     } catch (e, stack) {
-      debugPrint('PDF Save Error: $e');
-      debugPrint(stack.toString());
+      AppLog.logD('PDFEditorScreen', '', 'PDF Save Error: $e\nStack: $stack');
       if (mounted) {
         AppSnackBar.show(context, '${AppStrings.pdfErrorMessage}: $e');
       }
