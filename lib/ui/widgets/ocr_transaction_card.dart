@@ -234,7 +234,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
             spacing: 8,
             runSpacing: 8,
             children: [
-               _buildSmallChip(context, t.category.name, t.category.icon, onTap: widget.onPickCategory),
+               _buildSmallChip(context, t.category.name, t.category.iconData ?? t.category.icon, onTap: widget.onPickCategory, color: t.category.color),
               _buildSmallChip(context, _getPaymentMethodLabel(t.paymentMethod), _getPaymentMethodIcon(t.paymentMethod), onTap: _showPaymentMethodPicker),
               ...t.relations.map((rel) => _buildSmallChip(context, rel.name, Icons.person, onDelete: () {
                     final updatedRelations = List<Relation>.from(t.relations)..remove(rel);
@@ -321,28 +321,33 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
     );
   }
 
-  Widget _buildSmallChip(BuildContext context, String label, IconData icon, {bool isAction = false, VoidCallback? onTap, VoidCallback? onDelete}) {
+  Widget _buildSmallChip(BuildContext context, String label, dynamic icon, {bool isAction = false, VoidCallback? onTap, VoidCallback? onDelete, Color? color}) {
     final theme = Theme.of(context);
+    final chipColor = color ?? AppColors.primary;
+    
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isAction ? Colors.transparent : AppColors.primary.withOpacity(0.1),
+          color: isAction ? Colors.transparent : chipColor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(20),
           border: isAction ? Border.all(color: theme.dividerColor) : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: isAction ? theme.colorScheme.onSurface.withOpacity(0.5) : AppColors.primary),
+            if (icon is IconData)
+              Icon(icon, size: 14, color: isAction ? theme.colorScheme.onSurface.withOpacity(0.5) : chipColor)
+            else if (icon is String)
+              Text(icon, style: const TextStyle(fontSize: 14)),
             const SizedBox(width: 4),
-            Text(label, style: TextStyle(fontSize: 12, color: isAction ? theme.colorScheme.onSurface.withOpacity(0.7) : AppColors.primary)),
+            Text(label, style: TextStyle(fontSize: 12, color: isAction ? theme.colorScheme.onSurface.withOpacity(0.7) : chipColor)),
             if (onDelete != null) ...[
               const SizedBox(width: 4),
               GestureDetector(
                 onTap: onDelete,
-                child: const Icon(Icons.close, size: 14, color: AppColors.primary),
+                child: Icon(Icons.close, size: 14, color: chipColor),
               ),
             ],
           ],

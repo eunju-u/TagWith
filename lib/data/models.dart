@@ -10,7 +10,7 @@ enum PaymentMethod { cash, checkCard, creditCard }
 class Category {
   final String id;
   final String name;
-  final IconData icon;
+  final String icon; // Icon name (e.g., 'restaurant') or Emoji sequence
   final Color color;
 
   Category({
@@ -22,21 +22,49 @@ class Category {
 
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
-      id: json['id'].toString(),
-      name: json['name'],
-      icon: _parseIcon(json['icon']),
+      id: (json['id'] ?? '').toString(),
+      name: json['name'] ?? '',
+      icon: json['icon'] ?? 'category',
       color: _parseColor(json['color']),
     );
   }
 
-  static IconData _parseIcon(String? iconName) {
-    switch (iconName) {
+  // Returns IconData if it's a known identifier, otherwise null
+  IconData? get iconData {
+    switch (icon) {
       case 'restaurant': return Icons.restaurant;
       case 'coffee': return Icons.coffee;
       case 'account_balance_wallet': return Icons.account_balance_wallet;
       case 'directions_bus': return Icons.directions_bus;
       case 'shopping_bag': return Icons.shopping_bag;
-      default: return Icons.category;
+      case 'home': return Icons.home;
+      case 'school': return Icons.school;
+      case 'medical_services': return Icons.medical_services;
+      case 'phone_android': return Icons.phone_android;
+      case 'sports_esports': return Icons.sports_esports;
+      case 'fitness_center': return Icons.fitness_center;
+      case 'movie': return Icons.movie;
+      case 'flight': return Icons.flight_takeoff;
+      case 'pets': return Icons.pets;
+      case 'category': return Icons.category;
+      case 'shopping_cart': return Icons.shopping_cart;
+      case 'local_gas_station': return Icons.local_gas_station;
+      case 'electric_bolt': return Icons.electric_bolt;
+      case 'celebration': return Icons.celebration;
+      case 'theater_comedy': return Icons.theater_comedy;
+      case 'brush': return Icons.brush;
+      case 'card_giftcard': return Icons.card_giftcard;
+      case 'vpn_key': return Icons.vpn_key;
+      case 'lightbulb': return Icons.lightbulb;
+      case 'more_horiz':
+      case 'more_horizontal': return Icons.more_horiz;
+      case 'swap_horiz': return Icons.swap_horiz;
+      case 'local_bar': return Icons.local_bar;
+      case 'subscriptions': return Icons.subscriptions;
+      case 'child_care': return Icons.child_care;
+      case 'bolt': return Icons.bolt;
+      case 'description': return Icons.description;
+      default: return null;
     }
   }
 
@@ -52,21 +80,69 @@ class Category {
 
   factory Category.fromName(String name) {
     switch (name) {
-      case AppStrings.categoryFood:
-        return Category(id: '1', name: AppStrings.categoryFood, icon: Icons.restaurant, color: Colors.orange);
-      case AppStrings.categoryCafe:
-        return Category(id: '2', name: AppStrings.categoryCafe, icon: Icons.coffee, color: Colors.brown);
       case AppStrings.incomeLabel:
-        return Category(id: '3', name: AppStrings.incomeLabel, icon: Icons.account_balance_wallet, color: Colors.blue);
-      case AppStrings.categoryTransport:
-        return Category(id: '4', name: AppStrings.categoryTransport, icon: Icons.directions_bus, color: Colors.teal);
+        return Category(id: 'income', name: AppStrings.incomeLabel, icon: 'account_balance_wallet', color: Colors.blue);
+      case AppStrings.categoryTransferFinance:
+        return Category(id: 'finance', name: AppStrings.categoryTransferFinance, icon: 'swap_horiz', color: Colors.indigo);
+      case AppStrings.categoryFood:
+        return Category(id: 'food', name: AppStrings.categoryFood, icon: 'restaurant', color: Colors.orange);
+      case AppStrings.categoryCafe:
+        return Category(id: 'cafe', name: AppStrings.categoryCafe, icon: 'coffee', color: Colors.brown);
+      case AppStrings.categoryLiquorEntertainment:
+        return Category(id: 'entertainment', name: AppStrings.categoryLiquorEntertainment, icon: 'local_bar', color: Colors.redAccent);
       case AppStrings.categoryShopping:
-        return Category(id: '5', name: AppStrings.categoryShopping, icon: Icons.shopping_bag, color: Colors.purple);
+        return Category(id: 'shopping', name: AppStrings.categoryShopping, icon: 'shopping_bag', color: Colors.purple);
+      case AppStrings.categoryHobbyLeisure:
+        return Category(id: 'hobby', name: AppStrings.categoryHobbyLeisure, icon: 'sports_esports', color: Colors.pink);
+      case AppStrings.categoryTravel:
+        return Category(id: 'travel', name: AppStrings.categoryTravel, icon: 'flight', color: Colors.lightBlue);
+      case AppStrings.categoryTransport:
+        return Category(id: 'transport', name: AppStrings.categoryTransport, icon: 'directions_bus', color: Colors.teal);
+      case AppStrings.categoryHousing:
+        return Category(id: 'housing', name: AppStrings.categoryHousing, icon: 'home', color: Colors.deepOrange);
+      case AppStrings.categoryCommunication:
+        return Category(id: 'communication', name: AppStrings.categoryCommunication, icon: 'phone_android', color: Colors.cyan);
+      case AppStrings.categoryMedicalHealth:
+        return Category(id: 'medical', name: AppStrings.categoryMedicalHealth, icon: 'medical_services', color: Colors.red);
+      case AppStrings.categoryBeauty:
+        return Category(id: 'beauty', name: AppStrings.categoryBeauty, icon: 'brush', color: Colors.pinkAccent);
+      case AppStrings.categoryInsuranceTax:
+        return Category(id: 'tax', name: AppStrings.categoryInsuranceTax, icon: 'description', color: Colors.blueGrey);
+      case AppStrings.categoryEducation:
+        return Category(id: 'education', name: AppStrings.categoryEducation, icon: 'school', color: Colors.indigoAccent);
+      case AppStrings.categoryCelebration:
+        return Category(id: 'celebration', name: AppStrings.categoryCelebration, icon: 'celebration', color: Colors.orangeAccent);
+      case AppStrings.categoryCondolence:
+        return Category(id: 'condolence', name: AppStrings.categoryCondolence, icon: 'more_horiz', color: Colors.grey);
+      case AppStrings.categoryDonation:
+        return Category(id: 'donation', name: AppStrings.categoryDonation, icon: 'card_giftcard', color: Colors.amber);
+      case AppStrings.categoryParenting:
+        return Category(id: 'parenting', name: AppStrings.categoryParenting, icon: 'child_care', color: Colors.greenAccent);
+      case AppStrings.categoryPet:
+        return Category(id: 'pet', name: AppStrings.categoryPet, icon: 'pets', color: Colors.lime);
+      case AppStrings.categorySelfDev:
+        return Category(id: 'selfdev', name: AppStrings.categorySelfDev, icon: 'bolt', color: Colors.deepPurple);
+      case AppStrings.categorySubscription:
+        return Category(id: 'subscription', name: AppStrings.categorySubscription, icon: 'subscriptions', color: Colors.blueAccent);
+      case AppStrings.categoryLife:
+        return Category(id: 'life', name: AppStrings.categoryLife, icon: 'shopping_cart', color: Colors.lightGreen);
       case AppStrings.categoryMisc:
-        return Category(id: '6', name: AppStrings.categoryMisc, icon: Icons.more_horiz, color: Colors.blueGrey);
+        return Category(id: 'misc', name: AppStrings.categoryMisc, icon: 'category', color: Colors.blueGrey);
       default:
-        return Category(id: '0', name: name, icon: Icons.category, color: Colors.grey);
+        return Category(id: '0', name: name, icon: 'category', color: Colors.grey);
     }
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'icon': icon,
+      'color': _colorToHex(color),
+    };
+  }
+
+  static String _colorToHex(Color color) {
+    return '#${color.value.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
   }
 }
 

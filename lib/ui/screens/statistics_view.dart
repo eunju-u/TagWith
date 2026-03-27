@@ -134,7 +134,7 @@ class _StatisticsViewState extends State<StatisticsView> {
                               value: e.value,
                               title: '',
                               radius: radius,
-                              badgeWidget: _buildDonutBadge(cat.icon, cat.color),
+                              badgeWidget: _buildDonutBadge(cat),
                               badgePositionPercentageOffset: 1.15,
                             );
                           }).toList(),
@@ -628,7 +628,9 @@ class _StatisticsViewState extends State<StatisticsView> {
                   color: cat.color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(cat.icon, color: cat.color, size: 22),
+                child: cat.iconData != null 
+                    ? Icon(cat.iconData, color: cat.color, size: 22)
+                    : Center(child: Text(cat.icon, style: const TextStyle(fontSize: 22))),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -893,7 +895,7 @@ class _StatisticsViewState extends State<StatisticsView> {
     );
   }
 
-  Widget _buildDonutBadge(IconData icon, Color color) {
+  Widget _buildDonutBadge(Category cat) {
     return Container(
       width: 32,
       height: 32,
@@ -907,10 +909,12 @@ class _StatisticsViewState extends State<StatisticsView> {
             offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(color: color.withOpacity(0.2), width: 1.5),
+        border: Border.all(color: cat.color.withOpacity(0.2), width: 1.5),
       ),
       child: Center(
-        child: Icon(icon, size: 16, color: color),
+        child: cat.iconData != null 
+            ? Icon(cat.iconData, size: 16, color: cat.color)
+            : Text(cat.icon, style: const TextStyle(fontSize: 14)),
       ),
     );
   }

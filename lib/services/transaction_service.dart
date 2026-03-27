@@ -143,6 +143,90 @@ class TransactionService {
     }
   }
 
+  // 사용자 전용 카테고리 가져오기
+  Future<List<Category>> getUserCategories() async {
+    try {
+      final token = await _getToken();
+      if (token == null) return [];
+
+      final response = await _dio.get(
+        '/user/categories',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => Category.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      AppLog.logD('TransactionService', 'getUserCategories', 'Get User Categories Error: $e');
+      return [];
+    }
+  }
+
+  // 사용자 전용 카테고리 추가하기
+  Future<Category?> createUserCategory(Category category) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
+
+      final response = await _dio.post(
+        '/user/categories',
+        data: category.toJson(),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return Category.fromJson(response.data);
+      }
+      return null;
+    } catch (e) {
+      AppLog.logD('TransactionService', 'createUserCategory', 'Create User Category Error: $e');
+      return null;
+    }
+  }
+
+  // 사용자 전용 카테고리 수정하기
+  Future<Category?> updateUserCategory(Category category) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
+
+      final response = await _dio.put(
+        '/user/categories/${category.id}',
+        data: category.toJson(),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return Category.fromJson(response.data);
+      }
+      return null;
+    } catch (e) {
+      AppLog.logD('TransactionService', 'updateUserCategory', 'Update User Category Error: $e');
+      return null;
+    }
+  }
+
+  // 사용자 전용 카테고리 삭제하기
+  Future<bool> deleteUserCategory(String categoryId) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return false;
+
+      final response = await _dio.delete(
+        '/user/categories/$categoryId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      AppLog.logD('TransactionService', 'deleteUserCategory', 'Delete User Category Error: $e');
+      return false;
+    }
+  }
+
   // 사용자 태그(Relations) 가져오기
   Future<List<Relation>> getTags() async {
     try {

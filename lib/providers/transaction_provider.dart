@@ -50,6 +50,41 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
+  // 사용자 전용 카테고리 추가
+  Future<bool> addCustomCategory(Category category) async {
+    final newCategory = await _service.createUserCategory(category);
+    if (newCategory != null) {
+      _allCategories.add(newCategory);
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  // 사용자 전용 카테고리 수정
+  Future<bool> updateCustomCategory(Category category) async {
+    final updated = await _service.updateUserCategory(category);
+    if (updated != null) {
+      final index = _allCategories.indexWhere((c) => c.id == category.id);
+      if (index != -1) {
+        _allCategories[index] = updated;
+        notifyListeners();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // 사용자 전용 카테고리 삭제
+  Future<bool> deleteCustomCategory(String categoryId) async {
+    final success = await _service.deleteUserCategory(categoryId);
+    if (success) {
+      _allCategories.removeWhere((c) => c.id == categoryId);
+      notifyListeners();
+    }
+    return success;
+  }
+
   Future<void> loadStatistics({int? year, int? month}) async {
     _statistics = await _service.getStatistics(year: year, month: month);
     notifyListeners();
@@ -68,25 +103,46 @@ class TransactionProvider with ChangeNotifier {
     final results = await Future.wait([
       _service.getTransactions(),
       _service.getCategories(),
+      _service.getUserCategories(), // 유저별 카테고리 추가
       _service.getTags(),
       _service.getStatistics(year: DateTime.now().year, month: DateTime.now().month),
     ]);
 
     _transactions = results[0] as List<Transaction>;
-    _allCategories = results[1] as List<Category>;
-    _customRelations = results[2] as List<Relation>;
-    _statistics = results[3] as Statistics?;
+    final globalCats = results[1] as List<Category>;
+    final userCats = results[2] as List<Category>;
+    _allCategories = [...globalCats, ...userCats]; // 전역 + 유저 카테고리 병합
+    _customRelations = results[3] as List<Relation>;
+    _statistics = results[4] as Statistics?;
     
     // 카테고리가 비어있을 경우 기본값 세팅 (서버에서 아직 안 온 경우를 대비)
     if (_allCategories.isEmpty) {
-      _allCategories = [
-        Category(id: '1', name: AppStrings.categoryFood, icon: Icons.restaurant, color: Colors.orange),
-        Category(id: '2', name: AppStrings.categoryCafe, icon: Icons.coffee, color: Colors.brown),
-        Category(id: '3', name: AppStrings.incomeLabel, icon: Icons.account_balance_wallet, color: Colors.blue),
-        Category(id: '4', name: AppStrings.categoryTransport, icon: Icons.directions_bus, color: Colors.teal),
-        Category(id: '5', name: AppStrings.categoryShopping, icon: Icons.shopping_bag, color: Colors.purple),
-        Category(id: '6', name: AppStrings.categoryMisc, icon: Icons.more_horiz, color: Colors.blueGrey),
-      ];
+        _allCategories = [
+          Category.fromName(AppStrings.incomeLabel),
+          Category.fromName(AppStrings.categoryTransferFinance),
+          Category.fromName(AppStrings.categoryFood),
+          Category.fromName(AppStrings.categoryCafe),
+          Category.fromName(AppStrings.categoryLiquorEntertainment),
+          Category.fromName(AppStrings.categoryShopping),
+          Category.fromName(AppStrings.categoryHobbyLeisure),
+          Category.fromName(AppStrings.categoryTravel),
+          Category.fromName(AppStrings.categoryTransport),
+          Category.fromName(AppStrings.categoryHousing),
+          Category.fromName(AppStrings.categoryCommunication),
+          Category.fromName(AppStrings.categoryMedicalHealth),
+          Category.fromName(AppStrings.categoryBeauty),
+          Category.fromName(AppStrings.categoryInsuranceTax),
+          Category.fromName(AppStrings.categoryEducation),
+          Category.fromName(AppStrings.categoryCelebration),
+          Category.fromName(AppStrings.categoryCondolence),
+          Category.fromName(AppStrings.categoryDonation),
+          Category.fromName(AppStrings.categoryParenting),
+          Category.fromName(AppStrings.categoryPet),
+          Category.fromName(AppStrings.categorySelfDev),
+          Category.fromName(AppStrings.categorySubscription),
+          Category.fromName(AppStrings.categoryLife),
+          Category.fromName(AppStrings.categoryMisc),
+        ];
     }
     
     _isLoading = false;
@@ -94,7 +150,7 @@ class TransactionProvider with ChangeNotifier {
   }
 
   List<Transaction> get calendarFilteredTransactions {
-    return _transactions.where((t) {
+     return _transactions.where((t) {
       final matchesType = _calendarSelectedType == null || t.type == _calendarSelectedType;
       final matchesCategory = _calendarSelectedCategories.isEmpty || _calendarSelectedCategories.contains(t.category.id);
       final matchesRelation = _calendarSelectedRelations.isEmpty || t.relations.any((r) => _calendarSelectedRelations.contains(r.id));

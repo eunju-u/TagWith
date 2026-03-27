@@ -230,7 +230,8 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               const SizedBox(height: 24),
               _buildSectionHeader(AppStrings.categoryLabel),
               _buildActionCard(
-                icon: _selectedCategory?.icon ?? AppIcons.category,
+                icon: _selectedCategory?.iconData,
+                emoji: _selectedCategory?.iconData == null ? _selectedCategory?.icon : null,
                 label: _selectedCategory?.name ?? AppStrings.selectCategoryHint,
                 color: _selectedCategory?.color,
                 onTap: () => CategoryPickerSheet.show(
@@ -328,7 +329,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     );
   }
 
-  Widget _buildActionCard({required IconData icon, required String label, Color? color, required VoidCallback onTap}) {
+  Widget _buildActionCard({IconData? icon, String? emoji, required String label, Color? color, required VoidCallback onTap}) {
     final theme = Theme.of(context);
     return InkWell(
       onTap: () {
@@ -351,7 +352,9 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                 color: (color ?? AppColors.primary).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color ?? AppColors.primary, size: 20),
+              child: emoji != null 
+                  ? Text(emoji, style: const TextStyle(fontSize: 20))
+                  : Icon(icon ?? Icons.category, color: color ?? AppColors.primary, size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(

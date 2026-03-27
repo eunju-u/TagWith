@@ -540,7 +540,13 @@ class _CalendarViewState extends State<CalendarView> {
         Container(
           width: 48,
           height: 48,
-          child: Icon(t.category.icon, color: t.category.color, size: 24),
+          decoration: BoxDecoration(
+            color: t.category.color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: t.category.iconData != null 
+              ? Icon(t.category.iconData, color: t.category.color, size: 24)
+              : Center(child: Text(t.category.icon, style: const TextStyle(fontSize: 24))),
         ),
         const SizedBox(width: 16),
           Expanded(

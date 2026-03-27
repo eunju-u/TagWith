@@ -111,8 +111,26 @@ class AppStrings {
   // --- 카테고리 명칭 ---
   static const String categoryFood = '식비';
   static const String categoryCafe = '카페/간식';
+  static const String categoryTransferFinance = '이체/금융';
+  static const String categoryLiquorEntertainment = '술/유흥';
+  static const String categoryShopping = '쇼핑';
+  static const String categoryHobbyLeisure = '취미/여가';
+  static const String categoryTravel = '여행';
   static const String categoryTransport = '교통';
-  static const String categoryShopping = '생활/쇼핑';
+  static const String categoryHousing = '주거';
+  static const String categoryCommunication = '통신';
+  static const String categoryMedicalHealth = '의료/건강';
+  static const String categoryBeauty = '미용';
+  static const String categoryInsuranceTax = '보험/세금';
+  static const String categoryEducation = '교육';
+  static const String categoryCelebration = '경사비';
+  static const String categoryCondolence = '조사비';
+  static const String categoryDonation = '기부/후원';
+  static const String categoryParenting = '육아/자녀';
+  static const String categoryPet = '반려동물';
+  static const String categorySelfDev = '자기계발';
+  static const String categorySubscription = '구독/정기결제';
+  static const String categoryLife = '생활';
   static const String categoryMisc = '기타';
 
   // --- 달력 및 내역 관리 ---
