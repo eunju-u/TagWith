@@ -111,39 +111,9 @@ class TransactionProvider with ChangeNotifier {
     _transactions = results[0] as List<Transaction>;
     final globalCats = results[1] as List<Category>;
     final userCats = results[2] as List<Category>;
-    _allCategories = [...globalCats, ...userCats]; // 전역 + 유저 카테고리 병합
+    _allCategories = [...globalCats, ...userCats]; // 전역(정렬됨) + 유저(정렬됨) 카테고리 순서대로 병합
     _customRelations = results[3] as List<Relation>;
     _statistics = results[4] as Statistics?;
-    
-    // 카테고리가 비어있을 경우 기본값 세팅 (서버에서 아직 안 온 경우를 대비)
-    if (_allCategories.isEmpty) {
-        _allCategories = [
-          Category.fromName(AppStrings.incomeLabel),
-          Category.fromName(AppStrings.categoryTransferFinance),
-          Category.fromName(AppStrings.categoryFood),
-          Category.fromName(AppStrings.categoryCafe),
-          Category.fromName(AppStrings.categoryLiquorEntertainment),
-          Category.fromName(AppStrings.categoryShopping),
-          Category.fromName(AppStrings.categoryHobbyLeisure),
-          Category.fromName(AppStrings.categoryTravel),
-          Category.fromName(AppStrings.categoryTransport),
-          Category.fromName(AppStrings.categoryHousing),
-          Category.fromName(AppStrings.categoryCommunication),
-          Category.fromName(AppStrings.categoryMedicalHealth),
-          Category.fromName(AppStrings.categoryBeauty),
-          Category.fromName(AppStrings.categoryInsuranceTax),
-          Category.fromName(AppStrings.categoryEducation),
-          Category.fromName(AppStrings.categoryCelebration),
-          Category.fromName(AppStrings.categoryCondolence),
-          Category.fromName(AppStrings.categoryDonation),
-          Category.fromName(AppStrings.categoryParenting),
-          Category.fromName(AppStrings.categoryPet),
-          Category.fromName(AppStrings.categorySelfDev),
-          Category.fromName(AppStrings.categorySubscription),
-          Category.fromName(AppStrings.categoryLife),
-          Category.fromName(AppStrings.categoryMisc),
-        ];
-    }
     
     _isLoading = false;
     notifyListeners();

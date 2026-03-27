@@ -12,12 +12,16 @@ class Category {
   final String name;
   final String icon; // Icon name (e.g., 'restaurant') or Emoji sequence
   final Color color;
+  final int order;
+  final String? userId;
 
   Category({
     required this.id,
     required this.name,
     required this.icon,
     required this.color,
+    this.order = 0,
+    this.userId,
   });
 
   factory Category.fromJson(Map<String, dynamic> json) {
@@ -26,6 +30,8 @@ class Category {
       name: json['name'] ?? '',
       icon: json['icon'] ?? 'category',
       color: _parseColor(json['color']),
+      order: json['order'] ?? 0,
+      userId: json['user_id']?.toString(),
     );
   }
 
@@ -138,6 +144,8 @@ class Category {
       'name': name,
       'icon': icon,
       'color': _colorToHex(color),
+      'order': order,
+      'user_id': userId,
     };
   }
 
