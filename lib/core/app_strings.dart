@@ -72,7 +72,7 @@ class AppStrings {
   static const String ocrProcessedAll = '모든 내역이 처리되었습니다.';
   static const String ocrBackToHomeLabel = '홈으로 돌아가기';
   static const String ocrAnalyzedHistoryTitle = '분석된 내역';
-  static const String ocrReviewGuide = '내용을 확인하고 저장해 주세요.';
+  static const String ocrReviewGuide = '내용이 정확하지 않을 수 있으니 확인 후 저장해 주세요.';
   static const String ocrDuplicateFoundTitle = '중복 내역 발견';
   static const String ocrDuplicateFoundMessage = '이미 저장된 것으로 보이는 내역이 있습니다. 그래도 저장하시겠습니까?';
   static const String ocrDuplicateItemLabel = '이미 저장된 내역입니다';

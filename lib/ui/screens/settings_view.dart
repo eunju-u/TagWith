@@ -31,23 +31,25 @@ class SettingsView extends StatelessWidget {
         title: Text(AppStrings.settingsTitle, style: theme.textTheme.headlineMedium),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: false,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          _buildSectionHeader(context, AppStrings.accountSection),
-          const SizedBox(height: 10),
-          Card(
-            child: Column(
-              children: [
-                if (user != null) ...[
-                  ListTile(
-                    leading: const Icon(Icons.person_outline),
-                    title: Text(user['name'] ?? AppStrings.defaultUser),
-                    subtitle: Text(user['email'] ?? ''),
-                  ),
-                  const Divider(height: 1),
-                ],
+      body: SafeArea(
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 40),
+          children: [
+            _buildSectionHeader(context, AppStrings.accountSection),
+            const SizedBox(height: 10),
+            Card(
+              child: Column(
+                children: [
+                  if (user != null) ...[
+                    ListTile(
+                      leading: const Icon(Icons.person_outline),
+                      title: Text(user['name'] ?? AppStrings.defaultUser),
+                      subtitle: Text(user['email'] ?? ''),
+                    ),
+                    const Divider(height: 1),
+                  ],
                   ListTile(
                     leading: const Icon(AppIcons.logout, color: AppColors.primary),
                     title: const Text(AppStrings.logout),
@@ -131,14 +133,15 @@ class SettingsView extends StatelessWidget {
                   const Divider(height: 1),
                   ListTile(
                     title: const Text(AppStrings.versionInfo),
-                    trailing: Text('1.0.0', style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.5))),
+                    trailing: Text('1.0.0', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
                   ),
                 ],
               ),
             ),
           ],
         ),
-      );
+      ),
+    );
   }
 
   void _showLogoutDialog(BuildContext context, AuthProvider authProvider) {

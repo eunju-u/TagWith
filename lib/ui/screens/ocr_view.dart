@@ -132,7 +132,13 @@ class _OCRViewState extends State<OCRView> {
                 ],
               ),
               const SizedBox(height: 8),
-              Text(AppStrings.ocrReviewGuide, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6))),
+              Text(
+                AppStrings.ocrReviewGuide, 
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.error.withValues(alpha: 0.8),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ],
           ),
         ),

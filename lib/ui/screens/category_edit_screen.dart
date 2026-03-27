@@ -229,11 +229,11 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
                     final isSelected = _selectedIcon == iconName;
                     return InkWell(
                       onTap: () => setState(() => _selectedIcon = iconName),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(24),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: isSelected ? _selectedColor.withOpacity(0.2) : theme.colorScheme.onSurface.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
+                          color: isSelected ? _selectedColor.withValues(alpha: 0.2) : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                          shape: BoxShape.circle,
                           border: isSelected ? Border.all(color: _selectedColor, width: 2) : null,
                         ),
                         child: Icon(_getIconData(iconName), color: isSelected ? _selectedColor : Colors.grey),
@@ -257,6 +257,7 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
                       _selectedColor = color;
                       _isColorManuallySelected = true;
                     }),
+                    borderRadius: BorderRadius.circular(18),
                     child: Container(
                       width: 36,
                       height: 36,

@@ -21,40 +21,56 @@ class CategoryManagementScreen extends StatelessWidget {
         title: const Text('카테고리 관리', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: ListView.separated(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.fromLTRB(20, 20, 20, 100 + MediaQuery.of(context).padding.bottom),
         itemCount: allCategories.length,
         separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final cat = allCategories[index];
-          final isGlobal = cat.id == '0' || int.parse(cat.id == '' ? '0' : cat.id) <= 10; // Simple check
+          final isGlobal = cat.userId == null; // null이면 관리자(글로벌) 카테고리
           
           return Card(
+            elevation: 0,
+            color: theme.colorScheme.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+            ),
             child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               leading: Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: cat.color.withOpacity(0.1),
+                  color: cat.color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: cat.iconData != null 
                     ? Icon(cat.iconData, color: cat.color, size: 24)
-                    : Text(cat.icon, style: const TextStyle(fontSize: 24)),
+                    : Text(cat.icon, style: const TextStyle(fontSize: 22)),
               ),
               title: Text(cat.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(isGlobal ? '시스템 기본' : '사용자 정의', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-              trailing: Row(
+              subtitle: Text(isGlobal ? '시스템 기본' : '사용자 정의', 
+                style: TextStyle(fontSize: 12, color: isGlobal ? theme.colorScheme.primary.withValues(alpha: 0.7) : Colors.grey[600], fontWeight: isGlobal ? FontWeight.w600 : FontWeight.normal)),
+              trailing: !isGlobal ? Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
                     icon: const Icon(Icons.edit_outlined, size: 20, color: Colors.blue),
                     onPressed: () => _editCategory(context, provider, cat),
+                    tooltip: '수정',
                   ),
-                  if (!isGlobal) 
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
-                      onPressed: () => _deleteCategory(context, provider, cat),
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                    onPressed: () => _deleteCategory(context, provider, cat),
+                    tooltip: '삭제',
+                  ),
                 ],
+              ) : Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
               ),
             ),
           );

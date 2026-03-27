@@ -97,13 +97,13 @@ class _OCRLoadingScreenState extends State<OCRLoadingScreen> {
             String normalizedDate = receipt.date.replaceAll('.', '-');
             parsedDate = DateTime.parse(normalizedDate);
           } catch (e) {
-            AppLog.logD('OCRLoadingScreen', '', '날짜 파싱 실패: ${receipt.date}, 현재 시간으로 대체합니다.');
+            AppLog.logD('OCRLoadingScreen', '_startAnalysis', '날짜 파싱 실패: ${receipt.date}, 현재 시간으로 대체합니다.');
             parsedDate = DateTime.now();
           }
           
           return Transaction(
             id: '',
-            date: parsedDate, // 파싱된 날짜를 정확히 전달
+            date: parsedDate,
             amount: receipt.amount,
             description: receipt.description,
             type: TransactionType.expense,
@@ -113,6 +113,15 @@ class _OCRLoadingScreenState extends State<OCRLoadingScreen> {
             isDuplicate: receipt.isDuplicate,
           );
         }).toList();
+
+        // [DEBUG LOG] 추출된 아이템 상세 정보 로그 출력
+        AppLog.logD('OCRLoadingScreen', '_startAnalysis', '--- OCR 분석 결과 상세 (총 ${parsedTransactions.length}건) ---');
+        for (var i = 0; i < parsedTransactions.length; i++) {
+          final tx = parsedTransactions[i];
+          AppLog.logD('OCRLoadingScreen', '_startAnalysis', 
+            'Item [$i] | 내역: ${tx.description} | 금액: ${tx.amount} | 날짜: ${tx.date} | 중복: ${tx.isDuplicate}');
+        }
+        AppLog.logD('OCRLoadingScreen', '_startAnalysis', '--------------------------------------------');
 
         if (mounted) {
           Navigator.pushReplacement(
