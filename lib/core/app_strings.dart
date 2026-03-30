@@ -100,11 +100,13 @@ class AppStrings {
   static const String dateLabel = '날짜';
   static const String categoryLabel = '카테고리';
   static const String relationLabel = '태그';
+  static const String memoLabel = '메모';
+  static const String memoHint = '추가 정보를 입력하세요(선택)';
   static const String selectCategoryHint = '선택해주세요';
   static const String saveComplete = '기록이 완료되었습니다!';
   static const String updateComplete = '수정되었습니다!';
   static const String saveFailed = '저장에 실패했습니다. 다시 시도해 주세요.';
-  static const String entryIncompleteError = '금액과 내용을 입력해 주세요.';
+  static const String entryIncompleteError = '필수 항목(금액, 내용, 카테고리)을 모두 입력해 주세요.';
   static const String completeEntryButton = '기록 완료하기';
   static const String completeEditButton = '수정 완료하기';
 

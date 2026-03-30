@@ -25,6 +25,7 @@ class ManualEntryScreen extends StatefulWidget {
 class _ManualEntryScreenState extends State<ManualEntryScreen> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _memoController = TextEditingController(); // 추가
   final FocusNode _amountFocusNode = FocusNode();
   DateTime _selectedDate = DateTime.now();
   Category? _selectedCategory;
@@ -46,6 +47,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       _selectedRelations = List.from(t.relations);
       _type = t.type;
       _paymentMethod = t.paymentMethod;
+      _memoController.text = t.memo ?? ''; // 추가
     } else {
       _selectedCategory = provider.allCategories.firstWhere((c) => c.name == '식비', orElse: () => provider.allCategories.first);
       // Request focus once after build only when creating new entry
@@ -64,6 +66,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     _amountFocusNode.dispose();
     _amountController.dispose();
     _descriptionController.dispose();
+    _memoController.dispose(); // 추가
     super.dispose();
   }
 
@@ -87,6 +90,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
         category: _selectedCategory!,
         relations: _selectedRelations,
         paymentMethod: _paymentMethod,
+        memo: _memoController.text.trim().isNotEmpty ? _memoController.text.trim() : null, // 추가
       );
 
       final provider = Provider.of<TransactionProvider>(context, listen: false);
@@ -243,7 +247,25 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               const SizedBox(height: 24),
               _buildSectionHeader(AppStrings.relationLabel),
               _buildRelationCard(provider),
-              const SizedBox(height: 180), // Increased bottom space for better scrolling
+              const SizedBox(height: 24),
+              _buildSectionHeader(AppStrings.memoLabel),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurface.withOpacity(0.03),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: theme.dividerColor),
+                ),
+                child: TextField(
+                  controller: _memoController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    hintText: AppStrings.memoHint,
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 180),
             ],
           ),
         ),

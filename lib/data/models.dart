@@ -211,6 +211,9 @@ class Transaction {
   /// 이미 저장된 내역인지 여부 (중복 체크 결과)
   final bool isDuplicate;
 
+  /// 추가 메모
+  final String? memo;
+
   Transaction({
     required this.id,
     required this.date,
@@ -221,6 +224,7 @@ class Transaction {
     required this.relations,
     required this.paymentMethod,
     this.isDuplicate = false,
+    this.memo,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
@@ -244,6 +248,7 @@ class Transaction {
       }).toList(),
       paymentMethod: _parsePaymentMethod(json['payment_method']),
       isDuplicate: json['is_duplicate'] ?? false,
+      memo: json['memo'],
     );
   }
 
@@ -256,6 +261,7 @@ class Transaction {
       'type': type == TransactionType.income ? 'income' : 'expense',
       'tags': relations.map((r) => r.name).toList(), // 서버 최종 표준인 tags 사용
       'payment_method': _paymentMethodToString(paymentMethod),
+      'memo': memo,
     };
   }
 
@@ -286,6 +292,7 @@ class Transaction {
     List<Relation>? relations,
     PaymentMethod? paymentMethod,
     bool? isDuplicate,
+    String? memo,
   }) {
     return Transaction(
       id: id ?? this.id,
@@ -297,6 +304,7 @@ class Transaction {
       relations: relations ?? this.relations,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       isDuplicate: isDuplicate ?? this.isDuplicate,
+      memo: memo ?? this.memo,
     );
   }
 }

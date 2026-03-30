@@ -34,6 +34,7 @@ class OCRTransactionCard extends StatefulWidget {
 class _OCRTransactionCardState extends State<OCRTransactionCard> {
   late TextEditingController _descriptionController;
   late TextEditingController _amountController;
+  late TextEditingController _memoController;
 
   @override
   void initState() {
@@ -43,6 +44,7 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
     _amountController = TextEditingController(
       text: widget.transaction.amount > 0 ? currencyFormat.format(widget.transaction.amount.toInt()) : '',
     );
+    _memoController = TextEditingController(text: widget.transaction.memo ?? '');
   }
 
   @override
@@ -59,12 +61,18 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
         _amountController.text != formattedAmount) {
       _amountController.text = formattedAmount;
     }
+
+    if (oldWidget.transaction.memo != widget.transaction.memo && 
+        _memoController.text != widget.transaction.memo) {
+      _memoController.text = widget.transaction.memo ?? '';
+    }
   }
 
   @override
   void dispose() {
     _descriptionController.dispose();
     _amountController.dispose();
+    _memoController.dispose();
     super.dispose();
   }
 
@@ -227,6 +235,26 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
                   ),
                 ],
               ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          widget.headerBuilder(AppStrings.memoLabel),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.onSurface.withOpacity(0.03),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
+            ),
+            child: TextField(
+              controller: _memoController,
+              onChanged: (val) => widget.onUpdate(t.copyWith(memo: val.isNotEmpty ? val : null)),
+              decoration: const InputDecoration(
+                hintText: AppStrings.memoHint,
+                border: InputBorder.none,
+                isDense: true,
+              ),
+              style: theme.textTheme.bodyMedium,
             ),
           ),
           const SizedBox(height: 20),

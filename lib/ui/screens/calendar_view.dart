@@ -514,7 +514,6 @@ class _CalendarViewState extends State<CalendarView> {
           ),
           child: InkWell(
             onTap: () {
-              Navigator.pop(context); // 팝업 닫기
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -554,6 +553,18 @@ class _CalendarViewState extends State<CalendarView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(t.description, style: theme.textTheme.titleMedium),
+                if (t.memo != null && t.memo!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    t.memo!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.4),
+                      fontStyle: FontStyle.italic,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
                 const SizedBox(height: 2),
                 Text(
                   '${t.category.name} • ${_getPaymentMethodLabel(t.paymentMethod)}${t.relations.isNotEmpty ? ' • ${t.relations.map((r) => r.name).join(', ')}' : ''}',
@@ -628,7 +639,9 @@ class _CalendarViewState extends State<CalendarView> {
             const SizedBox(height: 16),
             const Divider(height: 1),
             Expanded(
-              child: _buildRecentTransactions(Provider.of<TransactionProvider>(context, listen: false), date),
+              child: Consumer<TransactionProvider>(
+                builder: (context, provider, child) => _buildRecentTransactions(provider, date),
+              ),
             ),
           ],
         ),
