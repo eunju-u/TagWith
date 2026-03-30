@@ -131,6 +131,9 @@ class AppStrings {
   static const String categorySelfDev = '자기계발';
   static const String categorySubscription = '구독/정기결제';
   static const String categoryLife = '생활';
+  static const String categorySavings = '저축';
+  static const String categoryWithdrawal = '인출';
+  static const String categoryCardPayment = '카드대금';
   static const String categoryMisc = '기타';
 
   // --- 달력 및 내역 관리 ---

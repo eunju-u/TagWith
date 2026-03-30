@@ -132,6 +132,12 @@ class Category {
         return Category(id: 'subscription', name: AppStrings.categorySubscription, icon: 'subscriptions', color: Colors.blueAccent);
       case AppStrings.categoryLife:
         return Category(id: 'life', name: AppStrings.categoryLife, icon: 'shopping_cart', color: Colors.lightGreen);
+      case AppStrings.categorySavings:
+        return Category(id: 'savings', name: AppStrings.categorySavings, icon: '💰', color: Colors.green);
+      case AppStrings.categoryWithdrawal:
+        return Category(id: 'withdrawal', name: AppStrings.categoryWithdrawal, icon: '💸', color: Colors.red);
+      case AppStrings.categoryCardPayment:
+        return Category(id: 'cardpayment', name: AppStrings.categoryCardPayment, icon: '💳', color: Colors.deepPurple);
       case AppStrings.categoryMisc:
         return Category(id: 'misc', name: AppStrings.categoryMisc, icon: 'category', color: Colors.blueGrey);
       default:
