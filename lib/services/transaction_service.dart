@@ -27,6 +27,7 @@ class TransactionService {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
+        AppLog.logD('TransactionService', 'getTransactions', 'Server Data : $data');
         return data.map((json) => Transaction.fromJson(json)).toList();
       }
       return [];

@@ -89,7 +89,25 @@ class _CalendarViewState extends State<CalendarView> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(AppIcons.filter, color: theme.colorScheme.onSurface.withOpacity(0.8)),
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(AppIcons.filter, color: provider.hasCalendarFilters ? AppColors.primary : theme.colorScheme.onSurface.withOpacity(0.8)),
+                if (provider.hasCalendarFilters)
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: AppColors.expense,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             onPressed: () => _showFilterBottomSheet(context),
           ),
           const SizedBox(width: 8),

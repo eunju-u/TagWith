@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -17,12 +18,16 @@ class TransactionProvider with ChangeNotifier {
   
   final _storage = const FlutterSecureStorage();
   static const String _budgetKey = 'monthly_budget';
+  static const String _calFilterTypeKey = 'cal_filter_type';
+  static const String _calFilterCatsKey = 'cal_filter_cats';
+  static const String _calFilterRelsKey = 'cal_filter_rels';
 
   double _monthlyBudget = 1000000.0; // 기본 예산 100만원
   double get monthlyBudget => _monthlyBudget;
 
   TransactionProvider() {
     _loadBudget();
+    _loadFilters();
   }
 
   Future<void> _loadBudget() async {
@@ -31,6 +36,28 @@ class TransactionProvider with ChangeNotifier {
       _monthlyBudget = double.tryParse(savedBudget) ?? 1000000.0;
       notifyListeners();
     }
+  }
+
+  Future<void> _loadFilters() async {
+    final type = await _storage.read(key: _calFilterTypeKey);
+    if (type != null) {
+      _calendarSelectedType = type == 'income' ? TransactionType.income : TransactionType.expense;
+    }
+    final cats = await _storage.read(key: _calFilterCatsKey);
+    if (cats != null) {
+      try {
+        _calendarSelectedCategories.clear();
+        _calendarSelectedCategories.addAll(List<String>.from(json.decode(cats)));
+      } catch (_) {}
+    }
+    final rels = await _storage.read(key: _calFilterRelsKey);
+    if (rels != null) {
+      try {
+        _calendarSelectedRelations.clear();
+        _calendarSelectedRelations.addAll(List<String>.from(json.decode(rels)));
+      } catch (_) {}
+    }
+    notifyListeners();
   }
 
   Future<void> updateMonthlyBudget(double newBudget) async {
@@ -112,6 +139,15 @@ class TransactionProvider with ChangeNotifier {
     final globalCats = results[1] as List<Category>;
     final userCats = results[2] as List<Category>;
     _allCategories = [...globalCats, ...userCats]; // 전역(정렬됨) + 유저(정렬됨) 카테고리 순서대로 병합
+    
+    // 내역의 카테고리를 실제 카테고리 리스트와 매핑 (ID 일치를 위해)
+    _transactions = _transactions.map((t) {
+      final realCat = _allCategories.firstWhere(
+        (c) => c.name == t.category.name,
+        orElse: () => t.category,
+      );
+      return t.copyWith(category: realCat);
+    }).toList();
     _customRelations = results[3] as List<Relation>;
     _statistics = results[4] as Statistics?;
     
@@ -154,12 +190,16 @@ class TransactionProvider with ChangeNotifier {
   TransactionType? get statsSelectedType => _statsSelectedType;
   List<String> get statsSelectedCategories => _statsSelectedCategories;
   List<String> get statsSelectedRelations => _statsSelectedRelations;
+  
+  bool get hasCalendarFilters => _calendarSelectedType != null || _calendarSelectedCategories.isNotEmpty || _calendarSelectedRelations.isNotEmpty;
+  bool get hasStatsFilters => _statsSelectedType != null || _statsSelectedCategories.isNotEmpty || _statsSelectedRelations.isNotEmpty;
 
   void setTypeFilter(TransactionType? type, {bool forStats = false}) {
     if (forStats) {
       _statsSelectedType = type;
     } else {
       _calendarSelectedType = type;
+      _storage.write(key: _calFilterTypeKey, value: type?.name);
     }
     notifyListeners();
   }
@@ -171,6 +211,9 @@ class TransactionProvider with ChangeNotifier {
     } else {
       list.add(categoryId);
     }
+    if (!forStats) {
+      _storage.write(key: _calFilterCatsKey, value: json.encode(_calendarSelectedCategories));
+    }
     notifyListeners();
   }
 
@@ -180,6 +223,9 @@ class TransactionProvider with ChangeNotifier {
       list.remove(relationId);
     } else {
       list.add(relationId);
+    }
+    if (!forStats) {
+      _storage.write(key: _calFilterRelsKey, value: json.encode(_calendarSelectedRelations));
     }
     notifyListeners();
   }
@@ -193,6 +239,9 @@ class TransactionProvider with ChangeNotifier {
       _calendarSelectedType = null;
       _calendarSelectedCategories.clear();
       _calendarSelectedRelations.clear();
+      _storage.delete(key: _calFilterTypeKey);
+      _storage.delete(key: _calFilterCatsKey);
+      _storage.delete(key: _calFilterRelsKey);
     }
     notifyListeners();
   }
@@ -347,7 +396,10 @@ class TransactionProvider with ChangeNotifier {
   Future<bool> addTransaction(Transaction transaction) async {
     final savedTransaction = await _service.createTransaction(transaction);
     if (savedTransaction != null) {
-      _transactions.add(savedTransaction);
+      final hydrated = savedTransaction.copyWith(
+        category: _allCategories.firstWhere((c) => c.name == savedTransaction.category.name, orElse: () => savedTransaction.category),
+      );
+      _transactions.add(hydrated);
       notifyListeners();
       return true;
     }
@@ -366,9 +418,12 @@ class TransactionProvider with ChangeNotifier {
   Future<bool> updateTransaction(Transaction transaction) async {
     final updated = await _service.updateTransaction(transaction);
     if (updated != null) {
+      final hydrated = updated.copyWith(
+        category: _allCategories.firstWhere((c) => c.name == updated.category.name, orElse: () => updated.category),
+      );
       final index = _transactions.indexWhere((t) => t.id == transaction.id);
       if (index != -1) {
-        _transactions[index] = updated;
+        _transactions[index] = hydrated;
         // 통계 데이터도 다시 로드 (금액 등이 바뀌었을 수 있으므로)
         await loadStatistics(year: transaction.date.year, month: transaction.date.month);
         notifyListeners();

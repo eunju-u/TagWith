@@ -127,21 +127,7 @@ class FilterBottomSheet extends StatelessWidget {
                     ),
                   ),
                 ),
-                // 하단 고정 버튼 영역
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text(AppStrings.filterApply),
-                  ),
-                ),
+                const SizedBox(height: 20),
               ],
             ),
           ),
