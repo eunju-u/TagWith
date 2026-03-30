@@ -241,7 +241,7 @@ class AppStrings {
   static const String pdfSuccessMessage = 'PDF가 성공적으로 생성 및 전달되었습니다.';
   static const String pdfDefaultFileNamePrefix = 'receipt_report_';
   static const String pdfDefaultSubject = 'PDF 보고서';
-  static const String pdfTitleHint = '제목을 입력하세요';
+  static const String pdfTitleHint = 'PDF 파일명을 입력하세요';
   static const String pdfAddItemTitle = '추가할 항목 선택';
   static const String pdfTypeTextLabel = '텍스트 (내용 입력)';
   static const String pdfTypeImageLabel = '이미지 (영수증 사진)';
@@ -257,7 +257,7 @@ class AppStrings {
   static const String pdfImageSizeMedium = '중간';
   static const String pdfImageSizeLarge = '크게';
 
-  // --- 설정 ---
+    static const String pdfShowTitleToggleLabel = 'PDF 내부에 파일명 표시';
   static const String settingsTitle = '설정';
   static const String accountSection = '계정';
   static const String displaySection = '화면 설정';

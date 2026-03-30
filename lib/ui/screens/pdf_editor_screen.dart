@@ -27,6 +27,7 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
   final List<PDFContentItem> _items = [];
   final ImagePicker _picker = ImagePicker();
   final TextEditingController _titleController = TextEditingController();
+  bool _showTitleInPdf = true; // PDF 내부에 제목 노출 여부
 
   @override
   void dispose() {
@@ -131,8 +132,8 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
         build: (pw.Context context) {
           List<pw.Widget> widgets = [];
           
-          // 제목이 있으면 PDF 상단에 추가
-          if (titleText.isNotEmpty) {
+          // 제목이 있고 노출 설정이 켜져 있으면 PDF 상단에 추가
+          if (_showTitleInPdf && titleText.isNotEmpty) {
             widgets.add(
               pw.Container(
                 width: double.infinity,
@@ -401,18 +402,48 @@ class _PDFEditorScreenState extends State<PDFEditorScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(top: 8, bottom: 24, left: 4, right: 4),
-                child: TextField(
-                  controller: _titleController,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  textInputAction: TextInputAction.done, // 완료 버튼으로 변경
-                  onSubmitted: (_) => FocusManager.instance.primaryFocus?.unfocus(), // 엔터 시 키보드 내리기
-                  decoration: InputDecoration(
-                    hintText: AppStrings.pdfTitleHint,
-                    hintStyle: TextStyle(color: Colors.grey[300]),
-                    border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[200]!)),
-                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[200]!)),
-                    focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary, width: 2)),
-                  ),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _titleController,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+                      decoration: InputDecoration(
+                        hintText: AppStrings.pdfTitleHint,
+                        hintStyle: TextStyle(color: Colors.grey[300]),
+                        border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[200]!)),
+                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey[200]!)),
+                        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary, width: 2)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          AppStrings.pdfShowTitleToggleLabel,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _showTitleInPdf ? AppColors.primary : Colors.grey,
+                            fontWeight: _showTitleInPdf ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          height: 24,
+                          child: Transform.scale(
+                            scale: 0.7,
+                            child: CupertinoSwitch(
+                              value: _showTitleInPdf,
+                              activeColor: AppColors.primary,
+                              onChanged: (val) => setState(() => _showTitleInPdf = val),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
