@@ -15,6 +15,8 @@ class TransactionProvider with ChangeNotifier {
   List<Relation> get customRelations => _customRelations;
   Statistics? _statistics;
   Statistics? get statistics => _statistics;
+  List<RecurringTransaction> _recurringTransactions = [];
+  List<RecurringTransaction> get recurringTransactions => _recurringTransactions;
   
   final _storage = const FlutterSecureStorage();
   static const String _budgetKey = 'monthly_budget';
@@ -130,9 +132,10 @@ class TransactionProvider with ChangeNotifier {
     final results = await Future.wait([
       _service.getTransactions(),
       _service.getCategories(),
-      _service.getUserCategories(), // 유저별 카테고리 추가
+      _service.getUserCategories(),
       _service.getTags(),
       _service.getStatistics(year: DateTime.now().year, month: DateTime.now().month),
+      _service.getRecurringTransactions(),
     ]);
 
     _transactions = results[0] as List<Transaction>;
@@ -150,6 +153,7 @@ class TransactionProvider with ChangeNotifier {
     }).toList();
     _customRelations = results[3] as List<Relation>;
     _statistics = results[4] as Statistics?;
+    _recurringTransactions = results[5] as List<RecurringTransaction>;
     
     _isLoading = false;
     notifyListeners();
@@ -454,5 +458,16 @@ class TransactionProvider with ChangeNotifier {
     await _storage.delete(key: _budgetKey);
     
     notifyListeners();
+  }
+
+  Future<bool> addRecurringTransaction(RecurringTransaction recurring) async {
+    final result = await _service.createRecurringTransaction(recurring);
+    if (result != null) {
+      _recurringTransactions.add(result);
+      await loadTransactions(); // 고정지출 등록 시 즉시 실행될 수도 있으므로 새로고침
+      notifyListeners();
+      return true;
+    }
+    return false;
   }
 }

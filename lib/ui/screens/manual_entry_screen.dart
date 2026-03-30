@@ -32,6 +32,12 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
   List<Relation> _selectedRelations = [];
   TransactionType _type = TransactionType.expense;
   PaymentMethod _paymentMethod = PaymentMethod.checkCard;
+  
+  // 반복 설정 관련 상태
+  bool _isRecurring = false;
+  String _selectedInterval = 'monthly'; // 'monthly', 'weekly'
+  int _selectedDayOfMonth = DateTime.now().day;
+  int _selectedDayOfWeek = DateTime.now().weekday == 7 ? 0 : DateTime.now().weekday; // 0이 일요일인 기준
 
   @override
   void initState() {
@@ -94,9 +100,29 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       );
 
       final provider = Provider.of<TransactionProvider>(context, listen: false);
-      final success = widget.existingTransaction != null
-          ? await provider.updateTransaction(transaction)
-          : await provider.addTransaction(transaction);
+      
+      bool success;
+      if (_isRecurring && widget.existingTransaction == null) {
+        // 새로운 고정 지출 등록
+        final recurring = RecurringTransaction(
+          id: '',
+          amount: amount,
+          description: _descriptionController.text.trim(),
+          category: _selectedCategory!,
+          type: _type,
+          paymentMethod: _paymentMethod,
+          interval: _selectedInterval,
+          dayOfMonth: _selectedInterval == 'monthly' ? _selectedDayOfMonth : null,
+          dayOfWeek: _selectedInterval == 'weekly' ? _selectedDayOfWeek : null,
+          startDate: _selectedDate,
+        );
+        success = await provider.addRecurringTransaction(recurring);
+      } else {
+        // 일반 내역 저장 또는 수정
+        success = widget.existingTransaction != null
+            ? await provider.updateTransaction(transaction)
+            : await provider.addTransaction(transaction);
+      }
       
       if (mounted) {
         if (success) {
@@ -265,6 +291,12 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 32),
+              // Recurring Toggle & Options
+              if (widget.existingTransaction == null) ...[
+                _buildRecurringSection(theme),
+                const SizedBox(height: 24),
+              ],
               const SizedBox(height: 180),
             ],
           ),
@@ -466,6 +498,112 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                 fontSize: 13,
                 color: isSelected ? Colors.white : theme.colorScheme.onSurface.withOpacity(0.6),
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecurringSection(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(AppStrings.recurringLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 4),
+                Text('지정한 주기에 맞춰 내역이 자동 생성됩니다.', style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey)),
+              ],
+            ),
+            Switch.adaptive(
+              value: _isRecurring,
+              activeColor: AppColors.primary,
+              onChanged: (val) => setState(() => _isRecurring = val),
+            ),
+          ],
+        ),
+        if (_isRecurring) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: _buildSimpleButton(AppStrings.recurringMonthly, _selectedInterval == 'monthly', () => setState(() => _selectedInterval = 'monthly'))),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildSimpleButton(AppStrings.recurringWeekly, _selectedInterval == 'weekly', () => setState(() => _selectedInterval = 'weekly'))),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                if (_selectedInterval == 'monthly')
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(AppStrings.recurringDateLabel, style: TextStyle(fontWeight: FontWeight.w600)),
+                      DropdownButton<int>(
+                        value: _selectedDayOfMonth,
+                        underline: const SizedBox(),
+                        items: List.generate(31, (i) => i + 1).map((day) => DropdownMenuItem(value: day, child: Text('$day일'))).toList(),
+                        onChanged: (val) => setState(() => _selectedDayOfMonth = val!),
+                      ),
+                    ],
+                  ),
+                if (_selectedInterval == 'weekly')
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(AppStrings.recurringDayLabel, style: TextStyle(fontWeight: FontWeight.w600)),
+                      DropdownButton<int>(
+                        value: _selectedDayOfWeek,
+                        underline: const SizedBox(),
+                        items: [
+                          DropdownMenuItem(value: 0, child: Text(AppStrings.recurringDaySun)),
+                          DropdownMenuItem(value: 1, child: Text(AppStrings.recurringDayMon)),
+                          DropdownMenuItem(value: 2, child: Text(AppStrings.recurringDayTue)),
+                          DropdownMenuItem(value: 3, child: Text(AppStrings.recurringDayWed)),
+                          DropdownMenuItem(value: 4, child: Text(AppStrings.recurringDayThu)),
+                          DropdownMenuItem(value: 5, child: Text(AppStrings.recurringDayFri)),
+                          DropdownMenuItem(value: 6, child: Text(AppStrings.recurringDaySat)),
+                        ],
+                        onChanged: (val) => setState(() => _selectedDayOfWeek = val!),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSimpleButton(String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isSelected ? AppColors.primary : Colors.grey.shade300),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.black87,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         ),

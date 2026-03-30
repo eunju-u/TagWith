@@ -299,5 +299,49 @@ class TransactionService {
       return null;
     }
   }
+
+  // 고정 지출 설정 가져오기
+  Future<List<RecurringTransaction>> getRecurringTransactions() async {
+    try {
+      final token = await _getToken();
+      if (token == null) return [];
+
+      final response = await _dio.get(
+        '/transactions/recurring',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => RecurringTransaction.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      AppLog.logD('TransactionService', 'getRecurringTransactions', 'Error: $e');
+      return [];
+    }
+  }
+
+  // 고정 지출 설정 추가
+  Future<RecurringTransaction?> createRecurringTransaction(RecurringTransaction recurring) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
+
+      final response = await _dio.post(
+        '/transactions/recurring',
+        data: recurring.toJson(),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return RecurringTransaction.fromJson(response.data);
+      }
+      return null;
+    } catch (e) {
+      AppLog.logD('TransactionService', 'createRecurringTransaction', 'Error: $e');
+      return null;
+    }
+  }
 }
 

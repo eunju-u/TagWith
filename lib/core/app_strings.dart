@@ -110,6 +110,23 @@ class AppStrings {
   static const String completeEntryButton = '기록 완료하기';
   static const String completeEditButton = '수정 완료하기';
 
+  // --- 고정 지출 (반복 내역) ---
+  static const String recurringLabel = '고정 지출 설정';
+  static const String recurringMonthly = '매달';
+  static const String recurringWeekly = '매주';
+  static const String recurringIntervalLabel = '반복 주기';
+  static const String recurringDayLabel = '반복 요일';
+  static const String recurringDateLabel = '반복 날짜';
+  static const String recurringStatusActive = '활성화됨';
+  static const String recurringStatusInactive = '비활성화됨';
+  static const String recurringDaySun = '일요일';
+  static const String recurringDayMon = '월요일';
+  static const String recurringDayTue = '화요일';
+  static const String recurringDayWed = '수요일';
+  static const String recurringDayThu = '목요일';
+  static const String recurringDayFri = '금요일';
+  static const String recurringDaySat = '토요일';
+
   // --- 카테고리 명칭 ---
   static const String categoryFood = '식비';
   static const String categoryCafe = '카페/간식';

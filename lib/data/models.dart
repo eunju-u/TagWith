@@ -422,7 +422,70 @@ class Receipt {
       date: json['date'] ?? '',
       categorySuggestion: json['category_suggestion'] ?? '',
       isDuplicate: isDuplicate,
-      paymentMethod: Transaction._parsePaymentMethod(json['payment_method']),
     );
   }
 }
+
+class RecurringTransaction {
+  final String id;
+  final double amount;
+  final String description;
+  final Category category;
+  final TransactionType type;
+  final PaymentMethod paymentMethod;
+  final String interval; // 'monthly', 'weekly', 'daily'
+  final int? dayOfMonth;
+  final int? dayOfWeek;
+  final DateTime startDate;
+  final DateTime? nextFireDate;
+  final bool isActive;
+
+  RecurringTransaction({
+    required this.id,
+    required this.amount,
+    required this.description,
+    required this.category,
+    required this.type,
+    required this.paymentMethod,
+    required this.interval,
+    this.dayOfMonth,
+    this.dayOfWeek,
+    required this.startDate,
+    this.nextFireDate,
+    this.isActive = true,
+  });
+
+  factory RecurringTransaction.fromJson(Map<String, dynamic> json) {
+    return RecurringTransaction(
+      id: json['id'].toString(),
+      amount: (json['amount'] as num).toDouble(),
+      description: json['description'] ?? '',
+      category: Category.fromName(json['category'] ?? ''),
+      type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
+      paymentMethod: Transaction._parsePaymentMethod(json['payment_method']),
+      interval: json['interval'] ?? 'monthly',
+      dayOfMonth: json['day_of_month'],
+      dayOfWeek: json['day_of_week'],
+      startDate: DateTime.parse(json['start_date']).toLocal(),
+      nextFireDate: json['next_fire_date'] != null ? DateTime.parse(json['next_fire_date']).toLocal() : null,
+      isActive: json['is_active'] ?? true,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'amount': amount,
+      'description': description,
+      'category': category.name,
+      'type': type.name.toLowerCase(),
+      'payment_method': Transaction._paymentMethodToString(paymentMethod),
+      'interval': interval,
+      'day_of_month': dayOfMonth,
+      'day_of_week': dayOfWeek,
+      'start_date': startDate.toIso8601String(),
+      'is_active': isActive,
+    };
+  }
+}
+
+const List<String> recurringIntervals = ['monthly', 'weekly', 'daily'];
