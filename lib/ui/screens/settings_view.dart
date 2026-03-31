@@ -13,6 +13,7 @@ import '../widgets/loading_overlay.dart';
 import '../../core/app_icons.dart';
 
 import 'category_management_screen.dart';
+import 'recurring_management_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SettingsView extends StatelessWidget {
@@ -103,14 +104,28 @@ class SettingsView extends StatelessWidget {
             _buildSectionHeader(context, '데이터 관리'),
             const SizedBox(height: 10),
             Card(
-              child: ListTile(
-                leading: const Icon(Icons.category_outlined, color: AppColors.primary),
-                title: const Text('카테고리 관리'),
-                trailing: const Icon(Icons.chevron_right, size: 20),
-                onTap: () => Navigator.push(
-                  context, 
-                  MaterialPageRoute(builder: (context) => const CategoryManagementScreen())
-                ),
+              child: Column(
+                children: [
+                   ListTile(
+                    leading: const Icon(Icons.category_outlined, color: AppColors.primary),
+                    title: const Text('카테고리 관리'),
+                    trailing: const Icon(Icons.chevron_right, size: 20),
+                    onTap: () => Navigator.push(
+                      context, 
+                      MaterialPageRoute(builder: (context) => const CategoryManagementScreen())
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.repeat, color: AppColors.primary),
+                    title: const Text(AppStrings.recurringLabel),
+                    trailing: const Icon(Icons.chevron_right, size: 20),
+                    onTap: () => Navigator.push(
+                      context, 
+                      MaterialPageRoute(builder: (context) => const RecurringManagementScreen())
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 30),

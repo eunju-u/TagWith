@@ -343,5 +343,45 @@ class TransactionService {
       return null;
     }
   }
+
+  // 고정 지출 설정 수정 (일부 필드 또는 활성화 상태)
+  Future<RecurringTransaction?> updateRecurringTransaction(String id, Map<String, dynamic> data) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
+
+      final response = await _dio.put(
+        '/transactions/recurring/$id',
+        data: data,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return RecurringTransaction.fromJson(response.data);
+      }
+      return null;
+    } catch (e) {
+      AppLog.logD('TransactionService', 'updateRecurringTransaction', 'Error: $e');
+      return null;
+    }
+  }
+
+  // 고정 지출 설정 삭제
+  Future<bool> deleteRecurringTransaction(String id) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return false;
+
+      final response = await _dio.delete(
+        '/transactions/recurring/$id',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      AppLog.logD('TransactionService', 'deleteRecurringTransaction', 'Error: $e');
+      return false;
+    }
+  }
 }
 

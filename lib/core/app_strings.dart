@@ -112,6 +112,7 @@ class AppStrings {
 
   // --- 고정 지출 (반복 내역) ---
   static const String recurringLabel = '고정 지출 설정';
+  static const String recurringManagementTitle = '고정 지출 관리';
   static const String recurringMonthly = '매달';
   static const String recurringWeekly = '매주';
   static const String recurringIntervalLabel = '반복 주기';

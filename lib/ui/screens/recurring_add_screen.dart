@@ -1,70 +1,49 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_strings.dart';
-import '../../core/theme.dart';
 import '../../core/input_formatters.dart';
+import '../../core/theme.dart';
+import '../../core/app_icons.dart';
 import '../../data/models.dart';
 import '../../providers/transaction_provider.dart';
-import '../widgets/relation_picker_sheet.dart';
-import '../widgets/category_picker_sheet.dart';
 import '../widgets/app_snackbar.dart';
+import '../widgets/category_picker_sheet.dart';
 import '../widgets/loading_overlay.dart';
-import '../../core/app_icons.dart';
 
-class ManualEntryScreen extends StatefulWidget {
-  final Transaction? existingTransaction;
-  const ManualEntryScreen({super.key, this.existingTransaction});
+class RecurringAddScreen extends StatefulWidget {
+  const RecurringAddScreen({super.key});
 
   @override
-  State<ManualEntryScreen> createState() => _ManualEntryScreenState();
+  State<RecurringAddScreen> createState() => _RecurringAddScreenState();
 }
 
-class _ManualEntryScreenState extends State<ManualEntryScreen> {
+class _RecurringAddScreenState extends State<RecurringAddScreen> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _memoController = TextEditingController(); // 추가
   final FocusNode _amountFocusNode = FocusNode();
-  DateTime _selectedDate = DateTime.now();
-  Category? _selectedCategory;
-  List<Relation> _selectedRelations = [];
+  
   TransactionType _type = TransactionType.expense;
+  Category? _selectedCategory;
   PaymentMethod _paymentMethod = PaymentMethod.checkCard;
   
-  // 반복 설정 관련 상태
-  bool _isRecurring = false;
-  String _selectedInterval = 'monthly'; // 'monthly', 'weekly'
+  String _selectedInterval = 'monthly';
   int _selectedDayOfMonth = DateTime.now().day;
-  int _selectedDayOfWeek = DateTime.now().weekday == 7 ? 0 : DateTime.now().weekday; // 0이 일요일인 기준
+  int _selectedDayOfWeek = DateTime.now().weekday == 7 ? 0 : DateTime.now().weekday;
+  DateTime _startDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
     final provider = Provider.of<TransactionProvider>(context, listen: false);
+    _selectedCategory = provider.allCategories.firstWhere(
+      (c) => c.name == '식비', 
+      orElse: () => provider.allCategories.first
+    );
     
-    if (widget.existingTransaction != null) {
-      final t = widget.existingTransaction!;
-      _amountController.text = formatCurrency(t.amount.toInt());
-      _descriptionController.text = t.description;
-      _selectedDate = t.date;
-      _selectedCategory = t.category;
-      _selectedRelations = List.from(t.relations);
-      _type = t.type;
-      _paymentMethod = t.paymentMethod;
-      _memoController.text = t.memo ?? ''; // 추가
-    } else {
-      _selectedCategory = provider.allCategories.firstWhere((c) => c.name == '식비', orElse: () => provider.allCategories.first);
-      // Request focus once after build only when creating new entry
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _amountFocusNode.requestFocus();
-      });
-    }
-  }
-
-  String formatCurrency(int amount) {
-    return NumberFormat('#,###').format(amount);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _amountFocusNode.requestFocus();
+    });
   }
 
   @override
@@ -72,13 +51,13 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     _amountFocusNode.dispose();
     _amountController.dispose();
     _descriptionController.dispose();
-    _memoController.dispose(); // 추가
     super.dispose();
   }
 
   Future<void> _save() async {
     final amountStr = _amountController.text.replaceAll(',', '');
     final amount = double.tryParse(amountStr) ?? 0;
+    
     if (amount <= 0 || _descriptionController.text.trim().isEmpty || _selectedCategory == null) {
       AppSnackBar.show(context, AppStrings.entryIncompleteError);
       return;
@@ -86,51 +65,27 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
 
     try {
       AppLoadingOverlay.show(context);
-
-      final transaction = Transaction(
-        id: widget.existingTransaction?.id ?? '', 
-        date: _selectedDate,
-        amount: amount,
-        description: _descriptionController.text.trim(),
-        type: _type,
-        category: _selectedCategory!,
-        relations: _selectedRelations,
-        paymentMethod: _paymentMethod,
-        memo: _memoController.text.trim().isNotEmpty ? _memoController.text.trim() : null, // 추가
-      );
-
       final provider = Provider.of<TransactionProvider>(context, listen: false);
       
-      bool success;
-      if (widget.existingTransaction != null) {
-        // 기존 내역 수정
-        success = await provider.updateTransaction(transaction);
-      } else {
-        // 신규 내역 저장
-        success = await provider.addTransaction(transaction);
-        
-        // 고정 지출 설정이 켜져있다면 반복 설정도 별도로 추가
-        if (success && _isRecurring) {
-          final recurring = RecurringTransaction(
-            id: '',
-            amount: amount,
-            description: _descriptionController.text.trim(),
-            category: _selectedCategory!,
-            type: _type,
-            paymentMethod: _paymentMethod,
-            interval: _selectedInterval,
-            dayOfMonth: _selectedInterval == 'monthly' ? _selectedDayOfMonth : null,
-            dayOfWeek: _selectedInterval == 'weekly' ? _selectedDayOfWeek : null,
-            startDate: _selectedDate,
-          );
-          await provider.addRecurringTransaction(recurring);
-        }
-      }
+      final recurring = RecurringTransaction(
+        id: '',
+        amount: amount,
+        description: _descriptionController.text.trim(),
+        category: _selectedCategory!,
+        type: _type,
+        paymentMethod: _paymentMethod,
+        interval: _selectedInterval,
+        dayOfMonth: _selectedInterval == 'monthly' ? _selectedDayOfMonth : null,
+        dayOfWeek: _selectedInterval == 'weekly' ? _selectedDayOfWeek : null,
+        startDate: _startDate,
+      );
+
+      final success = await provider.addRecurringTransaction(recurring);
       
       if (mounted) {
         if (success) {
           Navigator.pop(context);
-          AppSnackBar.show(context, widget.existingTransaction != null ? AppStrings.updateComplete : AppStrings.saveComplete);
+          AppSnackBar.show(context, AppStrings.saveComplete);
         } else {
           AppSnackBar.show(context, AppStrings.saveFailed);
         }
@@ -156,18 +111,23 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: MediaQuery.of(context).padding.top + 16),
-              // Custom Header
+              // Header
               Row(
                 children: [
-                  IconButton(
+                   IconButton(
                     icon: const Icon(AppIcons.close),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: () => Navigator.pop(context),
                   ),
+                  const Spacer(),
+                  Text('고정 지출 등록', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  const SizedBox(width: 40), // Balance close button
                 ],
               ),
               const SizedBox(height: 24),
+              
               // Type Selector
               Row(
                 children: [
@@ -177,6 +137,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                 ],
               ),
               const SizedBox(height: 40),
+
               // Amount Input
               Center(
                 child: Column(
@@ -195,7 +156,6 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                           FilteringTextInputFormatter.digitsOnly,
                           CurrencyInputFormatter(),
                         ],
-                        autofocus: false,
                         textAlign: TextAlign.center,
                         style: theme.textTheme.displayMedium?.copyWith(
                           fontWeight: FontWeight.bold,
@@ -217,7 +177,8 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                 ),
               ),
               const SizedBox(height: 48),
-              // Moved Details Form: Description first
+
+              // Form Sections
               _buildSectionHeader(AppStrings.descriptionLabel),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -235,32 +196,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              _buildSectionHeader(AppStrings.paymentMethodLabel),
-              Row(
-                children: [
-                  _buildPaymentMethodButton(PaymentMethod.cash, AppStrings.cashLabel, theme),
-                  const SizedBox(width: 8),
-                  _buildPaymentMethodButton(PaymentMethod.checkCard, AppStrings.checkCardLabel, theme),
-                  const SizedBox(width: 8),
-                  _buildPaymentMethodButton(PaymentMethod.creditCard, AppStrings.creditCardLabel, theme),
-                ],
-              ),
-              const SizedBox(height: 24),
-              _buildSectionHeader(AppStrings.dateLabel),
-              _buildActionCard(
-                icon: AppIcons.calendar,
-                label: DateFormat('yyyy년 MM월 dd일').format(_selectedDate),
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: _selectedDate,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime(2100),
-                  );
-                  if (date != null) setState(() => _selectedDate = date);
-                },
-              ),
-              const SizedBox(height: 24),
+
               _buildSectionHeader(AppStrings.categoryLabel),
               _buildActionCard(
                 icon: _selectedCategory?.iconData,
@@ -274,33 +210,79 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              _buildSectionHeader(AppStrings.relationLabel),
-              _buildRelationCard(provider),
+
+              _buildSectionHeader(AppStrings.paymentMethodLabel),
+              Row(
+                children: [
+                  _buildPaymentMethodButton(PaymentMethod.cash, AppStrings.cashLabel, theme),
+                  const SizedBox(width: 8),
+                  _buildPaymentMethodButton(PaymentMethod.checkCard, AppStrings.checkCardLabel, theme),
+                  const SizedBox(width: 8),
+                  _buildPaymentMethodButton(PaymentMethod.creditCard, AppStrings.creditCardLabel, theme),
+                ],
+              ),
               const SizedBox(height: 24),
-              _buildSectionHeader(AppStrings.memoLabel),
+
+              const Divider(),
+              const SizedBox(height: 16),
+
+              // Recurring Settings
+              _buildSectionHeader('반복 주기'),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withOpacity(0.03),
+                  color: AppColors.primary.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: theme.dividerColor),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.2)),
                 ),
-                child: TextField(
-                  controller: _memoController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    hintText: AppStrings.memoHint,
-                    border: InputBorder.none,
-                  ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: _buildSimpleButton(AppStrings.recurringMonthly, _selectedInterval == 'monthly', () => setState(() => _selectedInterval = 'monthly'))),
+                        const SizedBox(width: 8),
+                        Expanded(child: _buildSimpleButton(AppStrings.recurringWeekly, _selectedInterval == 'weekly', () => setState(() => _selectedInterval = 'weekly'))),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (_selectedInterval == 'monthly')
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(AppStrings.recurringDateLabel, style: TextStyle(fontWeight: FontWeight.w600)),
+                          DropdownButton<int>(
+                            value: _selectedDayOfMonth,
+                            underline: const SizedBox(),
+                            items: List.generate(31, (i) => i + 1).map((day) => DropdownMenuItem(value: day, child: Text('$day일'))).toList(),
+                            onChanged: (val) => setState(() => _selectedDayOfMonth = val!),
+                          ),
+                        ],
+                      ),
+                    if (_selectedInterval == 'weekly')
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(AppStrings.recurringDayLabel, style: TextStyle(fontWeight: FontWeight.w600)),
+                          DropdownButton<int>(
+                            value: _selectedDayOfWeek,
+                            underline: const SizedBox(),
+                            items: [
+                              DropdownMenuItem(value: 0, child: Text(AppStrings.recurringDaySun)),
+                              DropdownMenuItem(value: 1, child: Text(AppStrings.recurringDayMon)),
+                              DropdownMenuItem(value: 2, child: Text(AppStrings.recurringDayTue)),
+                              DropdownMenuItem(value: 3, child: Text(AppStrings.recurringDayWed)),
+                              DropdownMenuItem(value: 4, child: Text(AppStrings.recurringDayThu)),
+                              DropdownMenuItem(value: 5, child: Text(AppStrings.recurringDayFri)),
+                              DropdownMenuItem(value: 6, child: Text(AppStrings.recurringDaySat)),
+                            ],
+                            onChanged: (val) => setState(() => _selectedDayOfWeek = val!),
+                          ),
+                        ],
+                      ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 32),
-              // Recurring Toggle & Options
-              if (widget.existingTransaction == null) ...[
-                _buildRecurringSection(theme),
-                const SizedBox(height: 24),
-              ],
-              const SizedBox(height: 180),
+              const SizedBox(height: 180), // Space for bottom sheet
             ],
           ),
         ),
@@ -337,10 +319,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               shadowColor: Colors.transparent,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             ),
-            child: Text(
-              widget.existingTransaction != null ? AppStrings.completeEditButton : AppStrings.completeEntryButton, 
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
-            ),
+            child: const Text('고정 지출 등록하기', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ),
         ),
       ),
@@ -424,57 +403,6 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     );
   }
 
-  Widget _buildRelationCard(TransactionProvider provider) {
-    final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.onSurface.withOpacity(0.03),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.dividerColor),
-      ),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          ..._selectedRelations.map((rel) => Chip(
-            label: Text(rel.name),
-            onDeleted: () => setState(() => _selectedRelations.remove(rel)),
-            backgroundColor: AppColors.primary.withOpacity(0.1),
-            deleteIconColor: AppColors.primary,
-            labelStyle: const TextStyle(color: AppColors.primary, fontSize: 13),
-            side: BorderSide.none,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          )),
-          ActionChip(
-            label: const Text(AppStrings.add),
-            avatar: const Icon(AppIcons.add, size: 16),
-            onPressed: () {
-              _amountFocusNode.unfocus();
-              _showRelationPicker(provider);
-            },
-            backgroundColor: Colors.transparent,
-            side: BorderSide(color: theme.dividerColor),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-
-  void _showRelationPicker(TransactionProvider provider) {
-    RelationPickerSheet.show(
-      context: context,
-      provider: provider,
-      selectedRelations: _selectedRelations,
-      onUpdate: (updated) => setState(() => _selectedRelations = updated),
-    );
-  }
-
-
   Widget _buildPaymentMethodButton(PaymentMethod method, String label, ThemeData theme) {
     final isSelected = _paymentMethod == method;
     return Expanded(
@@ -508,89 +436,6 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     );
   }
 
-  Widget _buildRecurringSection(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(AppStrings.recurringLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 4),
-                Text('지정한 주기에 맞춰 내역이 자동 생성됩니다.', style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey)),
-              ],
-            ),
-            Switch.adaptive(
-              value: _isRecurring,
-              activeColor: AppColors.primary,
-              onChanged: (val) => setState(() => _isRecurring = val),
-            ),
-          ],
-        ),
-        if (_isRecurring) ...[
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(child: _buildSimpleButton(AppStrings.recurringMonthly, _selectedInterval == 'monthly', () => setState(() => _selectedInterval = 'monthly'))),
-                    const SizedBox(width: 8),
-                    Expanded(child: _buildSimpleButton(AppStrings.recurringWeekly, _selectedInterval == 'weekly', () => setState(() => _selectedInterval = 'weekly'))),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                if (_selectedInterval == 'monthly')
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(AppStrings.recurringDateLabel, style: TextStyle(fontWeight: FontWeight.w600)),
-                      DropdownButton<int>(
-                        value: _selectedDayOfMonth,
-                        underline: const SizedBox(),
-                        items: List.generate(31, (i) => i + 1).map((day) => DropdownMenuItem(value: day, child: Text('$day일'))).toList(),
-                        onChanged: (val) => setState(() => _selectedDayOfMonth = val!),
-                      ),
-                    ],
-                  ),
-                if (_selectedInterval == 'weekly')
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(AppStrings.recurringDayLabel, style: TextStyle(fontWeight: FontWeight.w600)),
-                      DropdownButton<int>(
-                        value: _selectedDayOfWeek,
-                        underline: const SizedBox(),
-                        items: [
-                          DropdownMenuItem(value: 0, child: Text(AppStrings.recurringDaySun)),
-                          DropdownMenuItem(value: 1, child: Text(AppStrings.recurringDayMon)),
-                          DropdownMenuItem(value: 2, child: Text(AppStrings.recurringDayTue)),
-                          DropdownMenuItem(value: 3, child: Text(AppStrings.recurringDayWed)),
-                          DropdownMenuItem(value: 4, child: Text(AppStrings.recurringDayThu)),
-                          DropdownMenuItem(value: 5, child: Text(AppStrings.recurringDayFri)),
-                          DropdownMenuItem(value: 6, child: Text(AppStrings.recurringDaySat)),
-                        ],
-                        onChanged: (val) => setState(() => _selectedDayOfWeek = val!),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
   Widget _buildSimpleButton(String label, bool isSelected, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
@@ -614,5 +459,3 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     );
   }
 }
-
-

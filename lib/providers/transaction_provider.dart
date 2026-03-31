@@ -470,4 +470,27 @@ class TransactionProvider with ChangeNotifier {
     }
     return false;
   }
+
+  Future<bool> updateRecurringTransaction(String id, Map<String, dynamic> data) async {
+    final updated = await _service.updateRecurringTransaction(id, data);
+    if (updated != null) {
+      final index = _recurringTransactions.indexWhere((r) => r.id == id);
+      if (index != -1) {
+        _recurringTransactions[index] = updated;
+        notifyListeners();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Future<bool> deleteRecurringTransaction(String id) async {
+    final success = await _service.deleteRecurringTransaction(id);
+    if (success) {
+      _recurringTransactions.removeWhere((r) => r.id == id);
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
 }
