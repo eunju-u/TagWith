@@ -134,8 +134,8 @@ class _CalendarViewState extends State<CalendarView> {
                               physics: const AlwaysScrollableScrollPhysics(),
                               padding: const EdgeInsets.only(bottom: 120),
                               child: TableCalendar(
-                                firstDay: DateTime.utc(2020, 1, 1),
-                                lastDay: DateTime.utc(2030, 12, 31),
+                                firstDay: DateTime(2020, 1, 1),
+                                lastDay: DateTime(2030, 12, 31),
                                 focusedDay: _focusedDay,
                                 calendarFormat: _calendarFormat,
                                 availableGestures: AvailableGestures.horizontalSwipe, // 수직 스크롤 허용
@@ -236,19 +236,25 @@ class _CalendarViewState extends State<CalendarView> {
     
     final totalIncome = isYear ? provider.getTotalIncomeByYear(_focusedDay.year) : provider.getTotalIncomeByMonth(_focusedDay);
     final cashIncome = isYear 
-        ? provider.getTotalByMethod(TransactionType.income, [PaymentMethod.cash], year: _focusedDay.year)
-        : provider.getTotalByMethod(TransactionType.income, [PaymentMethod.cash], month: _focusedDay);
+        ? provider.getTotalByMethod(TransactionType.income, [AppStrings.cashLabel], year: _focusedDay.year)
+        : provider.getTotalByMethod(TransactionType.income, [AppStrings.cashLabel], month: _focusedDay);
     final cardIncome = isYear
-        ? provider.getTotalByMethod(TransactionType.income, [PaymentMethod.checkCard, PaymentMethod.creditCard], year: _focusedDay.year)
-        : provider.getTotalByMethod(TransactionType.income, [PaymentMethod.checkCard, PaymentMethod.creditCard], month: _focusedDay);
+        ? provider.getTotalByMethod(TransactionType.income, [AppStrings.checkCardLabel, AppStrings.creditCardLabel], year: _focusedDay.year)
+        : provider.getTotalByMethod(TransactionType.income, [AppStrings.checkCardLabel, AppStrings.creditCardLabel], month: _focusedDay);
+    final otherIncome = isYear
+        ? provider.getTotalByOtherMethods(TransactionType.income, [AppStrings.cashLabel, AppStrings.checkCardLabel, AppStrings.creditCardLabel], year: _focusedDay.year)
+        : provider.getTotalByOtherMethods(TransactionType.income, [AppStrings.cashLabel, AppStrings.checkCardLabel, AppStrings.creditCardLabel], month: _focusedDay);
 
     final totalExpense = isYear ? provider.getTotalExpenseByYear(_focusedDay.year) : provider.getTotalExpenseByMonth(_focusedDay);
     final cashExpense = isYear
-        ? provider.getTotalByMethod(TransactionType.expense, [PaymentMethod.cash], year: _focusedDay.year)
-        : provider.getTotalByMethod(TransactionType.expense, [PaymentMethod.cash], month: _focusedDay);
+        ? provider.getTotalByMethod(TransactionType.expense, [AppStrings.cashLabel], year: _focusedDay.year)
+        : provider.getTotalByMethod(TransactionType.expense, [AppStrings.cashLabel], month: _focusedDay);
     final cardExpense = isYear
-        ? provider.getTotalByMethod(TransactionType.expense, [PaymentMethod.checkCard, PaymentMethod.creditCard], year: _focusedDay.year)
-        : provider.getTotalByMethod(TransactionType.expense, [PaymentMethod.checkCard, PaymentMethod.creditCard], month: _focusedDay);
+        ? provider.getTotalByMethod(TransactionType.expense, [AppStrings.checkCardLabel, AppStrings.creditCardLabel], year: _focusedDay.year)
+        : provider.getTotalByMethod(TransactionType.expense, [AppStrings.checkCardLabel, AppStrings.creditCardLabel], month: _focusedDay);
+    final otherExpense = isYear
+        ? provider.getTotalByOtherMethods(TransactionType.expense, [AppStrings.cashLabel, AppStrings.checkCardLabel, AppStrings.creditCardLabel], year: _focusedDay.year)
+        : provider.getTotalByOtherMethods(TransactionType.expense, [AppStrings.cashLabel, AppStrings.checkCardLabel, AppStrings.creditCardLabel], month: _focusedDay);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -260,17 +266,19 @@ class _CalendarViewState extends State<CalendarView> {
               totalIncome,
               cashIncome,
               cardIncome,
+              otherIncome,
               AppColors.income,
               theme,
             ),
           ),
-          Container(width: 1, height: 40, color: theme.dividerColor.withOpacity(0.5)),
+          Container(width: 1, height: 60, color: theme.dividerColor.withOpacity(0.5)),
           Expanded(
             child: _buildSummaryItem(
               AppStrings.totalExpenseLabel,
               totalExpense,
               cashExpense,
               cardExpense,
+              otherExpense,
               AppColors.expense,
               theme,
             ),
@@ -357,7 +365,7 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  Widget _buildSummaryItem(String label, double total, double cash, double card, Color color, ThemeData theme) {
+  Widget _buildSummaryItem(String label, double total, double cash, double card, double other, Color color, ThemeData theme) {
     final format = NumberFormat('#,###');
     return Column(
       children: [
@@ -384,18 +392,20 @@ class _CalendarViewState extends State<CalendarView> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(AppStrings.cashLabel, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.4))),
-                const SizedBox(height: 2),
-                Text(AppStrings.cardLabel, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.4))),
+                Text(AppStrings.cashLabel, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.4), height: 1.2)),
+                Text(AppStrings.cardLabel, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.4), height: 1.2)),
+                if (other > 0)
+                  Text(AppStrings.categoryMisc, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.4), height: 1.2)),
               ],
             ),
             const SizedBox(width: 8),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${format.format(cash)}${AppStrings.currencyUnit}', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.7), fontWeight: FontWeight.w600)),
-                const SizedBox(height: 2),
-                Text('${format.format(card)}${AppStrings.currencyUnit}', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.7), fontWeight: FontWeight.w600)),
+                Text('${format.format(cash)}${AppStrings.currencyUnit}', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.7), fontWeight: FontWeight.w600, height: 1.2)),
+                Text('${format.format(card)}${AppStrings.currencyUnit}', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.7), fontWeight: FontWeight.w600, height: 1.2)),
+                if (other > 0)
+                  Text('${format.format(other)}${AppStrings.currencyUnit}', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.7), fontWeight: FontWeight.w600, height: 1.2)),
               ],
             ),
           ],
@@ -571,6 +581,11 @@ class _CalendarViewState extends State<CalendarView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(t.description, style: theme.textTheme.titleMedium),
+                const SizedBox(height: 2),
+                Text(
+                  '${t.category.name} • ${_getPaymentMethodLabel(t.paymentMethod)}${t.relations.isNotEmpty ? ' • ${t.relations.map((r) => r.name).join(', ')}' : ''}',
+                  style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, color: theme.colorScheme.onSurface.withOpacity(0.6)),
+                ),
                 if (t.memo != null && t.memo!.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(
@@ -583,11 +598,6 @@ class _CalendarViewState extends State<CalendarView> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
-                const SizedBox(height: 2),
-                Text(
-                  '${t.category.name} • ${_getPaymentMethodLabel(t.paymentMethod)}${t.relations.isNotEmpty ? ' • ${t.relations.map((r) => r.name).join(', ')}' : ''}',
-                  style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, color: theme.colorScheme.onSurface.withOpacity(0.6)),
-                ),
               ],
             ),
           ),
@@ -667,11 +677,7 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  String _getPaymentMethodLabel(PaymentMethod method) {
-    switch (method) {
-      case PaymentMethod.cash: return AppStrings.cashLabel;
-      case PaymentMethod.checkCard: return AppStrings.checkCardLabel;
-      case PaymentMethod.creditCard: return AppStrings.creditCardLabel;
-    }
+  String _getPaymentMethodLabel(String methodName) {
+    return methodName;
   }
 }

@@ -2,10 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../core/app_strings.dart';
 import '../../core/theme.dart';
 import '../../core/input_formatters.dart';
 import '../../data/models.dart';
+import '../../providers/transaction_provider.dart';
 
 class OCRTransactionCard extends StatefulWidget {
   final Transaction transaction;
@@ -276,28 +278,27 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
     );
   }
 
-  String _getPaymentMethodLabel(PaymentMethod method) {
-    switch (method) {
-      case PaymentMethod.cash: return AppStrings.cashLabel;
-      case PaymentMethod.checkCard: return AppStrings.checkCardLabel;
-      case PaymentMethod.creditCard: return AppStrings.creditCardLabel;
-    }
+  String _getPaymentMethodLabel(String methodName) {
+     return methodName;
   }
 
-  IconData _getPaymentMethodIcon(PaymentMethod method) {
-    switch (method) {
-      case PaymentMethod.cash: return Icons.payments_outlined;
-      case PaymentMethod.checkCard: return Icons.credit_card_outlined;
-      case PaymentMethod.creditCard: return Icons.credit_card;
-    }
+  IconData _getPaymentMethodIcon(String methodName) {
+    // 기본 아이콘 매핑
+    if (methodName == 'cash' || methodName == AppStrings.cashLabel) return Icons.payments_outlined;
+    if (methodName.contains('체크') || methodName.contains('check')) return Icons.credit_card_outlined;
+    return Icons.credit_card;
   }
 
   void _showPaymentMethodPicker() {
+    final provider = Provider.of<TransactionProvider>(context, listen: false);
+    final paymentMethods = provider.paymentMethods;
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
+      isScrollControlled: true,
       builder: (context) {
         final theme = Theme.of(context);
         return SafeArea(
@@ -317,30 +318,43 @@ class _OCRTransactionCardState extends State<OCRTransactionCard> {
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Text(AppStrings.ocrPaymentMethodPickerTitle, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ),
-              ListTile(
-                leading: const Icon(Icons.payments_outlined, color: AppColors.primary),
-                title: const Text(AppStrings.cashLabel),
-                onTap: () {
-                  widget.onUpdate(widget.transaction.copyWith(paymentMethod: PaymentMethod.cash));
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.credit_card_outlined, color: AppColors.primary),
-                title: const Text(AppStrings.checkCardLabel),
-                onTap: () {
-                  widget.onUpdate(widget.transaction.copyWith(paymentMethod: PaymentMethod.checkCard));
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.credit_card, color: AppColors.primary),
-                title: const Text(AppStrings.creditCardLabel),
-                onTap: () {
-                  widget.onUpdate(widget.transaction.copyWith(paymentMethod: PaymentMethod.creditCard));
-                  Navigator.pop(context);
-                },
-              ),
+              if (paymentMethods.isEmpty) ...[
+                ListTile(
+                  leading: const Icon(Icons.payments_outlined, color: AppColors.primary),
+                  title: const Text(AppStrings.cashLabel),
+                  onTap: () {
+                    widget.onUpdate(widget.transaction.copyWith(paymentMethod: AppStrings.cashLabel));
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.credit_card_outlined, color: AppColors.primary),
+                  title: const Text(AppStrings.checkCardLabel),
+                  onTap: () {
+                    widget.onUpdate(widget.transaction.copyWith(paymentMethod: AppStrings.checkCardLabel));
+                    Navigator.pop(context);
+                  },
+                ),
+              ] else
+                ...paymentMethods.map((method) {
+                  IconData icon;
+                  switch (method.type) {
+                    case PaymentMethodBaseType.cash: icon = Icons.payments_outlined; break;
+                    case PaymentMethodBaseType.checkCard: icon = Icons.credit_card_outlined; break;
+                    case PaymentMethodBaseType.creditCard: icon = Icons.account_balance_wallet_outlined; break;
+                  }
+                  return ListTile(
+                    leading: Icon(icon, color: AppColors.primary),
+                    title: Text(method.name),
+                    onTap: () {
+                      widget.onUpdate(widget.transaction.copyWith(
+                        paymentMethod: method.name,
+                        paymentMethodId: method.id,
+                      ));
+                      Navigator.pop(context);
+                    },
+                  );
+                }),
               const SizedBox(height: 16),
             ],
           ),

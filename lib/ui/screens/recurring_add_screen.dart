@@ -10,6 +10,7 @@ import '../../providers/transaction_provider.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/category_picker_sheet.dart';
 import '../widgets/loading_overlay.dart';
+import '../widgets/payment_method_selector.dart';
 
 class RecurringAddScreen extends StatefulWidget {
   const RecurringAddScreen({super.key});
@@ -25,7 +26,8 @@ class _RecurringAddScreenState extends State<RecurringAddScreen> {
   
   TransactionType _type = TransactionType.expense;
   Category? _selectedCategory;
-  PaymentMethod _paymentMethod = PaymentMethod.checkCard;
+  String _paymentMethod = 'cash';
+  String? _paymentMethodId;
   
   String _selectedInterval = 'monthly';
   int _selectedDayOfMonth = DateTime.now().day;
@@ -36,10 +38,11 @@ class _RecurringAddScreenState extends State<RecurringAddScreen> {
   void initState() {
     super.initState();
     final provider = Provider.of<TransactionProvider>(context, listen: false);
-    _selectedCategory = provider.allCategories.firstWhere(
-      (c) => c.name == '식비', 
-      orElse: () => provider.allCategories.first
-    );
+    final cats = provider.allCategories;
+    _selectedCategory = cats.any((c) => c.name == '식비')
+        ? cats.firstWhere((c) => c.name == '식비')
+        : (cats.isNotEmpty ? cats.first : null);
+    _paymentMethod = AppStrings.cashLabel;
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _amountFocusNode.requestFocus();
@@ -74,6 +77,7 @@ class _RecurringAddScreenState extends State<RecurringAddScreen> {
         category: _selectedCategory!,
         type: _type,
         paymentMethod: _paymentMethod,
+        paymentMethodId: _paymentMethodId,
         interval: _selectedInterval,
         dayOfMonth: _selectedInterval == 'monthly' ? _selectedDayOfMonth : null,
         dayOfWeek: _selectedInterval == 'weekly' ? _selectedDayOfWeek : null,
@@ -212,14 +216,17 @@ class _RecurringAddScreenState extends State<RecurringAddScreen> {
               const SizedBox(height: 24),
 
               _buildSectionHeader(AppStrings.paymentMethodLabel),
-              Row(
-                children: [
-                  _buildPaymentMethodButton(PaymentMethod.cash, AppStrings.cashLabel, theme),
-                  const SizedBox(width: 8),
-                  _buildPaymentMethodButton(PaymentMethod.checkCard, AppStrings.checkCardLabel, theme),
-                  const SizedBox(width: 8),
-                  _buildPaymentMethodButton(PaymentMethod.creditCard, AppStrings.creditCardLabel, theme),
-                ],
+              PaymentMethodSelector(
+                provider: provider,
+                paymentMethod: _paymentMethod,
+                paymentMethodId: _paymentMethodId,
+                onSelected: (name, id) {
+                  _amountFocusNode.unfocus();
+                  setState(() {
+                    _paymentMethod = name;
+                    _paymentMethodId = id;
+                  });
+                },
               ),
               const SizedBox(height: 24),
 
@@ -403,38 +410,7 @@ class _RecurringAddScreenState extends State<RecurringAddScreen> {
     );
   }
 
-  Widget _buildPaymentMethodButton(PaymentMethod method, String label, ThemeData theme) {
-    final isSelected = _paymentMethod == method;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          _amountFocusNode.unfocus();
-          setState(() => _paymentMethod = method);
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isSelected ? AppColors.primary : theme.dividerColor.withOpacity(0.1),
-            ),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                fontSize: 13,
-                color: isSelected ? Colors.white : theme.colorScheme.onSurface.withOpacity(0.6),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildSimpleButton(String label, bool isSelected, VoidCallback onTap) {
     return GestureDetector(

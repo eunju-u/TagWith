@@ -5,7 +5,47 @@ import '../core/app_strings.dart';
 
 enum TransactionType { income, expense }
 
-enum PaymentMethod { cash, checkCard, creditCard }
+enum PaymentMethodBaseType { cash, checkCard, creditCard }
+
+class PaymentMethodModel {
+  final String id;
+  final String name;
+  final PaymentMethodBaseType type;
+  final bool isActive;
+
+  PaymentMethodModel({
+    required this.id,
+    required this.name,
+    required this.type,
+    this.isActive = true,
+  });
+
+  factory PaymentMethodModel.fromJson(Map<String, dynamic> json) {
+    return PaymentMethodModel(
+      id: json['id'].toString(),
+      name: json['name'] ?? '',
+      type: _parseType(json['type']),
+      isActive: json['is_active'] ?? true,
+    );
+  }
+
+  static PaymentMethodBaseType _parseType(String? type) {
+    switch (type) {
+      case 'cash': return PaymentMethodBaseType.cash;
+      case 'checkCard': return PaymentMethodBaseType.checkCard;
+      case 'creditCard': return PaymentMethodBaseType.creditCard;
+      default: return PaymentMethodBaseType.checkCard;
+    }
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'type': type.name,
+      'is_active': isActive,
+    };
+  }
+}
 
 class Category {
   final String id;
@@ -184,34 +224,22 @@ class Relation {
 }
 
 class Transaction {
-  /// 내역의 고유 식별자 (ID)
   final String id;
-  
-  /// 거래가 발생한 날짜와 시간
   final DateTime date;
-  
-  /// 거래 금액
   final double amount;
-  
-  /// 거래에 대한 설명 (예: 맛있는 돈까스)
   final String description;
-  
-  /// 거래 유형 (수입: income, 지출: expense)
   final TransactionType type;
-  
-  /// 거래 카테고리 (식비, 교통, 수입 등)
   final Category category;
-  
-  /// 거래와 관련된 관계 또는 태그 목록 (예: 친구, 가족 등)
   final List<Relation> relations;
   
-  /// 결제 수단 (현금, 체크카드, 신용카드)
-  final PaymentMethod paymentMethod;
-  
-  /// 이미 저장된 내역인지 여부 (중복 체크 결과)
-  final bool isDuplicate;
+  // 결제 수단 이름 (화면 표시용 및 서버 저장용)
+  final String paymentMethod;
+  // 실제 매핑된 결제 수단의 고유 ID
+  final String? paymentMethodId;
+  // 상세 정보 (로드되었을 경우)
+  final PaymentMethodModel? paymentInfo;
 
-  /// 추가 메모
+  final bool isDuplicate;
   final String? memo;
 
   Transaction({
@@ -223,14 +251,28 @@ class Transaction {
     required this.category,
     required this.relations,
     required this.paymentMethod,
+    this.paymentMethodId,
+    this.paymentInfo,
     this.isDuplicate = false,
     this.memo,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
-    // 서버 규격인 tags 필드로 통일
     final List<dynamic> tagData = (json['tags'] as List?) ?? [];
     
+    // 서버의 영문 식별자를 UI 표시용 한글 명칭으로 변환 (반드시 대조)
+    String rawMethod = (json['payment_method'] ?? 'cash').toString();
+    final paymentInfo = json['payment_info'] != null ? PaymentMethodModel.fromJson(json['payment_info']) : null;
+    String mappedMethod = paymentInfo?.name ?? rawMethod;
+    final lowerRaw = mappedMethod.toLowerCase();
+    
+    if (lowerRaw == 'cash') mappedMethod = AppStrings.cashLabel;
+    else if (lowerRaw == 'checkcard') mappedMethod = AppStrings.checkCardLabel;
+    else if (lowerRaw == 'creditcard') mappedMethod = AppStrings.creditCardLabel;
+    else if (rawMethod == '현금') mappedMethod = AppStrings.cashLabel;
+    else if (rawMethod == '체크카드') mappedMethod = AppStrings.checkCardLabel;
+    else if (rawMethod == '신용카드') mappedMethod = AppStrings.creditCardLabel;
+
     return Transaction(
       id: json['id'].toString(),
       date: DateTime.parse(json['date']).toLocal(),
@@ -241,12 +283,12 @@ class Transaction {
           ? Category.fromJson(json['category_detail']) 
           : Category.fromName(json['category'] ?? ''),
       relations: tagData.map((e) {
-        if (e is Map<String, dynamic>) {
-          return Relation.fromJson(e);
-        }
+        if (e is Map<String, dynamic>) return Relation.fromJson(e);
         return Relation.fromTagName(e.toString());
       }).toList(),
-      paymentMethod: _parsePaymentMethod(json['payment_method']),
+      paymentMethod: mappedMethod,
+      paymentMethodId: json['payment_method_id']?.toString(),
+      paymentInfo: json['payment_info'] != null ? PaymentMethodModel.fromJson(json['payment_info']) : null,
       isDuplicate: json['is_duplicate'] ?? false,
       memo: json['memo'],
     );
@@ -257,29 +299,13 @@ class Transaction {
       'amount': amount,
       'description': description,
       'category': category.name,
-      'date': DateFormat('yyyy-MM-dd').format(date), // 사용자 타임존 기준 날짜만 전송하여 오차 방지
+      'date': DateFormat('yyyy-MM-dd').format(date),
       'type': type == TransactionType.income ? 'income' : 'expense',
-      'tags': relations.map((r) => r.name).toList(), // 서버 최종 표준인 tags 사용
-      'payment_method': _paymentMethodToString(paymentMethod),
+      'tags': relations.map((r) => r.name).toList(),
+      'payment_method': paymentMethod,
+      'payment_method_id': paymentMethodId != null ? int.tryParse(paymentMethodId!) : null,
       'memo': memo,
     };
-  }
-
-  static String _paymentMethodToString(PaymentMethod method) {
-    switch (method) {
-      case PaymentMethod.cash: return 'cash';
-      case PaymentMethod.checkCard: return 'checkCard';
-      case PaymentMethod.creditCard: return 'creditCard';
-    }
-  }
-
-  static PaymentMethod _parsePaymentMethod(String? method) {
-    switch (method) {
-      case 'cash': return PaymentMethod.cash;
-      case 'checkCard': return PaymentMethod.checkCard;
-      case 'creditCard': return PaymentMethod.creditCard;
-      default: return PaymentMethod.checkCard;
-    }
   }
 
   Transaction copyWith({
@@ -290,7 +316,9 @@ class Transaction {
     TransactionType? type,
     Category? category,
     List<Relation>? relations,
-    PaymentMethod? paymentMethod,
+    String? paymentMethod,
+    String? paymentMethodId,
+    PaymentMethodModel? paymentInfo,
     bool? isDuplicate,
     String? memo,
   }) {
@@ -303,6 +331,8 @@ class Transaction {
       category: category ?? this.category,
       relations: relations ?? this.relations,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+      paymentMethodId: paymentMethodId ?? this.paymentMethodId,
+      paymentInfo: paymentInfo ?? this.paymentInfo,
       isDuplicate: isDuplicate ?? this.isDuplicate,
       memo: memo ?? this.memo,
     );
@@ -401,7 +431,8 @@ class Receipt {
   final String date;
   final String categorySuggestion;
   final bool isDuplicate;
-  final PaymentMethod paymentMethod;
+  final String paymentMethod;
+  final String? paymentMethodId;
 
   Receipt({
     required this.amount,
@@ -409,7 +440,8 @@ class Receipt {
     required this.date,
     required this.categorySuggestion,
     this.isDuplicate = false,
-    this.paymentMethod = PaymentMethod.checkCard,
+    this.paymentMethod = 'cash',
+    this.paymentMethodId,
   });
 
   factory Receipt.fromJson(Map<String, dynamic> json) {
@@ -422,6 +454,8 @@ class Receipt {
       date: json['date'] ?? '',
       categorySuggestion: json['category_suggestion'] ?? '',
       isDuplicate: isDuplicate,
+      paymentMethod: json['payment_method'] ?? 'cash',
+      paymentMethodId: json['payment_method_id']?.toString(),
     );
   }
 }
@@ -432,7 +466,8 @@ class RecurringTransaction {
   final String description;
   final Category category;
   final TransactionType type;
-  final PaymentMethod paymentMethod;
+  final String paymentMethod;
+  final String? paymentMethodId;
   final String interval; // 'monthly', 'weekly', 'daily'
   final int? dayOfMonth;
   final int? dayOfWeek;
@@ -447,6 +482,7 @@ class RecurringTransaction {
     required this.category,
     required this.type,
     required this.paymentMethod,
+    this.paymentMethodId,
     required this.interval,
     this.dayOfMonth,
     this.dayOfWeek,
@@ -456,13 +492,22 @@ class RecurringTransaction {
   });
 
   factory RecurringTransaction.fromJson(Map<String, dynamic> json) {
+    String rawMethod = (json['payment_method'] ?? 'cash').toString();
+    String mappedMethod = rawMethod;
+    final lowerRaw = rawMethod.toLowerCase();
+    
+    if (lowerRaw == 'cash') mappedMethod = AppStrings.cashLabel;
+    else if (lowerRaw == 'checkcard') mappedMethod = AppStrings.checkCardLabel;
+    else if (lowerRaw == 'creditcard') mappedMethod = AppStrings.creditCardLabel;
+
     return RecurringTransaction(
       id: json['id'].toString(),
       amount: (json['amount'] as num).toDouble(),
       description: json['description'] ?? '',
       category: Category.fromName(json['category'] ?? ''),
       type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
-      paymentMethod: Transaction._parsePaymentMethod(json['payment_method']),
+      paymentMethod: mappedMethod,
+      paymentMethodId: json['payment_method_id']?.toString(),
       interval: json['interval'] ?? 'monthly',
       dayOfMonth: json['day_of_month'],
       dayOfWeek: json['day_of_week'],
@@ -478,7 +523,8 @@ class RecurringTransaction {
       'description': description,
       'category': category.name,
       'type': type.name.toLowerCase(),
-      'payment_method': Transaction._paymentMethodToString(paymentMethod),
+      'payment_method': paymentMethod,
+      'payment_method_id': paymentMethodId != null ? int.tryParse(paymentMethodId!) : null,
       'interval': interval,
       'day_of_month': dayOfMonth,
       'day_of_week': dayOfWeek,

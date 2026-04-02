@@ -383,5 +383,89 @@ class TransactionService {
       return false;
     }
   }
+
+  // 결제 수단 목록 가져오기
+  Future<List<PaymentMethodModel>> getPaymentMethods() async {
+    try {
+      final token = await _getToken();
+      if (token == null) return [];
+
+      final response = await _dio.get(
+        '/transactions/payment-methods',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => PaymentMethodModel.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      AppLog.logD('TransactionService', 'getPaymentMethods', 'Error: $e');
+      return [];
+    }
+  }
+
+  // 결제 수단 추가
+  Future<PaymentMethodModel?> createPaymentMethod(PaymentMethodModel method) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
+
+      final response = await _dio.post(
+        '/transactions/payment-methods',
+        data: method.toJson(),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return PaymentMethodModel.fromJson(response.data);
+      }
+      return null;
+    } catch (e) {
+      AppLog.logD('TransactionService', 'createPaymentMethod', 'Error: $e');
+      return null;
+    }
+  }
+
+  // 결제 수단 수정
+  Future<PaymentMethodModel?> updatePaymentMethod(PaymentMethodModel method) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
+
+      final response = await _dio.put(
+        '/transactions/payment-methods/${method.id}',
+        data: method.toJson(),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return PaymentMethodModel.fromJson(response.data);
+      }
+      return null;
+    } catch (e) {
+      AppLog.logD('TransactionService', 'updatePaymentMethod', 'Error: $e');
+      return null;
+    }
+  }
+
+  // 결제 수단 삭제
+  Future<bool> deletePaymentMethod(String id) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return false;
+
+      final response = await _dio.delete(
+        '/transactions/payment-methods/$id',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      AppLog.logD('TransactionService', 'deletePaymentMethod', 'Error: $e');
+      return false;
+    }
+  }
 }
 

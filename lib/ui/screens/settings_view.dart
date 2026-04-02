@@ -14,6 +14,7 @@ import '../../core/app_icons.dart';
 
 import 'category_management_screen.dart';
 import 'recurring_management_screen.dart';
+import 'payment_method_management_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SettingsView extends StatelessWidget {
@@ -123,6 +124,16 @@ class SettingsView extends StatelessWidget {
                     onTap: () => Navigator.push(
                       context, 
                       MaterialPageRoute(builder: (context) => const RecurringManagementScreen())
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.credit_card, color: AppColors.primary),
+                    title: const Text('결제 수단 관리'),
+                    trailing: const Icon(Icons.chevron_right, size: 20),
+                    onTap: () => Navigator.push(
+                      context, 
+                      MaterialPageRoute(builder: (context) => const PaymentMethodManagementScreen())
                     ),
                   ),
                 ],

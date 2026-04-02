@@ -110,6 +110,19 @@ class AppStrings {
   static const String completeEntryButton = '기록 완료하기';
   static const String completeEditButton = '수정 완료하기';
 
+  // --- 결제 수단 관리 ---
+  static const String paymentMethodManagementTitle = '결제 수단 관리';
+  static const String paymentMethodAddEntry = '결제 수단 추가';
+  static const String paymentMethodEditEntry = '결제 수단 수정';
+  static const String paymentMethodNameLabel = '이름';
+  static const String paymentMethodTypeLabel = '유형';
+  static const String paymentMethodDeleteConfirmTitle = '삭제 확인';
+  static const String paymentMethodDeleteConfirmContent = '을(를) 삭제하시겠습니까?\n이 수단으로 기록된 내역의 결제 수단 명칭은 유지되지만, 필터 등에서 제외될 수 있습니다.';
+  static const String paymentMethodEmptyMessage = '등록된 결제 수단이 없습니다.';
+  static const String paymentMethodEmptySubMessage = '자주 사용하는 카드를 등록해보세요!';
+  static const String paymentMethodAddButton = '추가하기';
+  static const String paymentMethodNameHint = '예: 신한카드, 카카오페이';
+
   // --- 고정 지출 (반복 내역) ---
   static const String recurringLabel = '고정 지출 설정';
   static const String recurringManagementTitle = '고정 지출 관리';

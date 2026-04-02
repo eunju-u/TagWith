@@ -22,6 +22,7 @@ class FilterBottomSheet extends StatelessWidget {
     final selectedType = forStats ? provider.statsSelectedType : provider.calendarSelectedType;
     final selectedCategories = forStats ? provider.statsSelectedCategories : provider.calendarSelectedCategories;
     final selectedRelations = forStats ? provider.statsSelectedRelations : provider.calendarSelectedRelations;
+    final selectedPaymentMethods = forStats ? provider.statsSelectedPaymentMethods : provider.calendarSelectedPaymentMethods;
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -100,6 +101,37 @@ class FilterBottomSheet extends StatelessWidget {
                                 isSelected: selectedCategories.contains(cat.id),
                                 onSelected: (_) => provider.toggleCategoryFilter(cat.id, forStats: forStats),
                               )).toList(),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(AppStrings.paymentMethodLabel, style: theme.textTheme.titleMedium),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            ...provider.paymentMethods.map((m) => _FilterChip(
+                                  label: m.name,
+                                  isSelected: selectedPaymentMethods.contains(m.name),
+                                  onSelected: (_) => provider.togglePaymentMethodFilter(m.name, forStats: forStats),
+                                )),
+                            if (provider.paymentMethods.isEmpty) ...[
+                               _FilterChip(
+                                  label: AppStrings.cashLabel,
+                                  isSelected: selectedPaymentMethods.contains(AppStrings.cashLabel),
+                                  onSelected: (_) => provider.togglePaymentMethodFilter(AppStrings.cashLabel, forStats: forStats),
+                                ),
+                                _FilterChip(
+                                  label: AppStrings.checkCardLabel,
+                                  isSelected: selectedPaymentMethods.contains(AppStrings.checkCardLabel),
+                                  onSelected: (_) => provider.togglePaymentMethodFilter(AppStrings.checkCardLabel, forStats: forStats),
+                                ),
+                                _FilterChip(
+                                  label: AppStrings.creditCardLabel,
+                                  isSelected: selectedPaymentMethods.contains(AppStrings.creditCardLabel),
+                                  onSelected: (_) => provider.togglePaymentMethodFilter(AppStrings.creditCardLabel, forStats: forStats),
+                                ),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: 20),
                         Row(

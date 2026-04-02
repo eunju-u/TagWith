@@ -13,6 +13,7 @@ import '../widgets/category_picker_sheet.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/loading_overlay.dart';
 import '../../core/app_icons.dart';
+import '../widgets/payment_method_selector.dart';
 
 class ManualEntryScreen extends StatefulWidget {
   final Transaction? existingTransaction;
@@ -31,7 +32,8 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
   Category? _selectedCategory;
   List<Relation> _selectedRelations = [];
   TransactionType _type = TransactionType.expense;
-  PaymentMethod _paymentMethod = PaymentMethod.checkCard;
+  String _paymentMethod = 'cash';
+  String? _paymentMethodId;
   
   // 반복 설정 관련 상태
   bool _isRecurring = false;
@@ -53,9 +55,14 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       _selectedRelations = List.from(t.relations);
       _type = t.type;
       _paymentMethod = t.paymentMethod;
-      _memoController.text = t.memo ?? ''; // 추가
+      _paymentMethodId = t.paymentMethodId;
+      _memoController.text = t.memo ?? ''; 
     } else {
-      _selectedCategory = provider.allCategories.firstWhere((c) => c.name == '식비', orElse: () => provider.allCategories.first);
+      _paymentMethod = AppStrings.cashLabel;
+      final cats = provider.allCategories;
+      _selectedCategory = cats.any((c) => c.name == '식비')
+          ? cats.firstWhere((c) => c.name == '식비')
+          : (cats.isNotEmpty ? cats.first : null);
       // Request focus once after build only when creating new entry
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _amountFocusNode.requestFocus();
@@ -96,6 +103,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
         category: _selectedCategory!,
         relations: _selectedRelations,
         paymentMethod: _paymentMethod,
+        paymentMethodId: _paymentMethodId,
         memo: _memoController.text.trim().isNotEmpty ? _memoController.text.trim() : null, // 추가
       );
 
@@ -118,6 +126,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
             category: _selectedCategory!,
             type: _type,
             paymentMethod: _paymentMethod,
+            paymentMethodId: _paymentMethodId,
             interval: _selectedInterval,
             dayOfMonth: _selectedInterval == 'monthly' ? _selectedDayOfMonth : null,
             dayOfWeek: _selectedInterval == 'weekly' ? _selectedDayOfWeek : null,
@@ -236,14 +245,17 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
               ),
               const SizedBox(height: 24),
               _buildSectionHeader(AppStrings.paymentMethodLabel),
-              Row(
-                children: [
-                  _buildPaymentMethodButton(PaymentMethod.cash, AppStrings.cashLabel, theme),
-                  const SizedBox(width: 8),
-                  _buildPaymentMethodButton(PaymentMethod.checkCard, AppStrings.checkCardLabel, theme),
-                  const SizedBox(width: 8),
-                  _buildPaymentMethodButton(PaymentMethod.creditCard, AppStrings.creditCardLabel, theme),
-                ],
+              PaymentMethodSelector(
+                provider: provider,
+                paymentMethod: _paymentMethod,
+                paymentMethodId: _paymentMethodId,
+                onSelected: (name, id) {
+                  _amountFocusNode.unfocus();
+                  setState(() {
+                    _paymentMethod = name;
+                    _paymentMethodId = id;
+                  });
+                },
               ),
               const SizedBox(height: 24),
               _buildSectionHeader(AppStrings.dateLabel),
@@ -475,38 +487,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
   }
 
 
-  Widget _buildPaymentMethodButton(PaymentMethod method, String label, ThemeData theme) {
-    final isSelected = _paymentMethod == method;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          _amountFocusNode.unfocus();
-          setState(() => _paymentMethod = method);
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : theme.colorScheme.onSurface.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isSelected ? AppColors.primary : theme.dividerColor.withOpacity(0.1),
-            ),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                fontSize: 13,
-                color: isSelected ? Colors.white : theme.colorScheme.onSurface.withOpacity(0.6),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildRecurringSection(ThemeData theme) {
     return Column(

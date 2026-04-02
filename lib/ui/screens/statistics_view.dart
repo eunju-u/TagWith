@@ -693,72 +693,132 @@ class _StatisticsViewState extends State<StatisticsView> {
 
   Widget _buildPaymentMethodSection(BuildContext context, TransactionProvider provider, int? year, int? month) {
     final theme = Theme.of(context);
+    // 모든 거래 내역에 대해 결제수단별 지출액 맵을 가져옵니다.
     final paymentMap = provider.getPaymentMethodSpending(forStats: true, year: year, month: month);
-    final totalExpense = paymentMap.values.fold(0.0, (sum, val) => sum + val);
+    
+    // 대분류를 위한 데이터 구조 정의
+    final Map<PaymentMethodBaseType, double> typeTotals = {
+      PaymentMethodBaseType.cash: 0,
+      PaymentMethodBaseType.checkCard: 0,
+      PaymentMethodBaseType.creditCard: 0,
+    };
+    
+    // 이름별 카드 데이터를 타입별로 분류하기 위한 맵
+    final Map<PaymentMethodBaseType, List<MapEntry<String, double>>> groupedMethods = {
+      PaymentMethodBaseType.cash: [],
+      PaymentMethodBaseType.checkCard: [],
+      PaymentMethodBaseType.creditCard: [],
+    };
+
+    // 1. 현금 기본 데이터 처리
+    final cashKey = AppStrings.cashLabel;
+    final cashAmount = paymentMap[cashKey] ?? 0.0;
+    if (cashAmount > 0) {
+      typeTotals[PaymentMethodBaseType.cash] = cashAmount;
+      groupedMethods[PaymentMethodBaseType.cash]!.add(MapEntry(cashKey, cashAmount));
+    }
+
+    // 2. 등록된 결제수단별 분류 처리
+    for (var method in provider.paymentMethods) {
+      final amount = paymentMap[method.name] ?? 0.0;
+      if (amount > 0) {
+        typeTotals[method.type] = (typeTotals[method.type] ?? 0) + amount;
+        groupedMethods[method.type]!.add(MapEntry(method.name, amount));
+      }
+    }
+
+    // 3. 타입별 합계 계산
+    final checkCardTotal = typeTotals[PaymentMethodBaseType.checkCard] ?? 0;
+    final checkCardList = groupedMethods[PaymentMethodBaseType.checkCard]!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(AppStrings.paymentMethodSpendingTitle, style: theme.textTheme.titleLarge),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
+        
+        // 대분류 요약 카드 행
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: PaymentMethod.values.map((method) {
-            final amount = paymentMap[method] ?? 0.0;
-            final percentage = totalExpense > 0 ? (amount / totalExpense * 100).toStringAsFixed(1) : '0.0';
-
-            IconData methodIcon;
-            String methodLabel;
-            switch (method) {
-              case PaymentMethod.cash:
-                methodIcon = Icons.payments_outlined;
-                methodLabel = AppStrings.cashLabel;
-                break;
-              case PaymentMethod.checkCard:
-                methodIcon = Icons.credit_card_outlined;
-                methodLabel = AppStrings.checkCardLabel;
-                break;
-              case PaymentMethod.creditCard:
-                methodIcon = Icons.account_balance_wallet_outlined;
-                methodLabel = AppStrings.creditCardLabel;
-                break;
-            }
-
-            return Expanded(
-              child: Container(
-                margin: EdgeInsets.only(
-                  right: method == PaymentMethod.values.last ? 0 : 8,
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withOpacity(0.03),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
-                ),
-                child: Column(
-                  children: [
-                    Icon(methodIcon, size: 24, color: AppColors.primary.withOpacity(0.7)),
-                    const SizedBox(height: 8),
-                    Text(methodLabel, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${NumberFormat('#,###').format(amount)}${AppStrings.currencyUnit}',
-                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      '$percentage%',
-                      style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.5)),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
+          children: [
+            _buildTypeSummaryCard(theme, AppStrings.cashLabel, typeTotals[PaymentMethodBaseType.cash]!, Icons.payments_outlined, Colors.orange),
+            const SizedBox(width: 12),
+            _buildTypeSummaryCard(theme, AppStrings.checkCardLabel, checkCardTotal, Icons.credit_card_outlined, Colors.blue),
+            const SizedBox(width: 12),
+            _buildTypeSummaryCard(theme, AppStrings.creditCardLabel, typeTotals[PaymentMethodBaseType.creditCard]!, Icons.account_balance_wallet_outlined, Colors.purple),
+          ],
         ),
+        
+        const SizedBox(height: 24),
+        
+        // 상세 카드별 리스트
+        if (checkCardList.isNotEmpty || groupedMethods[PaymentMethodBaseType.creditCard]!.isNotEmpty) ...[
+          const Text('상세 카드별 지출', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey)),
+          const SizedBox(height: 12),
+          ..._buildDetailedCardList(theme, checkCardList, groupedMethods[PaymentMethodBaseType.creditCard]!),
+        ],
       ],
     );
+  }
+
+  Widget _buildTypeSummaryCard(ThemeData theme, String label, double amount, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 8),
+            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                NumberFormat('#,###').format(amount),
+                style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 14),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildDetailedCardList(ThemeData theme, List<MapEntry<String, double>> checkCards, List<MapEntry<String, double>> creditCards) {
+    final all = [...checkCards, ...creditCards];
+    all.sort((a, b) => b.value.compareTo(a.value));
+    
+    return all.map((e) => Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.onSurface.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)],
+            ),
+            child: Icon(Icons.credit_card, size: 16, color: theme.colorScheme.onSurface.withOpacity(0.5)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(child: Text(e.key, style: const TextStyle(fontWeight: FontWeight.bold))),
+          Text(
+            '${NumberFormat('#,###').format(e.value)}${AppStrings.currencyUnit}',
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    )).toList();
   }
 
 
