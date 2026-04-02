@@ -147,6 +147,7 @@ class _PaymentMethodManagementScreenState extends State<PaymentMethodManagementS
                   return ChoiceChip(
                     label: Text(_getTypeLabel(type)),
                     selected: isSelected,
+                    showCheckmark: false,
                     onSelected: (val) {
                       if (val) setDialogState(() => selectedType = type);
                     },
