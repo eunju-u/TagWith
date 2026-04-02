@@ -34,6 +34,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
   TransactionType _type = TransactionType.expense;
   String _paymentMethod = 'cash';
   String? _paymentMethodId;
+  PaymentMethodBaseType? _paymentMethodBaseType;
   
   // 반복 설정 관련 상태
   bool _isRecurring = false;
@@ -56,6 +57,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       _type = t.type;
       _paymentMethod = t.paymentMethod;
       _paymentMethodId = t.paymentMethodId;
+      _paymentMethodBaseType = t.paymentMethodBaseType;
       _memoController.text = t.memo ?? ''; 
     } else {
       _paymentMethod = AppStrings.cashLabel;
@@ -104,6 +106,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
         relations: _selectedRelations,
         paymentMethod: _paymentMethod,
         paymentMethodId: _paymentMethodId,
+        paymentMethodBaseType: _paymentMethodBaseType,
         memo: _memoController.text.trim().isNotEmpty ? _memoController.text.trim() : null, // 추가
       );
 
@@ -127,6 +130,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
             type: _type,
             paymentMethod: _paymentMethod,
             paymentMethodId: _paymentMethodId,
+            paymentMethodBaseType: _paymentMethodBaseType,
             interval: _selectedInterval,
             dayOfMonth: _selectedInterval == 'monthly' ? _selectedDayOfMonth : null,
             dayOfWeek: _selectedInterval == 'weekly' ? _selectedDayOfWeek : null,
@@ -249,11 +253,21 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                 provider: provider,
                 paymentMethod: _paymentMethod,
                 paymentMethodId: _paymentMethodId,
+                paymentMethodBaseType: _paymentMethodBaseType,
                 onSelected: (name, id) {
                   _amountFocusNode.unfocus();
                   setState(() {
                     _paymentMethod = name;
                     _paymentMethodId = id;
+                    // 선택 시 해당 카드의 타입을 찾아 업데이트
+                    if (id != null) {
+                      _paymentMethodBaseType = provider.paymentMethods.firstWhere((m) => m.id == id).type;
+                    } else {
+                      // 시스템 기본 수단 선택 시
+                      if (name == AppStrings.cashLabel) _paymentMethodBaseType = PaymentMethodBaseType.cash;
+                      else if (name == AppStrings.checkCardLabel) _paymentMethodBaseType = PaymentMethodBaseType.checkCard;
+                      else if (name == AppStrings.creditCardLabel) _paymentMethodBaseType = PaymentMethodBaseType.creditCard;
+                    }
                   });
                 },
               ),

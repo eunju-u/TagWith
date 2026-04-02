@@ -28,6 +28,7 @@ class _RecurringAddScreenState extends State<RecurringAddScreen> {
   Category? _selectedCategory;
   String _paymentMethod = 'cash';
   String? _paymentMethodId;
+  PaymentMethodBaseType? _paymentMethodBaseType;
   
   String _selectedInterval = 'monthly';
   int _selectedDayOfMonth = DateTime.now().day;
@@ -78,6 +79,7 @@ class _RecurringAddScreenState extends State<RecurringAddScreen> {
         type: _type,
         paymentMethod: _paymentMethod,
         paymentMethodId: _paymentMethodId,
+        paymentMethodBaseType: _paymentMethodBaseType,
         interval: _selectedInterval,
         dayOfMonth: _selectedInterval == 'monthly' ? _selectedDayOfMonth : null,
         dayOfWeek: _selectedInterval == 'weekly' ? _selectedDayOfWeek : null,
@@ -220,11 +222,21 @@ class _RecurringAddScreenState extends State<RecurringAddScreen> {
                 provider: provider,
                 paymentMethod: _paymentMethod,
                 paymentMethodId: _paymentMethodId,
+                paymentMethodBaseType: _paymentMethodBaseType,
                 onSelected: (name, id) {
                   _amountFocusNode.unfocus();
                   setState(() {
                     _paymentMethod = name;
                     _paymentMethodId = id;
+                    // 선택 시 해당 카드의 타입을 찾아 업데이트
+                    if (id != null) {
+                      _paymentMethodBaseType = provider.paymentMethods.firstWhere((m) => m.id == id).type;
+                    } else {
+                      // 시스템 기본 수단 선택 시
+                      if (name == AppStrings.cashLabel) _paymentMethodBaseType = PaymentMethodBaseType.cash;
+                      else if (name == AppStrings.checkCardLabel) _paymentMethodBaseType = PaymentMethodBaseType.checkCard;
+                      else if (name == AppStrings.creditCardLabel) _paymentMethodBaseType = PaymentMethodBaseType.creditCard;
+                    }
                   });
                 },
               ),

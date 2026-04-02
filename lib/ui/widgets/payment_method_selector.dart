@@ -8,6 +8,7 @@ class PaymentMethodSelector extends StatelessWidget {
   final TransactionProvider provider;
   final String paymentMethod;
   final String? paymentMethodId;
+  final PaymentMethodBaseType? paymentMethodBaseType;
   final Function(String name, String? id) onSelected;
 
   const PaymentMethodSelector({
@@ -15,6 +16,7 @@ class PaymentMethodSelector extends StatelessWidget {
     required this.provider,
     required this.paymentMethod,
     this.paymentMethodId,
+    this.paymentMethodBaseType,
     required this.onSelected,
   });
 
@@ -27,19 +29,45 @@ class PaymentMethodSelector extends StatelessWidget {
     
     // 현재 선택된 항목의 대분류 판별
     String? currentMainType;
-    if (paymentMethod == AppStrings.cashLabel) {
-      currentMainType = AppStrings.cashLabel;
-    } else if (mainMethods.contains(paymentMethod) && paymentMethodId == null) {
-      currentMainType = paymentMethod;
-    } else if (paymentMethodId != null) {
-      final selected = provider.paymentMethods.firstWhere(
-        (m) => m.id == paymentMethodId, 
-        orElse: () => provider.paymentMethods.first
-      ); 
-      if (selected.type == PaymentMethodBaseType.checkCard) currentMainType = AppStrings.checkCardLabel;
-      else if (selected.type == PaymentMethodBaseType.creditCard) currentMainType = AppStrings.creditCardLabel;
-    } else {
-      currentMainType = AppStrings.cashLabel;
+    
+    // 1. 카드가 명시되어 있거나, 스냅샷에서 추출된 baseType이 있는 경우
+    if (paymentMethodId != null || paymentMethodBaseType != null) {
+      PaymentMethodBaseType? targetBaseType;
+      
+      if (paymentMethodId != null) {
+        final matches = provider.paymentMethods.where((m) => m.id == paymentMethodId).toList();
+        if (matches.isNotEmpty) {
+          targetBaseType = matches.first.type;
+        }
+      }
+      
+      // 스냅샷에서 파싱된 타입이 있다면 (또는 위에서 찾은 타입)
+      targetBaseType ??= paymentMethodBaseType;
+
+      if (targetBaseType == PaymentMethodBaseType.checkCard) currentMainType = AppStrings.checkCardLabel;
+      else if (targetBaseType == PaymentMethodBaseType.creditCard) currentMainType = AppStrings.creditCardLabel;
+      else if (targetBaseType == PaymentMethodBaseType.cash) currentMainType = AppStrings.cashLabel;
+      
+      // [폴백] 여전히 모르는 경우 텍스트 키워드로 추론
+      if (currentMainType == null) {
+        String m = paymentMethod.toLowerCase();
+        if (m.contains('체크') || m.contains('check')) currentMainType = AppStrings.checkCardLabel;
+        else if (m.contains('신용') || m.contains('credit')) currentMainType = AppStrings.creditCardLabel;
+        else currentMainType = AppStrings.cashLabel;
+      }
+    } 
+    // 2. ID가 없는 경우 (현금 또는 이전 데이터의 시스템 명칭)
+    else {
+      String m = paymentMethod.toLowerCase();
+      if (paymentMethod == AppStrings.cashLabel || m == 'cash' || m == '현금') {
+        currentMainType = AppStrings.cashLabel;
+      } else if (paymentMethod == AppStrings.checkCardLabel || m == 'checkcard' || m == '체크카드') {
+        currentMainType = AppStrings.checkCardLabel;
+      } else if (paymentMethod == AppStrings.creditCardLabel || m == 'creditcard' || m == '신용카드') {
+        currentMainType = AppStrings.creditCardLabel;
+      } else {
+        currentMainType = AppStrings.cashLabel;
+      }
     }
 
     return Column(

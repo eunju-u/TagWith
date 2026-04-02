@@ -20,6 +20,43 @@ class PaymentMethodModel {
     this.isActive = true,
   });
 
+  // 결제 수단 명칭 및 유형 파싱 유틸리티 (스냅샷 대응 고도화)
+  static (String name, PaymentMethodBaseType? type) parseSnapshot(String input, {PaymentMethodModel? info}) {
+    String name = input;
+    PaymentMethodBaseType? type;
+
+    // 1. "유형|이름" 형식 분해
+    if (input.contains('|')) {
+      final parts = input.split('|');
+      final typeStr = parts[0];
+      name = parts.length > 1 ? parts.sublist(1).join('|') : parts[0];
+      
+      if (typeStr == 'cash') type = PaymentMethodBaseType.cash;
+      else if (typeStr == 'checkCard') type = PaymentMethodBaseType.checkCard;
+      else if (typeStr == 'creditCard') type = PaymentMethodBaseType.creditCard;
+    }
+    
+    // 2. 서버에서 전달된 상세 정보(Info)가 있는 경우 최신 데이터로 덮어씌움
+    if (info != null) {
+      name = info.name;
+      type = info.type;
+    }
+    
+    // 3. 시스템 예약어 번역 및 타입 지정
+    if (name == 'cash') {
+      name = AppStrings.cashLabel;
+      type ??= PaymentMethodBaseType.cash;
+    } else if (name == 'checkCard' || name == 'checkcard') {
+      name = AppStrings.checkCardLabel;
+      type ??= PaymentMethodBaseType.checkCard;
+    } else if (name == 'creditCard' || name == 'creditcard') {
+      name = AppStrings.creditCardLabel;
+      type ??= PaymentMethodBaseType.creditCard;
+    }
+    
+    return (name, type);
+  }
+
   factory PaymentMethodModel.fromJson(Map<String, dynamic> json) {
     return PaymentMethodModel(
       id: json['id'].toString(),
@@ -238,6 +275,8 @@ class Transaction {
   final String? paymentMethodId;
   // 상세 정보 (로드되었을 경우)
   final PaymentMethodModel? paymentInfo;
+  // 상위 결제 수단 분류 (삭제된 카드 복원용)
+  final PaymentMethodBaseType? paymentMethodBaseType;
 
   final bool isDuplicate;
   final String? memo;
@@ -253,6 +292,7 @@ class Transaction {
     required this.paymentMethod,
     this.paymentMethodId,
     this.paymentInfo,
+    this.paymentMethodBaseType,
     this.isDuplicate = false,
     this.memo,
   });
@@ -260,21 +300,9 @@ class Transaction {
   factory Transaction.fromJson(Map<String, dynamic> json) {
     final List<dynamic> tagData = (json['tags'] as List?) ?? [];
     
-    // 결제 수단 명칭 처리 (스냅샷 우선)
-    String rawMethod = (json['payment_method'] ?? 'cash').toString();
+    // 결제 수단 통합 파싱 (스냅샷 및 상위 타입 복원)
     final paymentInfo = json['payment_info'] != null ? PaymentMethodModel.fromJson(json['payment_info']) : null;
-    
-    String mappedMethod = paymentInfo?.name ?? rawMethod;
-    
-    // 시스템 예약어인 경우에만 한글 레이블로 치환
-    if (mappedMethod == 'cash') {
-      mappedMethod = AppStrings.cashLabel;
-    } else if (mappedMethod == 'checkCard' || mappedMethod == 'checkcard') {
-      mappedMethod = AppStrings.checkCardLabel;
-    } else if (mappedMethod == 'creditCard' || mappedMethod == 'creditcard') {
-      mappedMethod = AppStrings.creditCardLabel;
-    }
-    // 그 외(예: "신한카드", "현금" 등)는 그대로 사용
+    final parsed = PaymentMethodModel.parseSnapshot((json['payment_method'] ?? 'cash').toString(), info: paymentInfo);
 
     return Transaction(
       id: json['id'].toString(),
@@ -289,9 +317,10 @@ class Transaction {
         if (e is Map<String, dynamic>) return Relation.fromJson(e);
         return Relation.fromTagName(e.toString());
       }).toList(),
-      paymentMethod: mappedMethod,
+      paymentMethod: parsed.$1,
       paymentMethodId: json['payment_method_id']?.toString(),
-      paymentInfo: json['payment_info'] != null ? PaymentMethodModel.fromJson(json['payment_info']) : null,
+      paymentInfo: paymentInfo,
+      paymentMethodBaseType: parsed.$2,
       isDuplicate: json['is_duplicate'] ?? false,
       memo: json['memo'],
     );
@@ -322,6 +351,7 @@ class Transaction {
     String? paymentMethod,
     String? paymentMethodId,
     PaymentMethodModel? paymentInfo,
+    PaymentMethodBaseType? paymentMethodBaseType,
     bool? isDuplicate,
     String? memo,
   }) {
@@ -336,6 +366,7 @@ class Transaction {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       paymentMethodId: paymentMethodId ?? this.paymentMethodId,
       paymentInfo: paymentInfo ?? this.paymentInfo,
+      paymentMethodBaseType: paymentMethodBaseType ?? this.paymentMethodBaseType,
       isDuplicate: isDuplicate ?? this.isDuplicate,
       memo: memo ?? this.memo,
     );
@@ -471,6 +502,7 @@ class RecurringTransaction {
   final TransactionType type;
   final String paymentMethod;
   final String? paymentMethodId;
+  final PaymentMethodBaseType? paymentMethodBaseType;
   final String interval; // 'monthly', 'weekly', 'daily'
   final int? dayOfMonth;
   final int? dayOfWeek;
@@ -486,6 +518,7 @@ class RecurringTransaction {
     required this.type,
     required this.paymentMethod,
     this.paymentMethodId,
+    this.paymentMethodBaseType,
     required this.interval,
     this.dayOfMonth,
     this.dayOfWeek,
@@ -495,16 +528,8 @@ class RecurringTransaction {
   });
 
   factory RecurringTransaction.fromJson(Map<String, dynamic> json) {
-    String rawMethod = (json['payment_method'] ?? 'cash').toString();
-    String mappedMethod = rawMethod;
-    
-    if (mappedMethod == 'cash') {
-      mappedMethod = AppStrings.cashLabel;
-    } else if (mappedMethod == 'checkCard' || mappedMethod == 'checkcard') {
-      mappedMethod = AppStrings.checkCardLabel;
-    } else if (mappedMethod == 'creditCard' || mappedMethod == 'creditcard') {
-      mappedMethod = AppStrings.creditCardLabel;
-    }
+    // 결제 수단 통합 파싱 (스냅샷 및 상위 타입 복원)
+    final parsed = PaymentMethodModel.parseSnapshot((json['payment_method'] ?? 'cash').toString());
 
     return RecurringTransaction(
       id: json['id'].toString(),
@@ -512,8 +537,9 @@ class RecurringTransaction {
       description: json['description'] ?? '',
       category: Category.fromName(json['category'] ?? ''),
       type: json['type'] == 'income' ? TransactionType.income : TransactionType.expense,
-      paymentMethod: mappedMethod,
+      paymentMethod: parsed.$1,
       paymentMethodId: json['payment_method_id']?.toString(),
+      paymentMethodBaseType: parsed.$2,
       interval: json['interval'] ?? 'monthly',
       dayOfMonth: json['day_of_month'],
       dayOfWeek: json['day_of_week'],

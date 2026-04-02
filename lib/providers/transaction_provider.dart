@@ -449,6 +449,8 @@ class TransactionProvider with ChangeNotifier {
     final success = await _service.deletePaymentMethod(id);
     if (success) {
       _paymentMethods.removeWhere((m) => m.id == id);
+      // [최적화] 결제 수단 삭제 시 해당 수단을 쓰던 내역들의 스냅샷(유형|이름) 정보를 갱신하기 위해 내역 재로그
+      await loadTransactions(); 
       notifyListeners();
       return true;
     }

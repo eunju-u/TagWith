@@ -53,19 +53,14 @@ class _PaymentMethodManagementScreenState extends State<PaymentMethodManagementS
                 return _buildMethodTile(context, method, provider);
               },
             ),
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: const Icon(Icons.add_rounded, color: Colors.white, size: 32),
-          ),
-        ),
+      floatingActionButton: CircleGradientFAB(
+        onPressed: () => _showAddEditDialog(context, provider),
+        icon: Icons.add_rounded,
+        tooltip: '결제 수단 추가',
       ),
     );
   }
+
 
   Widget _buildMethodTile(BuildContext context, PaymentMethodModel method, TransactionProvider provider) {
     final theme = Theme.of(context);

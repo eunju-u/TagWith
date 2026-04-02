@@ -78,17 +78,14 @@ class CategoryManagementScreen extends StatelessWidget {
           );
         },
       ),
-                colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: const Icon(Icons.add_rounded, color: Colors.white, size: 32),
-          ),
-        ),
+      floatingActionButton: CircleGradientFAB(
+        onPressed: () => _addCategory(context, provider),
+        icon: Icons.add_rounded,
+        tooltip: '카테고리 추가',
       ),
     );
   }
+
 
   void _addCategory(BuildContext context, TransactionProvider provider) {
     Navigator.push(
