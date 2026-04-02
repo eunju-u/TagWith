@@ -7,6 +7,7 @@ import '../../data/models.dart';
 import '../../providers/transaction_provider.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/app_snackbar.dart';
+import '../widgets/circle_gradient_fab.dart';
 import '../widgets/loading_overlay.dart';
 
 class PaymentMethodManagementScreen extends StatefulWidget {
@@ -52,18 +53,6 @@ class _PaymentMethodManagementScreenState extends State<PaymentMethodManagementS
                 return _buildMethodTile(context, method, provider);
               },
             ),
-      floatingActionButton: SizedBox(
-        height: 64,
-        width: 64,
-        child: FloatingActionButton(
-          onPressed: () => _showAddEditDialog(context, provider),
-          backgroundColor: AppColors.primary,
-          elevation: 4,
-          shape: const CircleBorder(),
-          child: Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],

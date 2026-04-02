@@ -260,18 +260,21 @@ class Transaction {
   factory Transaction.fromJson(Map<String, dynamic> json) {
     final List<dynamic> tagData = (json['tags'] as List?) ?? [];
     
-    // 서버의 영문 식별자를 UI 표시용 한글 명칭으로 변환 (반드시 대조)
+    // 결제 수단 명칭 처리 (스냅샷 우선)
     String rawMethod = (json['payment_method'] ?? 'cash').toString();
     final paymentInfo = json['payment_info'] != null ? PaymentMethodModel.fromJson(json['payment_info']) : null;
-    String mappedMethod = paymentInfo?.name ?? rawMethod;
-    final lowerRaw = mappedMethod.toLowerCase();
     
-    if (lowerRaw == 'cash') mappedMethod = AppStrings.cashLabel;
-    else if (lowerRaw == 'checkcard') mappedMethod = AppStrings.checkCardLabel;
-    else if (lowerRaw == 'creditcard') mappedMethod = AppStrings.creditCardLabel;
-    else if (rawMethod == '현금') mappedMethod = AppStrings.cashLabel;
-    else if (rawMethod == '체크카드') mappedMethod = AppStrings.checkCardLabel;
-    else if (rawMethod == '신용카드') mappedMethod = AppStrings.creditCardLabel;
+    String mappedMethod = paymentInfo?.name ?? rawMethod;
+    
+    // 시스템 예약어인 경우에만 한글 레이블로 치환
+    if (mappedMethod == 'cash') {
+      mappedMethod = AppStrings.cashLabel;
+    } else if (mappedMethod == 'checkCard' || mappedMethod == 'checkcard') {
+      mappedMethod = AppStrings.checkCardLabel;
+    } else if (mappedMethod == 'creditCard' || mappedMethod == 'creditcard') {
+      mappedMethod = AppStrings.creditCardLabel;
+    }
+    // 그 외(예: "신한카드", "현금" 등)는 그대로 사용
 
     return Transaction(
       id: json['id'].toString(),
@@ -494,11 +497,14 @@ class RecurringTransaction {
   factory RecurringTransaction.fromJson(Map<String, dynamic> json) {
     String rawMethod = (json['payment_method'] ?? 'cash').toString();
     String mappedMethod = rawMethod;
-    final lowerRaw = rawMethod.toLowerCase();
     
-    if (lowerRaw == 'cash') mappedMethod = AppStrings.cashLabel;
-    else if (lowerRaw == 'checkcard') mappedMethod = AppStrings.checkCardLabel;
-    else if (lowerRaw == 'creditcard') mappedMethod = AppStrings.creditCardLabel;
+    if (mappedMethod == 'cash') {
+      mappedMethod = AppStrings.cashLabel;
+    } else if (mappedMethod == 'checkCard' || mappedMethod == 'checkcard') {
+      mappedMethod = AppStrings.checkCardLabel;
+    } else if (mappedMethod == 'creditCard' || mappedMethod == 'creditcard') {
+      mappedMethod = AppStrings.creditCardLabel;
+    }
 
     return RecurringTransaction(
       id: json['id'].toString(),

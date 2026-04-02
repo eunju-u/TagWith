@@ -8,6 +8,7 @@ import '../../data/models.dart';
 import '../../providers/transaction_provider.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/app_snackbar.dart';
+import '../widgets/circle_gradient_fab.dart';
 import 'recurring_add_screen.dart';
 
 class RecurringManagementScreen extends StatelessWidget {
@@ -69,31 +70,13 @@ class RecurringManagementScreen extends StatelessWidget {
                 return _buildRecurringItem(context, item, provider);
               },
             ),
-      floatingActionButton: SizedBox(
-        height: 64,
-        width: 64,
-        child: FloatingActionButton(
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const RecurringAddScreen()),
-          ),
-          backgroundColor: AppColors.primary,
-          elevation: 4,
-          shape: const CircleBorder(),
-          child: Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: const Icon(Icons.add_rounded, color: Colors.white, size: 32),
-          ),
+      floatingActionButton: CircleGradientFAB(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const RecurringAddScreen()),
         ),
+        icon: Icons.add_rounded,
+        tooltip: '고정 지출 추가',
       ),
     );
   }

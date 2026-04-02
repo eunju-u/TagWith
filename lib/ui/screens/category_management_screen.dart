@@ -6,6 +6,8 @@ import '../../core/app_strings.dart';
 import '../../core/theme.dart';
 import 'category_edit_screen.dart';
 import '../widgets/app_dialog.dart';
+import '../widgets/app_snackbar.dart';
+import '../widgets/circle_gradient_fab.dart';
 
 class CategoryManagementScreen extends StatelessWidget {
   const CategoryManagementScreen({super.key});
@@ -76,20 +78,6 @@ class CategoryManagementScreen extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: SizedBox(
-        height: 64,
-        width: 64,
-        child: FloatingActionButton(
-          onPressed: () => _addCategory(context, provider),
-          backgroundColor: AppColors.primary,
-          elevation: 4,
-          shape: const CircleBorder(),
-          child: Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
                 colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
